@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Customer;
 use App\Models\JobOrder;
+use App\Models\ServiceArea;
 use App\Models\ServicePlan;
 use App\Models\ServiceRequest;
 use App\Models\Subscription;
@@ -11,61 +12,97 @@ use App\Models\Technician;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
+use RuntimeException;
 
 class DemoDataSeeder extends Seeder
 {
+    /**
+     * Seed a controlled Rincomm development/demo dataset.
+     *
+     * Existing records are preserved. This seeder creates missing demo
+     * records but does not reset operational statuses on every run.
+     */
     public function run(): void
     {
+        if (app()->environment('production')) {
+            throw new RuntimeException(
+                'DemoDataSeeder must not be executed in production.'
+            );
+        }
 
-           // Demo administrator user
-        $adminUser = User::updateOrCreate(
-            ['email' => 'admin@rincomm.test'],
+        /*
+        |--------------------------------------------------------------------------
+        | Administrator
+        |--------------------------------------------------------------------------
+        */
+
+        $this->createDemoUser(
+            name: 'Rincomm Administrator',
+            email: 'admin@rincomm.test',
+            role: 'admin'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Staff
+        |--------------------------------------------------------------------------
+        */
+
+        $this->createDemoUser(
+            name: 'Rincomm Staff',
+            email: 'staff@rincomm.test',
+            role: 'staff'
+        );
+
+        /*
+        |--------------------------------------------------------------------------
+        | Confirmed Rincomm Service Area
+        |--------------------------------------------------------------------------
+        |
+        | This record restores the Week 3 coverage-check foundation.
+        | These values were recovered from the original confirmed development
+        | command used to create the Acocolao service-area record.
+        |
+        */
+
+        ServiceArea::firstOrCreate(
             [
-                'name' => 'Rincomm Administrator',
-                'password' => Hash::make('password'),
+                'province' => 'Tarlac',
+                'city_municipality' => 'Paniqui',
+                'barangay' => 'Acocolao',
+            ],
+            [
+                'postal_code' => '2307',
+                'latitude' => 15.6591,
+                'longitude' => 120.5634,
+                'is_serviceable' => true,
+                'notes' => 'Confirmed Rincomm service area',
             ]
         );
 
-        $adminUser->role = 'admin';
-        $adminUser->account_status = 'active';
-        $adminUser->save();
+        /*
+        |--------------------------------------------------------------------------
+        | Demo Customer Account
+        |--------------------------------------------------------------------------
+        */
 
-        // Demo staff user
-        $staffUser = User::updateOrCreate(
-            ['email' => 'staff@rincomm.test'],
-            [
-                'name' => 'Rincomm Staff',
-                'password' => Hash::make('password'),
-            ]
+        $customerUser = $this->createDemoUser(
+            name: 'Miguel Santos',
+            email: 'miguel.santos@rincomm.test',
+            role: 'customer'
         );
 
-        $staffUser->role = 'staff';
-        $staffUser->account_status = 'active';
-        $staffUser->save();
-
-// Demo customer user
-$customerUser = User::updateOrCreate(
-    ['email' => 'customer@rincomm.test'],
-    [
-        'name' => 'Juan Dela Cruz',
-        'password' => Hash::make('password'),
-    ]
-);
-
-$customerUser->role = 'customer';
-$customerUser->account_status = 'active';
-$customerUser->save();
-
-        // Demo customer
-        $customer = Customer::updateOrCreate(
-            ['customer_code' => 'CUST-0001'],
+        $customer = Customer::firstOrCreate(
+            [
+                'customer_code' => 'CUST-0001',
+            ],
             [
                 'user_id' => $customerUser->id,
-                'first_name' => 'Juan',
+                'first_name' => 'Miguel',
                 'middle_name' => null,
-                'last_name' => 'Dela Cruz',
+                'last_name' => 'Santos',
                 'phone' => '09123456789',
-                'email' => 'customer@rincomm.test',
+                'email' => 'miguel.santos@rincomm.test',
                 'address' => 'Paniqui',
                 'city' => 'Paniqui',
                 'province' => 'Tarlac',
@@ -76,9 +113,16 @@ $customerUser->save();
             ]
         );
 
-        // Demo internet plan
-        $servicePlan = ServicePlan::updateOrCreate(
-            ['name' => 'Fiber 100'],
+        /*
+        |--------------------------------------------------------------------------
+        | Demo Internet Plan
+        |--------------------------------------------------------------------------
+        */
+
+        $servicePlan = ServicePlan::firstOrCreate(
+            [
+                'name' => 'Fiber 100',
+            ],
             [
                 'description' => '100 Mbps residential internet plan',
                 'speed_mbps' => 100,
@@ -89,8 +133,13 @@ $customerUser->save();
             ]
         );
 
-        // Demo active subscription
-        Subscription::updateOrCreate(
+        /*
+        |--------------------------------------------------------------------------
+        | Demo Subscription
+        |--------------------------------------------------------------------------
+        */
+
+        Subscription::firstOrCreate(
             [
                 'customer_id' => $customer->id,
                 'service_plan_id' => $servicePlan->id,
@@ -105,22 +154,22 @@ $customerUser->save();
             ]
         );
 
-// Demo technician user
-$technicianUser = User::updateOrCreate(
-    ['email' => 'technician@rincomm.test'],
-    [
-        'name' => 'Pedro Santos',
-        'password' => Hash::make('password'),
-    ]
-);
+        /*
+        |--------------------------------------------------------------------------
+        | Demo Technician
+        |--------------------------------------------------------------------------
+        */
 
-$technicianUser->role = 'technician';
-$technicianUser->account_status = 'active';
-$technicianUser->save();
+        $technicianUser = $this->createDemoUser(
+            name: 'Pedro Santos',
+            email: 'technician@rincomm.test',
+            role: 'technician'
+        );
 
-        // Demo technician
-        $technician = Technician::updateOrCreate(
-            ['technician_code' => 'TECH-0001'],
+        $technician = Technician::firstOrCreate(
+            [
+                'technician_code' => 'TECH-0001',
+            ],
             [
                 'user_id' => $technicianUser->id,
                 'specialization' => 'Fiber Installation and Repair',
@@ -128,9 +177,16 @@ $technicianUser->save();
             ]
         );
 
-        // Demo open ticket
-        $ticket = ServiceRequest::updateOrCreate(
-            ['ticket_number' => 'TKT-0001'],
+        /*
+        |--------------------------------------------------------------------------
+        | Demo Ticket
+        |--------------------------------------------------------------------------
+        */
+
+        $ticket = ServiceRequest::firstOrCreate(
+            [
+                'ticket_number' => 'TKT-0001',
+            ],
             [
                 'customer_id' => $customer->id,
                 'service_plan_id' => $servicePlan->id,
@@ -141,9 +197,16 @@ $technicianUser->save();
             ]
         );
 
-        // Demo pending job order
-        JobOrder::updateOrCreate(
-            ['job_order_number' => 'JO-0001'],
+        /*
+        |--------------------------------------------------------------------------
+        | Demo Job Order
+        |--------------------------------------------------------------------------
+        */
+
+        JobOrder::firstOrCreate(
+            [
+                'job_order_number' => 'JO-0001',
+            ],
             [
                 'service_request_id' => $ticket->id,
                 'customer_id' => $customer->id,
@@ -158,5 +221,37 @@ $technicianUser->save();
                 'remarks' => 'Demo job order',
             ]
         );
+    }
+
+    /**
+     * Create a development-only login fixture.
+     *
+     * Existing users are intentionally left unchanged so reseeding cannot
+     * reset passwords, account statuses, roles, or verification state.
+     */
+    private function createDemoUser(
+        string $name,
+        string $email,
+        string $role
+    ): User {
+        $user = User::firstOrCreate(
+            [
+                'email' => $email,
+            ],
+            [
+                'name' => $name,
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        if ($user->wasRecentlyCreated) {
+            $user->forceFill([
+                'role' => $role,
+                'account_status' => 'active',
+                'email_verified_at' => now(),
+            ])->save();
+        }
+
+        return $user;
     }
 }
