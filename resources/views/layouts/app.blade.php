@@ -513,6 +513,62 @@
 
             </nav>
 
+
+            <!-- Sidebar Logout -->
+            <div
+                class="
+                    shrink-0
+                    border-t border-neutral-200
+                    bg-white p-4
+                    dark:border-neutral-800
+                    dark:bg-neutral-950
+                ">
+
+                <form
+                    method="POST"
+                    action="{{ route('logout') }}"
+                    data-lock-submit>
+
+                    @csrf
+
+                    <button
+                        type="submit"
+                        class="
+                            inline-flex min-h-11 w-full
+                            items-center justify-start gap-3
+                            rounded-xl
+                            border border-red-200
+                            px-4 py-3
+                            text-sm font-semibold
+                            text-red-600
+                            transition
+                            hover:border-red-300
+                            hover:bg-red-50
+                            focus:outline-none
+                            focus:ring-2
+                            focus:ring-red-500/30
+                            dark:border-red-900
+                            dark:text-red-400
+                            dark:hover:border-red-800
+                            dark:hover:bg-red-950/40
+                        ">
+
+                        <i
+                            data-lucide="log-out"
+                            class="h-5 w-5 shrink-0"
+                            aria-hidden="true">
+                        </i>
+
+                        <span>
+                            Logout
+                        </span>
+
+                    </button>
+
+                </form>
+
+            </div>
+
         </aside>
 
 
@@ -618,56 +674,6 @@
                         </i>
 
                     </button>
-
-
-                    {{-- Logout --}}
-                    <form
-                        method="POST"
-                        action="{{ route('logout') }}"
-                        data-lock-submit>
-
-                        @csrf
-
-                        <button
-                            type="submit"
-                            title="Logout"
-                            class="
-                                inline-flex h-8 shrink-0
-                                items-center justify-center gap-1
-                                border border-red-400
-                                bg-red-400 px-1.5
-                                text-xs font-medium text-white
-                                shadow-sm transition
-                                hover:border-red-500
-                                hover:bg-red-500
-                                focus:outline-none
-                                focus:ring-2
-                                focus:ring-red-500
-                                focus:ring-offset-2
-                                dark:border-red-200
-                                dark:bg-red-400
-                                dark:text-white
-                                dark:hover:border-red-700
-                                dark:hover:bg-red-700
-                                dark:focus:ring-offset-neutral-900
-                                sm:h-10
-                                sm:gap-2
-                                sm:px-3
-                                sm:text-sm
-                            ">
-
-                            <i
-                                data-lucide="log-out"
-                                class="h-3.5 w-3.5 shrink-0 sm:h-4 sm:w-4">
-                            </i>
-
-                            <span>
-                                Logout
-                            </span>
-
-                        </button>
-
-                    </form>
 
 
                     {{-- Authenticated User Identity --}}
