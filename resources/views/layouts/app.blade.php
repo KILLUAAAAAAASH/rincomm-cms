@@ -15,9 +15,11 @@
             const savedTheme = localStorage.getItem('rincomm-theme');
 
             const theme = savedTheme ??
-                (window.matchMedia('(prefers-color-scheme: dark)').matches ?
+                (
+                    window.matchMedia('(prefers-color-scheme: dark)').matches ?
                     'dark' :
-                    'light');
+                    'light'
+                );
 
             document.documentElement.classList.toggle(
                 'dark',
@@ -29,15 +31,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <style>
-        /*
-         * Secondary authenticated navigation.
-         *
-         * Mobile header:  3.5rem / 56px
-         * sm+ header:     4rem / 64px
-         *
-         * This element lives inside the main workspace, so it never
-         * needs a manual desktop sidebar offset.
-         */
+        /* Secondary nav */
         .rincomm-secondary-nav {
             position: sticky;
             top: 3.5rem;
@@ -52,10 +46,9 @@
     </style>
 </head>
 
-
 <body class="bg-neutral-100 text-neutral-900 dark:bg-neutral-950 dark:text-neutral-100">
 
-    <!-- Global Page Loader -->
+    {{-- Page loader --}}
     <div
         id="page-loader"
         class="pointer-events-none fixed inset-x-0 top-0 z-[100] hidden h-1"
@@ -70,7 +63,7 @@
     </div>
 
 
-    <!-- Mobile Sidebar Overlay -->
+    {{-- Mobile overlay --}}
     <div
         id="sidebar-overlay"
         class="fixed inset-0 z-40 hidden bg-slate-950/50 lg:hidden">
@@ -79,7 +72,7 @@
 
     <div class="flex min-h-screen">
 
-        <!-- Sidebar -->
+        {{-- Sidebar --}}
         <aside
             id="sidebar"
             class="
@@ -103,7 +96,7 @@
                 lg:translate-x-0
             ">
 
-            <!-- Sidebar Header -->
+            {{-- Sidebar header --}}
             <div
                 class="
                     flex items-start justify-between
@@ -125,7 +118,7 @@
                 </div>
 
 
-                <!-- Mobile Close Button -->
+                {{-- Close sidebar --}}
                 <button
                     id="sidebar-close"
                     type="button"
@@ -152,7 +145,7 @@
             </div>
 
 
-            <!-- Navigation -->
+            {{-- Navigation --}}
             <nav class="min-h-0 flex-1 space-y-1 overflow-y-auto p-4">
 
                 {{-- Dashboard --}}
@@ -182,7 +175,7 @@
                 </a>
 
 
-                {{-- User Management --}}
+                {{-- User management --}}
                 <a
                     href="{{ route('admin.users.index') }}"
                     class="
@@ -209,7 +202,7 @@
                 </a>
 
 
-                {{-- Hero Slides --}}
+                {{-- Hero slides --}}
                 <a
                     href="{{ route('admin.hero-slides.index') }}"
                     class="
@@ -276,7 +269,7 @@
 
                     <div class="mt-1 space-y-1 pl-4">
 
-                        {{-- All Subscribers --}}
+                        {{-- All subscribers --}}
                         <a
                             href="{{ route('admin.subscribers.index') }}"
                             class="
@@ -350,7 +343,7 @@
                 </details>
 
 
-                {{-- Service Plans --}}
+                {{-- Service plans --}}
                 <a
                     href="#"
                     class="
@@ -431,7 +424,7 @@
                 </a>
 
 
-                {{-- Job Orders --}}
+                {{-- Job orders --}}
                 <a
                     href="#"
                     class="
@@ -514,7 +507,7 @@
             </nav>
 
 
-            <!-- Sidebar Logout -->
+            {{-- Logout --}}
             <div
                 class="
                     shrink-0
@@ -572,10 +565,10 @@
         </aside>
 
 
-        <!-- Main Workspace -->
+        {{-- Workspace --}}
         <div class="flex min-w-0 flex-1 flex-col">
 
-            <!-- Main Header -->
+            {{-- Header --}}
             <header
                 class="
                     sticky top-0 z-30
@@ -593,7 +586,7 @@
 
                 <div class="flex min-w-0 flex-1 items-center gap-1.5 sm:gap-3">
 
-                    <!-- Hamburger -->
+                    {{-- Open sidebar --}}
                     <button
                         id="sidebar-open"
                         type="button"
@@ -638,7 +631,7 @@
 
                 <div class="flex shrink-0 items-center gap-1 sm:gap-3">
 
-                    {{-- Theme Toggle --}}
+                    {{-- Theme toggle --}}
                     <button
                         data-theme-toggle
                         type="button"
@@ -676,7 +669,7 @@
                     </button>
 
 
-                    {{-- Authenticated User Identity --}}
+                    {{-- User identity --}}
                     <div class="hidden min-w-0 text-right md:block">
 
                         <p
@@ -703,18 +696,18 @@
             </header>
 
 
-            {{-- Optional Secondary Navigation --}}
+            {{-- Secondary navigation --}}
             @hasSection('secondary-navigation')
 
             <div
                 class="
-            rincomm-secondary-nav
-            border-b border-neutral-200
-            bg-neutral-100
-            shadow-sm
-            dark:border-neutral-800
-            dark:bg-neutral-950
-        ">
+                        rincomm-secondary-nav
+                        border-b border-neutral-200
+                        bg-neutral-100
+                        shadow-sm
+                        dark:border-neutral-800
+                        dark:bg-neutral-950
+                    ">
 
                 <div class="px-4 sm:px-6">
                     @yield('secondary-navigation')
@@ -725,7 +718,7 @@
             @endif
 
 
-            <!-- Page Content -->
+            {{-- Page content --}}
             <main class="flex-1 p-4 sm:p-6">
                 @yield('content')
             </main>

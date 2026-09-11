@@ -4,7 +4,7 @@
 
 @section('content')
 
-<!-- Public Navbar -->
+{{-- Public navbar --}}
 <header
     class="
         sticky top-0 z-50
@@ -13,25 +13,35 @@
         dark:border-zinc-800
         dark:bg-zinc-950/95
     ">
+
     <nav class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         <div class="flex h-16 items-center justify-between">
 
-            <!-- Brand -->
+            {{-- Brand --}}
             <a
                 href="#home"
                 class="flex items-center gap-3">
+
                 <div
                     class="
-        flex h-10 w-10 items-center justify-center
-        rounded-md
-        bg-[#008080]
-        text-white
-    ">
-                    <i data-lucide="wifi" class="h-5 w-5"></i>
+                        flex h-10 w-10
+                        items-center justify-center
+                        rounded-md
+                        bg-[#008080]
+                        text-white
+                    ">
+
+                    <i
+                        data-lucide="wifi"
+                        class="h-5 w-5">
+                    </i>
+
                 </div>
 
+
                 <div>
+
                     <p
                         class="
                             text-base
@@ -45,20 +55,22 @@
 
                     <p
                         class="
-                            mt-1 hidden text-xs
-                            text-slate-500
+                            mt-1 hidden
+                            text-xs text-slate-500
                             dark:text-zinc-400
                             sm:block
                         ">
                         Internet Services
                     </p>
+
                 </div>
+
             </a>
 
-            <!-- Desktop Navigation -->
+
+            {{-- Desktop navigation --}}
             <div class="hidden items-center gap-1 lg:flex">
 
-                <!-- Home -->
                 <a
                     href="#home"
                     class="
@@ -75,26 +87,24 @@
                     Home
                 </a>
 
-                <!-- Plans -->
                 <a
                     href="#plans"
                     class="
-        rounded-xl px-4 py-2.5
-        text-sm font-medium
-        text-slate-700
-        transition-colors
-        hover:bg-[#008080]/10
-        hover:text-[#008080]
-        dark:text-zinc-300
-        dark:hover:bg-[#008080]/15
-        dark:hover:text-[#2DD4BF]
-    ">
+                        rounded-xl px-4 py-2.5
+                        text-sm font-medium
+                        text-slate-700
+                        transition-colors
+                        hover:bg-[#008080]/10
+                        hover:text-[#008080]
+                        dark:text-zinc-300
+                        dark:hover:bg-[#008080]/15
+                        dark:hover:text-[#2DD4BF]
+                    ">
                     Plans
                 </a>
 
 
-
-                <!-- Support Dropdown -->
+                {{-- Support dropdown --}}
                 <div class="group relative">
 
                     <button
@@ -102,22 +112,26 @@
                         data-desktop-dropdown="desktop-support"
                         aria-expanded="false"
                         class="
-        flex items-center gap-1.5
-        rounded-xl px-4 py-2.5
-        text-sm font-medium
-        text-slate-700
-        hover:bg-[#008080]/10
-        hover:text-[#008080]
-        dark:text-zinc-300
-        dark:hover:bg-[#008080]/15
-        dark:hover:text-[#2DD4BF]
-    ">
+                            flex items-center gap-1.5
+                            rounded-xl px-4 py-2.5
+                            text-sm font-medium
+                            text-slate-700
+                            hover:bg-[#008080]/10
+                            hover:text-[#008080]
+                            dark:text-zinc-300
+                            dark:hover:bg-[#008080]/15
+                            dark:hover:text-[#2DD4BF]
+                        ">
+
                         Support
 
                         <i
                             data-lucide="chevron-down"
-                            class="h-4 w-4 transition-transform duration-150 group-hover:rotate-180"></i>
+                            class="h-4 w-4 transition-transform duration-150 group-hover:rotate-180">
+                        </i>
+
                     </button>
+
 
                     <div
                         id="desktop-support"
@@ -130,6 +144,7 @@
                             group-hover:translate-y-0
                             group-hover:opacity-100
                         ">
+
                         <div
                             class="
                                 rounded-2xl
@@ -139,57 +154,126 @@
                                 dark:border-zinc-700
                                 dark:bg-zinc-900
                             ">
-                            <a href="{{ route('login') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-slate-100 dark:hover:bg-zinc-800">
-                                <i data-lucide="ticket-plus" class="h-4 w-4 text-[#008080]"></i>
-                                <span class="text-sm font-medium dark:text-zinc-200">Create Ticket</span>
+
+                            <a
+                                href="{{ route('login') }}"
+                                class="
+                                    flex items-center gap-3
+                                    rounded-xl px-3 py-3
+                                    hover:bg-slate-100
+                                    dark:hover:bg-zinc-800
+                                ">
+
+                                <i
+                                    data-lucide="ticket-plus"
+                                    class="h-4 w-4 text-[#008080]">
+                                </i>
+
+                                <span class="text-sm font-medium dark:text-zinc-200">
+                                    Create Ticket
+                                </span>
+
                             </a>
 
-                            <a href="{{ route('login') }}" class="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-slate-100 dark:hover:bg-zinc-800">
-                                <i data-lucide="activity" class="h-4 w-4 text-[#008080]"></i>
-                                <span class="text-sm font-medium dark:text-zinc-200">Service Status</span>
+
+                            <a
+                                href="{{ route('login') }}"
+                                class="
+                                    flex items-center gap-3
+                                    rounded-xl px-3 py-3
+                                    hover:bg-slate-100
+                                    dark:hover:bg-zinc-800
+                                ">
+
+                                <i
+                                    data-lucide="activity"
+                                    class="h-4 w-4 text-[#008080]">
+                                </i>
+
+                                <span class="text-sm font-medium dark:text-zinc-200">
+                                    Service Status
+                                </span>
+
                             </a>
 
-                            <a href="#faqs" class="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-slate-100 dark:hover:bg-zinc-800">
-                                <i data-lucide="circle-help" class="h-4 w-4 text-[#008080]"></i>
-                                <span class="text-sm font-medium dark:text-zinc-200">FAQs</span>
+
+                            <a
+                                href="#faqs"
+                                class="
+                                    flex items-center gap-3
+                                    rounded-xl px-3 py-3
+                                    hover:bg-slate-100
+                                    dark:hover:bg-zinc-800
+                                ">
+
+                                <i
+                                    data-lucide="circle-help"
+                                    class="h-4 w-4 text-[#008080]">
+                                </i>
+
+                                <span class="text-sm font-medium dark:text-zinc-200">
+                                    FAQs
+                                </span>
+
                             </a>
 
-                            <a href="#contact" class="flex items-center gap-3 rounded-xl px-3 py-3 hover:bg-slate-100 dark:hover:bg-zinc-800">
-                                <i data-lucide="headphones" class="h-4 w-4 text-[#008080]"></i>
-                                <span class="text-sm font-medium dark:text-zinc-200">Contact Support</span>
+
+                            <a
+                                href="#contact"
+                                class="
+                                    flex items-center gap-3
+                                    rounded-xl px-3 py-3
+                                    hover:bg-slate-100
+                                    dark:hover:bg-zinc-800
+                                ">
+
+                                <i
+                                    data-lucide="headphones"
+                                    class="h-4 w-4 text-[#008080]">
+                                </i>
+
+                                <span class="text-sm font-medium dark:text-zinc-200">
+                                    Contact Support
+                                </span>
+
                             </a>
+
                         </div>
+
                     </div>
 
                 </div>
 
-
-
             </div>
 
-            <!-- Desktop Apply Button -->
+
+            {{-- Desktop apply button --}}
             <div class="hidden lg:block">
+
                 <a
                     href="{{ route('apply.coverage') }}"
                     class="
-            inline-flex min-h-11
-            items-center justify-center
-            rounded-md
-            bg-[#008080]
-            px-4 py-2.5
-            text-sm font-semibold text-white
-            transition
-            hover:bg-[#006666]
-            focus:outline-none
-            focus:ring-2 focus:ring-[#008080]
-            focus:ring-offset-2
-            dark:focus:ring-offset-zinc-950
-        ">
+                        inline-flex min-h-11
+                        items-center justify-center
+                        rounded-md
+                        bg-[#008080]
+                        px-4 py-2.5
+                        text-sm font-semibold text-white
+                        transition
+                        hover:bg-[#006666]
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-[#008080]
+                        focus:ring-offset-2
+                        dark:focus:ring-offset-zinc-950
+                    ">
                     Get connected now
                 </a>
+
             </div>
 
-            <!-- Mobile Hamburger -->
+
+            {{-- Mobile menu --}}
             <button
                 id="public-drawer-open"
                 type="button"
@@ -207,33 +291,45 @@
                     dark:text-zinc-200
                     lg:hidden
                 ">
-                <i data-lucide="menu" class="h-5 w-5"></i>
+
+                <i
+                    data-lucide="menu"
+                    class="h-5 w-5">
+                </i>
+
             </button>
 
         </div>
 
     </nav>
+
 </header>
 
-<!-- Mobile Drawer Overlay -->
+
+{{-- Mobile overlay --}}
 <div
     id="public-drawer-overlay"
-    class="fixed inset-0 z-[60] hidden bg-black/50 backdrop-blur-[1px] lg:hidden"></div>
+    class="fixed inset-0 z-[60] hidden bg-black/50 backdrop-blur-[1px] lg:hidden">
+</div>
 
-<!-- Mobile Navigation Drawer -->
+
+{{-- Mobile drawer --}}
 <aside
     id="public-mobile-drawer"
     aria-hidden="true"
-    class="fixed inset-y-0 right-0 z-[70]
-           w-80 max-w-[88vw]
-           translate-x-full
-           pointer-events-none
-           overflow-y-auto
-           bg-white shadow-2xl
-           transition-transform duration-200 ease-out
-           dark:bg-zinc-900
-           lg:hidden">
-    <!-- Drawer Header -->
+    class="
+        pointer-events-none
+        fixed inset-y-0 right-0 z-[70]
+        w-80 max-w-[88vw]
+        translate-x-full
+        overflow-y-auto
+        bg-white shadow-2xl
+        transition-transform duration-200 ease-out
+        dark:bg-zinc-900
+        lg:hidden
+    ">
+
+    {{-- Drawer header --}}
     <div
         class="
             flex h-16 items-center justify-between
@@ -241,16 +337,23 @@
             px-5
             dark:border-zinc-800
         ">
+
         <div class="flex items-center gap-3">
 
             <div
                 class="
-        flex h-9 w-9 items-center justify-center
-        rounded-md
-        bg-[#008080]
-        text-white
-    ">
-                <i data-lucide="wifi" class="h-4 w-4"></i>
+                    flex h-9 w-9
+                    items-center justify-center
+                    rounded-md
+                    bg-[#008080]
+                    text-white
+                ">
+
+                <i
+                    data-lucide="wifi"
+                    class="h-4 w-4">
+                </i>
+
             </div>
 
             <span class="font-semibold dark:text-white">
@@ -258,6 +361,7 @@
             </span>
 
         </div>
+
 
         <button
             id="public-drawer-close"
@@ -270,11 +374,18 @@
                 dark:text-zinc-300
                 dark:hover:bg-zinc-800
             ">
-            <i data-lucide="x" class="h-5 w-5"></i>
+
+            <i
+                data-lucide="x"
+                class="h-5 w-5">
+            </i>
+
         </button>
+
     </div>
 
-    <!-- Drawer Navigation -->
+
+    {{-- Drawer navigation --}}
     <nav class="space-y-2 p-4">
 
         <a
@@ -292,24 +403,26 @@
             Home
         </a>
 
-        <!-- Plans Mobile-Nav -->
+
         <a
             href="#plans"
             class="
-        public-drawer-link
-        flex min-h-12 items-center
-        rounded-xl px-4
-        text-sm font-medium
-        text-slate-700
-        hover:bg-[#008080]/10
-        hover:text-[#008080]
-        dark:text-zinc-200
-    ">
+                public-drawer-link
+                flex min-h-12 items-center
+                rounded-xl px-4
+                text-sm font-medium
+                text-slate-700
+                hover:bg-[#008080]/10
+                hover:text-[#008080]
+                dark:text-zinc-200
+            ">
             Plans
         </a>
 
-        <!-- Support Accordion -->
+
+        {{-- Support menu --}}
         <div>
+
             <button
                 type="button"
                 data-mobile-dropdown="mobile-support"
@@ -322,49 +435,86 @@
                     hover:bg-[#008080]/10
                     dark:text-zinc-200
                 ">
+
                 Support
-                <i data-lucide="chevron-down" class="h-4 w-4"></i>
+
+                <i
+                    data-lucide="chevron-down"
+                    class="h-4 w-4">
+                </i>
+
             </button>
 
-            <div id="mobile-support" class="hidden space-y-1 px-3 pb-2">
-                <a href="{{ route('login') }}" class="public-drawer-link block rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-zinc-400">Create Ticket</a>
-                <a href="{{ route('login') }}" class="public-drawer-link block rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-zinc-400">Service Status</a>
-                <a href="#faqs" class="public-drawer-link block rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-zinc-400">FAQs</a>
-                <a href="#contact" class="public-drawer-link block rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-zinc-400">Contact Support</a>
+
+            <div
+                id="mobile-support"
+                class="hidden space-y-1 px-3 pb-2">
+
+                <a
+                    href="{{ route('login') }}"
+                    class="public-drawer-link block rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-zinc-400">
+                    Create Ticket
+                </a>
+
+                <a
+                    href="{{ route('login') }}"
+                    class="public-drawer-link block rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-zinc-400">
+                    Service Status
+                </a>
+
+                <a
+                    href="#faqs"
+                    class="public-drawer-link block rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-zinc-400">
+                    FAQs
+                </a>
+
+                <a
+                    href="#contact"
+                    class="public-drawer-link block rounded-xl px-4 py-3 text-sm text-slate-600 dark:text-zinc-400">
+                    Contact Support
+                </a>
+
             </div>
+
         </div>
 
 
-        <!-- Apply -->
+        {{-- Apply --}}
         <div class="pt-4">
+
             <a
                 href="{{ route('apply.coverage') }}"
                 class="
-            public-drawer-link
-            flex min-h-12 w-full
-            items-center justify-center
-            rounded-md
-            bg-[#008080]
-            px-5 py-3
-            text-sm font-semibold text-white
-            transition
-            hover:bg-[#006666]
-            focus:outline-none
-            focus:ring-2 focus:ring-[#008080]
-            focus:ring-offset-2
-            dark:focus:ring-offset-zinc-900
-        ">
+                    public-drawer-link
+                    flex min-h-12 w-full
+                    items-center justify-center
+                    rounded-md
+                    bg-[#008080]
+                    px-5 py-3
+                    text-sm font-semibold text-white
+                    transition
+                    hover:bg-[#006666]
+                    focus:outline-none
+                    focus:ring-2
+                    focus:ring-[#008080]
+                    focus:ring-offset-2
+                    dark:focus:ring-offset-zinc-900
+                ">
                 Get connected now
             </a>
+
         </div>
+
     </nav>
 
 </aside>
 
-<!-- Hero -->
+
+{{-- Hero --}}
 <section
     id="home"
     class="bg-slate-50 dark:bg-neutral-950">
+
     <div
         class="
             mx-auto grid max-w-7xl
@@ -376,8 +526,9 @@
             lg:px-8 lg:pb-16 lg:pt-8
         ">
 
-        <!-- Hero Content -->
+        {{-- Hero content --}}
         <div>
+
             <p class="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-neutral-400">
                 Rincomm Internet Services
             </p>
@@ -387,9 +538,9 @@
                     mt-4
                     text-4xl font-bold tracking-tight
                     text-slate-950
+                    dark:text-white
                     sm:text-5xl
                     lg:text-6xl
-                    dark:text-white
                 ">
                 Reliable internet for your home.
             </h1>
@@ -398,15 +549,16 @@
                 class="
                     mt-6 max-w-xl
                     text-base leading-7 text-slate-600
-                    sm:text-lg
                     dark:text-neutral-300
+                    sm:text-lg
                 ">
                 Find an internet plan that fits your needs and manage
                 your subscription, bills, payments, and support requests
                 online.
             </p>
 
-            <!-- Hero Actions -->
+
+            {{-- Hero actions --}}
             <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
 
                 <a
@@ -421,7 +573,8 @@
                         transition
                         hover:bg-[#006666]
                         focus:outline-none
-                        focus:ring-2 focus:ring-[#008080]
+                        focus:ring-2
+                        focus:ring-[#008080]
                         focus:ring-offset-2
                         dark:focus:ring-offset-neutral-950
                     ">
@@ -442,7 +595,8 @@
                         hover:border-[#008080]
                         hover:text-[#008080]
                         focus:outline-none
-                        focus:ring-2 focus:ring-[#008080]
+                        focus:ring-2
+                        focus:ring-[#008080]
                         focus:ring-offset-2
                         dark:border-neutral-700
                         dark:bg-neutral-900
@@ -455,9 +609,11 @@
                 </a>
 
             </div>
+
         </div>
 
-        <!-- Hero Carousel -->
+
+        {{-- Hero carousel --}}
         <div
             class="
                 relative
@@ -483,19 +639,21 @@
                                 transition-opacity duration-500
                                 {{ $index === 0
                                     ? 'z-10 opacity-100'
-                                    : 'pointer-events-none z-0 opacity-0' }}
+                                    : 'pointer-events-none z-0 opacity-0'
+                                }}
                             "
                     aria-hidden="{{ $index === 0 ? 'false' : 'true' }}">
 
-                    <!-- Slide Image -->
+                    {{-- Slide image --}}
                     <img
                         src="{{ asset('storage/' . $slide->image_path) }}"
                         alt="{{ $slide->alt_text ?: $slide->title ?: 'Rincomm homepage slide' }}"
                         class="h-full w-full object-cover">
 
+
                     @if ($slide->content_type !== 'image_only')
 
-                    <!-- Readability Overlay -->
+                    {{-- Overlay --}}
                     <div
                         class="
                                         absolute inset-0
@@ -505,9 +663,11 @@
                                         lg:from-black/80
                                         lg:via-black/40
                                         lg:to-transparent
-                                    "></div>
+                                    ">
+                    </div>
 
-                    <!-- Slide Content -->
+
+                    {{-- Slide content --}}
                     <div
                         class="
                                         absolute inset-0 z-10
@@ -516,76 +676,96 @@
                                         sm:p-8 sm:pb-16
                                         lg:p-10 lg:pb-16
                                     ">
+
                         <div class="max-w-xl">
 
                             <span
                                 class="
-        inline-flex rounded-full
-        border border-white/20
-        bg-black/30
-        px-2 py-0.5
-        text-[9px] font-semibold uppercase
-        tracking-wide text-white
-        backdrop-blur-sm
-        sm:px-3 sm:py-1 sm:text-xs
-    ">
+                                                inline-flex rounded-full
+                                                border border-white/20
+                                                bg-black/30
+                                                px-2 py-0.5
+                                                text-[9px] font-semibold uppercase
+                                                tracking-wide text-white
+                                                backdrop-blur-sm
+                                                sm:px-3 sm:py-1 sm:text-xs
+                                            ">
                                 {{ \Illuminate\Support\Str::headline($slide->category) }}
                             </span>
 
-                            <!-- Title -->
+
                             @if ($slide->title)
+
                             <h2
                                 class="
-        mt-2
-        text-lg font-bold leading-[1.15] text-white
-        sm:mt-3 sm:text-3xl
-        lg:text-4xl
-    ">
+                                                    mt-2
+                                                    text-lg font-bold
+                                                    leading-[1.15] text-white
+                                                    sm:mt-3 sm:text-3xl
+                                                    lg:text-4xl
+                                                ">
                                 {{ $slide->title }}
                             </h2>
+
                             @endif
 
-                            <!-- Description -->
+
                             @if ($slide->description)
+
                             <p
                                 class="
-        mt-2 max-w-lg
-        text-[10px] leading-[1.4] text-neutral-200
-        sm:mt-3 sm:text-sm sm:leading-5
-        lg:text-base lg:leading-6
-    ">
+                                                    mt-2 max-w-lg
+                                                    text-[10px]
+                                                    leading-[1.4]
+                                                    text-neutral-200
+                                                    sm:mt-3
+                                                    sm:text-sm
+                                                    sm:leading-5
+                                                    lg:text-base
+                                                    lg:leading-6
+                                                ">
                                 {{ $slide->description }}
                             </p>
+
                             @endif
 
-                            <!-- CTA -->
+
                             @if (
                             $slide->content_type === 'image_text_cta' &&
                             $slide->cta_text &&
                             $slide->cta_url
                             )
+
                             <a
                                 href="{{ $slide->cta_url }}"
                                 class="
-        mt-3 inline-flex
-        items-center justify-center gap-1.5
-        rounded-lg
-        bg-[#008080]
-        px-3 py-2
-        text-xs font-semibold text-white
-        shadow-sm transition
-        hover:bg-[#006666]
-        sm:mt-4 sm:px-4 sm:py-2.5 sm:text-sm
-    ">
+                                                    mt-3 inline-flex
+                                                    items-center justify-center gap-1.5
+                                                    rounded-lg
+                                                    bg-[#008080]
+                                                    px-3 py-2
+                                                    text-xs font-semibold text-white
+                                                    shadow-sm transition
+                                                    hover:bg-[#006666]
+                                                    sm:mt-4
+                                                    sm:px-4
+                                                    sm:py-2.5
+                                                    sm:text-sm
+                                                ">
+
                                 {{ $slide->cta_text }}
 
                                 <i
                                     data-lucide="arrow-right"
-                                    class="h-3.5 w-3.5"></i>
+                                    class="h-3.5 w-3.5">
+                                </i>
+
                             </a>
+
                             @endif
 
                         </div>
+
                     </div>
 
                     @endif
@@ -596,9 +776,10 @@
 
             </div>
 
+
             @if ($heroSlides->count() > 1)
 
-            <!-- Previous -->
+            {{-- Previous slide --}}
             <button
                 type="button"
                 data-hero-previous
@@ -609,17 +790,23 @@
                             items-center justify-center
                             rounded-full
                             border border-white/20
-                            bg-black/30 text-white
+                            bg-black/30
+                            text-white
                             backdrop-blur-sm
-                            transition hover:bg-black/50
+                            transition
+                            hover:bg-black/50
                         "
                 aria-label="Previous slide">
+
                 <i
                     data-lucide="chevron-left"
-                    class="h-5 w-5"></i>
+                    class="h-5 w-5">
+                </i>
+
             </button>
 
-            <!-- Next -->
+
+            {{-- Next slide --}}
             <button
                 type="button"
                 data-hero-next
@@ -630,17 +817,23 @@
                             items-center justify-center
                             rounded-full
                             border border-white/20
-                            bg-black/30 text-white
+                            bg-black/30
+                            text-white
                             backdrop-blur-sm
-                            transition hover:bg-black/50
+                            transition
+                            hover:bg-black/50
                         "
                 aria-label="Next slide">
+
                 <i
                     data-lucide="chevron-right"
-                    class="h-5 w-5"></i>
+                    class="h-5 w-5">
+                </i>
+
             </button>
 
-            <!-- Carousel Dots -->
+
+            {{-- Carousel dots --}}
             <div
                 class="
                             absolute bottom-4 left-1/2 z-20
@@ -652,7 +845,9 @@
                             backdrop-blur-sm
                         "
                 data-hero-dots>
+
                 @foreach ($heroSlides as $index => $slide)
+
                 <button
                     type="button"
                     data-hero-dot="{{ $index }}"
@@ -660,18 +855,22 @@
                                     h-2.5 rounded-full transition-all
                                     {{ $index === 0
                                         ? 'w-7 bg-white'
-                                        : 'w-2.5 bg-white/50 hover:bg-white/80' }}
+                                        : 'w-2.5 bg-white/50 hover:bg-white/80'
+                                    }}
                                 "
                     aria-label="Go to slide {{ $index + 1 }}"
-                    aria-current="{{ $index === 0 ? 'true' : 'false' }}"></button>
+                    aria-current="{{ $index === 0 ? 'true' : 'false' }}">
+                </button>
+
                 @endforeach
+
             </div>
 
             @endif
 
             @else
 
-            <!-- Empty Carousel -->
+            {{-- Empty carousel --}}
             <div
                 class="
                         flex h-[420px]
@@ -681,6 +880,7 @@
                         px-8 text-center
                         lg:h-[500px]
                     ">
+
                 <div class="max-w-md text-white">
 
                     <div
@@ -689,9 +889,12 @@
                                 items-center justify-center
                                 rounded-2xl bg-white/10
                             ">
+
                         <i
                             data-lucide="wifi"
-                            class="h-7 w-7"></i>
+                            class="h-7 w-7">
+                        </i>
+
                     </div>
 
                     <h2 class="mt-5 text-2xl font-bold">
@@ -704,6 +907,7 @@
                     </p>
 
                 </div>
+
             </div>
 
             @endif
@@ -711,15 +915,18 @@
         </div>
 
     </div>
+
 </section>
 
-<!-- Internet Plans -->
+
+{{-- Internet plans --}}
 <section
     id="plans"
     class="bg-white py-16 sm:py-20">
+
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-        <!-- Section Header -->
+        {{-- Section header --}}
         <div class="mx-auto max-w-2xl text-center">
 
             <p class="text-md font-semibold uppercase tracking-wide text-slate-600">
@@ -736,50 +943,61 @@
 
         </div>
 
-        <!-- Plans Grid -->
+
         @if ($servicePlans->isNotEmpty())
 
+        {{-- Plans grid --}}
         <div class="mx-auto mt-10 grid max-w-5xl gap-6 md:grid-cols-2 lg:grid-cols-3">
 
             @foreach ($servicePlans as $plan)
 
             <article
                 class="
-        flex w-full flex-col
-        rounded-lg
-        border border-slate-200
-        bg-white
-        p-6
-    ">
+                            flex w-full flex-col
+                            rounded-lg
+                            border border-slate-200
+                            bg-white
+                            p-6
+                        ">
+
                 <div class="flex items-start justify-between gap-4">
 
                     <div>
+
                         <h3 class="text-xl font-bold text-slate-900">
                             {{ $plan->name }}
                         </h3>
 
                         @if ($plan->description)
+
                         <p class="mt-2 text-sm leading-6 text-slate-600">
                             {{ $plan->description }}
                         </p>
+
                         @endif
+
                     </div>
+
 
                     <div
                         class="
-                flex h-10 w-10 shrink-0
-                items-center justify-center
-                rounded-md
-                bg-slate-100
-            ">
+                                    flex h-10 w-10 shrink-0
+                                    items-center justify-center
+                                    rounded-md
+                                    bg-slate-100
+                                ">
+
                         <i
                             data-lucide="wifi"
-                            class="h-5 w-5 text-slate-700"></i>
+                            class="h-5 w-5 text-slate-700">
+                        </i>
+
                     </div>
 
                 </div>
 
-                <!-- Speed -->
+
+                {{-- Speed --}}
                 <div class="mt-6">
 
                     <p class="text-sm text-slate-500">
@@ -787,16 +1005,19 @@
                     </p>
 
                     <p class="mt-1 text-3xl font-bold text-slate-950">
+
                         {{ number_format((float) $plan->speed_mbps, 0) }}
 
                         <span class="text-base font-medium text-slate-500">
                             Mbps
                         </span>
+
                     </p>
 
                 </div>
 
-                <!-- Monthly Fee -->
+
+                {{-- Monthly fee --}}
                 <div class="mt-5 border-t border-slate-200 pt-5">
 
                     <p class="text-sm text-slate-500">
@@ -804,34 +1025,37 @@
                     </p>
 
                     <p class="mt-1 text-2xl font-bold text-slate-950">
-                        ₱{{ number_format((float) $plan->monthly_fee, 2) }}
+
+                        &#8369;{{ number_format((float) $plan->monthly_fee, 2) }}
 
                         <span class="text-sm font-normal text-slate-500">
                             / month
                         </span>
+
                     </p>
 
                 </div>
 
-                <!-- Action -->
+
+                {{-- Plan action --}}
                 <div class="mt-auto pt-6">
 
                     <a
                         href="{{ route('apply.coverage', ['plan' => $plan->id]) }}"
                         class="
-                inline-flex min-h-12 w-full
-                items-center justify-center
-                rounded-md
-                bg-[#008080]
-                px-5 py-3
-                text-sm font-semibold text-white
-                transition
-                hover:bg-[#006666]
-                focus:outline-none
-                focus:ring-2
-                focus:ring-[#008080]
-                focus:ring-offset-2
-            ">
+                                    inline-flex min-h-12 w-full
+                                    items-center justify-center
+                                    rounded-md
+                                    bg-[#008080]
+                                    px-5 py-3
+                                    text-sm font-semibold text-white
+                                    transition
+                                    hover:bg-[#006666]
+                                    focus:outline-none
+                                    focus:ring-2
+                                    focus:ring-[#008080]
+                                    focus:ring-offset-2
+                                ">
                         Check availability
                     </a>
 
@@ -845,15 +1069,18 @@
 
         @else
 
+        {{-- Empty plans --}}
         <div
             class="
-        mx-auto mt-10 max-w-xl
-        border-y border-slate-200
-        py-8 text-center
-    ">
+                    mx-auto mt-10 max-w-xl
+                    border-y border-slate-200
+                    py-8 text-center
+                ">
+
             <i
                 data-lucide="wifi-off"
-                class="mx-auto h-7 w-7 text-slate-400"></i>
+                class="mx-auto h-7 w-7 text-slate-400">
+            </i>
 
             <h3 class="mt-3 font-semibold text-slate-900">
                 No plans available
@@ -862,14 +1089,17 @@
             <p class="mt-2 text-sm text-slate-600">
                 Internet plans will appear here when they become available.
             </p>
+
         </div>
 
         @endif
 
     </div>
+
 </section>
 
-<!-- About Rincomm -->
+
+{{-- About --}}
 <section
     id="about"
     class="
@@ -877,6 +1107,7 @@
         bg-slate-50 py-16
         sm:py-20
     ">
+
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         <div
@@ -886,16 +1117,23 @@
                 lg:items-start
                 lg:gap-16
             ">
-            <!-- Section Heading -->
+
             <div>
+
                 <p class="text-sm font-bold uppercase tracking-wide text-slate-600">
                     About Rincomm
                 </p>
+
             </div>
+
+        </div>
+
     </div>
+
 </section>
 
-<!-- FAQs -->
+
+{{-- FAQs --}}
 <section
     id="faqs"
     class="
@@ -903,9 +1141,10 @@
         bg-slate-50 py-16
         sm:py-20
     ">
+
     <div class="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8">
 
-        <!-- Section Header -->
+        {{-- Section header --}}
         <div class="max-w-2xl">
 
             <p class="text-sm font-semibold uppercase tracking-wide text-slate-600">
@@ -923,7 +1162,8 @@
 
         </div>
 
-        <!-- FAQ List -->
+
+        {{-- FAQ list --}}
         <div
             class="
                 mt-10
@@ -932,6 +1172,7 @@
             ">
 
             <details class="py-5">
+
                 <summary
                     class="
                         cursor-pointer
@@ -946,9 +1187,12 @@
                     is serviceable, choose an available internet plan,
                     and continue with your account and service application.
                 </p>
+
             </details>
 
+
             <details class="py-5">
+
                 <summary
                     class="
                         cursor-pointer
@@ -963,9 +1207,12 @@
                     plan. Your location will be checked against Rincomm's
                     currently serviceable areas.
                 </p>
+
             </details>
 
+
             <details class="py-5">
+
                 <summary
                     class="
                         cursor-pointer
@@ -980,9 +1227,12 @@
                     payment records, and receipts through their customer
                     account.
                 </p>
+
             </details>
 
+
             <details class="py-5">
+
                 <summary
                     class="
                         cursor-pointer
@@ -996,14 +1246,17 @@
                     Sign in to your customer account and submit a support
                     ticket so the concern can be recorded and tracked.
                 </p>
+
             </details>
 
         </div>
 
     </div>
+
 </section>
 
-<!-- Contact Support -->
+
+{{-- Contact support --}}
 <section
     id="contact"
     class="
@@ -1011,6 +1264,7 @@
         bg-white py-16
         sm:py-20
     ">
+
     <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
         <div
@@ -1019,6 +1273,7 @@
                 lg:grid-cols-[1fr_auto]
                 lg:items-center
             ">
+
             <div class="max-w-2xl">
 
                 <p class="text-sm font-semibold uppercase tracking-wide text-slate-600">
@@ -1035,6 +1290,7 @@
                 </p>
 
             </div>
+
 
             <div class="flex flex-col gap-3 sm:flex-row lg:flex-col">
 
@@ -1079,10 +1335,13 @@
         </div>
 
     </div>
+
 </section>
 
-<!-- Public Footer -->
+
+{{-- Footer --}}
 <footer class="border-t border-slate-200 bg-white">
+
     <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 
         <div
@@ -1092,8 +1351,10 @@
                 sm:items-center
                 sm:justify-between
             ">
-            <!-- Brand -->
+
+            {{-- Brand --}}
             <div>
+
                 <p class="font-semibold text-slate-950">
                     Rincomm
                 </p>
@@ -1101,12 +1362,15 @@
                 <p class="mt-1 text-sm text-slate-500">
                     Internet Services
                 </p>
+
             </div>
 
-            <!-- Footer Navigation -->
+
+            {{-- Footer navigation --}}
             <nav
                 class="flex flex-wrap gap-x-6 gap-y-3 text-sm"
                 aria-label="Footer navigation">
+
                 <a
                     href="#home"
                     class="text-slate-600 hover:text-[#008080]">
@@ -1136,18 +1400,23 @@
                     class="text-slate-600 hover:text-[#008080]">
                     Login
                 </a>
+
             </nav>
 
         </div>
 
+
         <div class="mt-6 border-t border-slate-200 pt-6">
+
             <p class="text-sm text-slate-500">
                 &copy; {{ now()->year }} Rincomm Internet Services.
                 All rights reserved.
             </p>
+
         </div>
 
     </div>
+
 </footer>
 
 @endsection

@@ -3,7 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
     <title>Forgot Password - Rincomm</title>
 
@@ -18,10 +21,7 @@
                     window.matchMedia('(prefers-color-scheme: dark)').matches
                 );
 
-            document.documentElement.classList.toggle(
-                'dark',
-                useDarkTheme
-            );
+            document.documentElement.classList.toggle('dark', useDarkTheme);
         })();
     </script>
 
@@ -38,7 +38,7 @@
         dark:text-neutral-100
     ">
 
-    {{-- Theme Toggle --}}
+    {{-- Theme toggle --}}
     <button
         type="button"
         data-theme-toggle
@@ -99,19 +99,12 @@
                     sm:p-6
                 ">
 
-                {{-- Company Logo --}}
-                <div
-                    class="
-                        mb-1 flex h-20
-                        items-center justify-center
-                    ">
+                {{-- Logo --}}
+                <div class="mb-1 flex h-20 items-center justify-center">
 
                     <a
                         href="{{ route('home') }}"
-                        class="
-                            inline-flex h-20 w-56
-                            items-center justify-center
-                        "
+                        class="inline-flex h-20 w-56 items-center justify-center"
                         aria-label="Rincomm Home">
 
                         <img
@@ -157,7 +150,7 @@
                 </div>
 
 
-                {{-- Success Message --}}
+                {{-- Success message --}}
                 @if (session('status'))
 
                 <div
@@ -178,7 +171,7 @@
                 @endif
 
 
-                {{-- Validation Errors --}}
+                {{-- Validation errors --}}
                 @if ($errors->any())
 
                 <div
@@ -195,7 +188,11 @@
                         ">
 
                     @foreach ($errors->all() as $error)
-                    <p>{{ $error }}</p>
+
+                    <p>
+                        {{ $error }}
+                    </p>
+
                     @endforeach
 
                 </div>
@@ -203,7 +200,7 @@
                 @endif
 
 
-                {{-- Password Reset Form --}}
+                {{-- Reset form --}}
                 <form
                     method="POST"
                     action="{{ route('password.email') }}"
@@ -227,6 +224,7 @@
                             Email Address
                         </label>
 
+
                         <div class="relative">
 
                             <div
@@ -248,6 +246,7 @@
                                 </i>
 
                             </div>
+
 
                             <input
                                 id="email"
@@ -284,7 +283,7 @@
                     </div>
 
 
-                    {{-- Send Reset Link --}}
+                    {{-- Submit --}}
                     <button
                         type="submit"
                         data-loading-text="Sending reset link..."
@@ -317,7 +316,7 @@
                     </button>
 
 
-                    {{-- Back to Login --}}
+                    {{-- Login link --}}
                     <div class="text-center">
 
                         <a
@@ -337,7 +336,7 @@
                     </div>
 
 
-                    {{-- Back to Home --}}
+                    {{-- Home link --}}
                     <div class="text-center">
 
                         <a

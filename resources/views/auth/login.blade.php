@@ -3,7 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
     <title>Login - Rincomm</title>
 
@@ -11,14 +14,14 @@
         (() => {
             const savedTheme = localStorage.getItem('rincomm-theme');
 
-            const useDarkTheme = savedTheme === 'dark' ||
-                (!savedTheme &&
-                    window.matchMedia('(prefers-color-scheme: dark)').matches);
+            const useDarkTheme =
+                savedTheme === 'dark' ||
+                (
+                    !savedTheme &&
+                    window.matchMedia('(prefers-color-scheme: dark)').matches
+                );
 
-            document.documentElement.classList.toggle(
-                'dark',
-                useDarkTheme
-            );
+            document.documentElement.classList.toggle('dark', useDarkTheme);
         })();
     </script>
 
@@ -35,7 +38,7 @@
         dark:text-neutral-100
     ">
 
-    {{-- Theme Toggle --}}
+    {{-- Theme toggle --}}
     <button
         type="button"
         data-theme-toggle
@@ -96,19 +99,12 @@
                     sm:p-6
                 ">
 
-                {{-- Company Logo --}}
-                <div
-                    class="
-                        mb-2 flex h-20
-                        items-center justify-center
-                    ">
+                {{-- Logo --}}
+                <div class="mb-2 flex h-20 items-center justify-center">
 
                     <a
                         href="{{ route('home') }}"
-                        class="
-                            inline-flex h-20 w-56
-                            items-center justify-center
-                        "
+                        class="inline-flex h-20 w-56 items-center justify-center"
                         aria-label="Rincomm Home">
 
                         <img
@@ -143,7 +139,8 @@
 
                     <p
                         class="
-                            mt-1.5 text-sm
+                            mt-1.5
+                            text-sm
                             text-neutral-500
                             dark:text-neutral-400
                             sm:text-base
@@ -154,7 +151,7 @@
                 </div>
 
 
-                {{-- Login Form --}}
+                {{-- Login form --}}
                 <form
                     method="POST"
                     action="{{ route('login.store') }}"
@@ -219,12 +216,7 @@
                     {{-- Password --}}
                     <div>
 
-                        <div
-                            class="
-                                mb-1.5 flex
-                                items-center justify-between
-                                gap-4
-                            ">
+                        <div class="mb-1.5 flex items-center justify-between gap-4">
 
                             <label
                                 for="password"
@@ -261,7 +253,7 @@
                                 id="password"
                                 name="password"
                                 type="password"
-                                autocomplete="new-password"
+                                autocomplete="current-password"
                                 aria-invalid="{{ $errors->has('password') ? 'true' : 'false' }}"
                                 aria-describedby="{{ $errors->has('password') ? 'password-error' : '' }}"
                                 class="
@@ -313,7 +305,7 @@
                     </div>
 
 
-                    {{-- Remember Me --}}
+                    {{-- Remember me --}}
                     <div class="flex items-center">
 
                         <input
@@ -345,7 +337,7 @@
                     </div>
 
 
-                    {{-- Sign In --}}
+                    {{-- Submit --}}
                     <button
                         type="submit"
                         data-loading-text="Signing in..."
@@ -370,7 +362,7 @@
                     </button>
 
 
-                    {{-- Back to Home --}}
+                    {{-- Home link --}}
                     <div class="text-center">
 
                         <a
@@ -413,37 +405,25 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', () => {
-            const passwordInput =
-                document.getElementById('password');
-
-            const toggleButton =
-                document.getElementById('togglePassword');
+            const passwordInput = document.getElementById('password');
+            const toggleButton = document.getElementById('togglePassword');
 
             if (!passwordInput || !toggleButton) {
                 return;
             }
 
+            // Toggle password visibility
             toggleButton.addEventListener('click', () => {
-                const isVisible =
-                    passwordInput.type === 'text';
+                const isVisible = passwordInput.type === 'text';
 
-                passwordInput.type =
-                    isVisible ? 'password' : 'text';
+                passwordInput.type = isVisible ? 'password' : 'text';
 
-                const label =
-                    isVisible
-                        ? 'Show password'
-                        : 'Hide password';
+                const label = isVisible ?
+                    'Show password' :
+                    'Hide password';
 
-                toggleButton.setAttribute(
-                    'aria-label',
-                    label
-                );
-
-                toggleButton.setAttribute(
-                    'title',
-                    label
-                );
+                toggleButton.setAttribute('aria-label', label);
+                toggleButton.setAttribute('title', label);
             });
         });
     </script>

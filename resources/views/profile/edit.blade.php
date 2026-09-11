@@ -15,9 +15,11 @@
             const savedTheme = localStorage.getItem('rincomm-theme');
 
             const theme = savedTheme ??
-                (window.matchMedia('(prefers-color-scheme: dark)').matches ?
+                (
+                    window.matchMedia('(prefers-color-scheme: dark)').matches ?
                     'dark' :
-                    'light');
+                    'light'
+                );
 
             document.documentElement.classList.toggle(
                 'dark',
@@ -38,12 +40,11 @@
     default => route('dashboard'),
     };
 
-    $hasSubscriberProfile =
-    $user->isCustomer() && $customer;
+    $hasSubscriberProfile = $user->isCustomer() && $customer;
     @endphp
 
 
-    <!-- Global Page Loader -->
+    {{-- Page loader --}}
     <div
         id="page-loader"
         class="pointer-events-none fixed inset-x-0 top-0 z-[100] hidden h-1"
@@ -58,7 +59,7 @@
     </div>
 
 
-    <!-- Header -->
+    {{-- Header --}}
     <header
         class="
             border-b border-neutral-200
@@ -91,7 +92,7 @@
 
             <div class="flex shrink-0 items-center gap-2">
 
-                <!-- Theme Toggle -->
+                {{-- Theme toggle --}}
                 <button
                     data-theme-toggle
                     type="button"
@@ -135,11 +136,12 @@
                 </button>
 
 
-                <!-- Back to Dashboard -->
+                {{-- Back button --}}
                 <a
                     href="{{ $dashboardUrl }}"
                     class="
-                        inline-flex h-10 items-center justify-center gap-2
+                        inline-flex h-10
+                        items-center justify-center gap-2
                         bg-[#008080] px-3
                         text-sm font-semibold text-white
                         transition
@@ -175,10 +177,10 @@
     </header>
 
 
-    <!-- Main Content -->
+    {{-- Main content --}}
     <main class="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
 
-        <!-- Success Feedback -->
+        {{-- Success message --}}
         @if (session('success'))
 
         <div
@@ -213,7 +215,7 @@
 
         <div class="grid gap-6 lg:grid-cols-3">
 
-            <!-- Edit Profile -->
+            {{-- Profile form --}}
             <section
                 class="
                     border border-neutral-200
@@ -234,10 +236,14 @@
                     <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
 
                         @if ($hasSubscriberProfile)
+
                         Update your current subscriber name.
                         Linked account information stays synchronized.
+
                         @else
+
                         Update your account name.
+
                         @endif
 
                     </p>
@@ -258,10 +264,10 @@
 
                     @if ($hasSubscriberProfile)
 
-                    <!-- First Name + Last Name -->
+                    {{-- First and last name --}}
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
-                        <!-- First Name -->
+                        {{-- First name --}}
                         <div>
 
                             <label
@@ -311,7 +317,7 @@
                         </div>
 
 
-                        <!-- Last Name -->
+                        {{-- Last name --}}
                         <div>
 
                             <label
@@ -363,7 +369,7 @@
                     </div>
 
 
-                    <!-- Middle Name -->
+                    {{-- Middle name --}}
                     <div>
 
                         <label
@@ -420,7 +426,7 @@
 
                     @else
 
-                    <!-- Full Name -->
+                    {{-- Full name --}}
                     <div>
 
                         <label
@@ -472,7 +478,7 @@
                     @endif
 
 
-                    <!-- Email -->
+                    {{-- Email --}}
                     <div>
 
                         <label
@@ -525,7 +531,7 @@
                     </div>
 
 
-                    <!-- Save -->
+                    {{-- Form actions --}}
                     <div
                         class="
                             flex flex-col-reverse gap-3
@@ -599,7 +605,7 @@
             </section>
 
 
-            <!-- Account Details -->
+            {{-- Account details --}}
             <aside
                 class="
                     h-fit border border-neutral-200
@@ -629,6 +635,7 @@
 
                     </div>
 
+
                     <div>
 
                         <h2 class="font-semibold">
@@ -648,7 +655,7 @@
 
                     @if ($customer)
 
-                    <!-- Customer Code -->
+                    {{-- Customer code --}}
                     <div>
 
                         <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">
@@ -664,7 +671,7 @@
                     @endif
 
 
-                    <!-- Role -->
+                    {{-- Role --}}
                     <div>
 
                         <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">
@@ -688,7 +695,7 @@
                     </div>
 
 
-                    <!-- Account Status -->
+                    {{-- Account status --}}
                     <div>
 
                         <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">
@@ -756,7 +763,7 @@
 
                     @if ($customer)
 
-                    <!-- Subscriber Status -->
+                    {{-- Subscriber status --}}
                     <div>
 
                         <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">
@@ -772,7 +779,7 @@
                     @endif
 
 
-                    <!-- Account Email -->
+                    {{-- Email --}}
                     <div>
 
                         <dt class="text-sm font-medium text-neutral-500 dark:text-neutral-400">

@@ -3,7 +3,10 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0">
 
     <title>Register - Rincomm</title>
 
@@ -18,10 +21,7 @@
                     window.matchMedia('(prefers-color-scheme: dark)').matches
                 );
 
-            document.documentElement.classList.toggle(
-                'dark',
-                useDarkTheme
-            );
+            document.documentElement.classList.toggle('dark', useDarkTheme);
         })();
     </script>
 
@@ -38,7 +38,7 @@
         dark:text-neutral-100
     ">
 
-    {{-- Theme Toggle --}}
+    {{-- Theme toggle --}}
     <button
         type="button"
         data-theme-toggle
@@ -99,19 +99,12 @@
                     sm:p-6
                 ">
 
-                {{-- Company Logo --}}
-                <div
-                    class="
-                        mb-1 flex h-20
-                        items-center justify-center
-                    ">
+                {{-- Logo --}}
+                <div class="mb-1 flex h-20 items-center justify-center">
 
                     <a
                         href="{{ route('home') }}"
-                        class="
-                            inline-flex h-20 w-56
-                            items-center justify-center
-                        "
+                        class="inline-flex h-20 w-56 items-center justify-center"
                         aria-label="Rincomm Home">
 
                         <img
@@ -156,7 +149,7 @@
                 </div>
 
 
-                {{-- Registration Form --}}
+                {{-- Registration form --}}
                 <form
                     method="POST"
                     action="{{ route('register.store') }}"
@@ -167,20 +160,22 @@
                     @csrf
 
 
-                    {{-- Preserve coverage-first application flow --}}
+                    {{-- Application flow --}}
                     @if (
                     (request()->boolean('apply') || old('application_flow') === '1') &&
                     session()->has('service_application.coverage') &&
                     session()->has('service_application.plan_id')
                     )
+
                     <input
                         type="hidden"
                         name="application_flow"
                         value="1">
+
                     @endif
 
 
-                    {{-- First Name + Last Name --}}
+                    {{-- Name --}}
                     <div
                         class="
                             grid grid-cols-1
@@ -188,7 +183,7 @@
                             sm:grid-cols-2
                         ">
 
-                        {{-- First Name --}}
+                        {{-- First name --}}
                         <div>
 
                             <label
@@ -237,7 +232,7 @@
                         </div>
 
 
-                        {{-- Last Name --}}
+                        {{-- Last name --}}
                         <div>
 
                             <label
@@ -338,7 +333,7 @@
                     </div>
 
 
-                    {{-- Password + Confirm Password --}}
+                    {{-- Password fields --}}
                     <div
                         class="
                             grid grid-cols-1
@@ -412,12 +407,7 @@
 
                             </div>
 
-                            <p
-                                class="
-                                    mt-1 text-xs
-                                    text-neutral-500
-                                    dark:text-neutral-400
-                                ">
+                            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
                                 At least 8 characters.
                             </p>
 
@@ -428,7 +418,7 @@
                         </div>
 
 
-                        {{-- Confirm Password --}}
+                        {{-- Confirm password --}}
                         <div>
 
                             <label
@@ -529,54 +519,49 @@
                     </button>
 
 
-                    {{-- Account Navigation --}}
-<div class="text-center">
+                    {{-- Account links --}}
+                    <div class="text-center">
 
-    <p
-        class="
-            text-sm
-            text-neutral-600
-            dark:text-neutral-400
-        ">
+                        <p class="text-sm text-neutral-600 dark:text-neutral-400">
 
-        Already have an account?
+                            Already have an account?
 
-        <a
-            href="{{ route('login') }}"
-            class="
-                ml-1 font-semibold
-                text-[#008080]
-                underline underline-offset-4
-                transition
-                hover:text-[#006666]
-                dark:text-teal-400
-                dark:hover:text-teal-300
-            ">
-            Sign In
-        </a>
+                            <a
+                                href="{{ route('login') }}"
+                                class="
+                                    ml-1 font-semibold
+                                    text-[#008080]
+                                    underline underline-offset-4
+                                    transition
+                                    hover:text-[#006666]
+                                    dark:text-teal-400
+                                    dark:hover:text-teal-300
+                                ">
+                                Sign In
+                            </a>
 
-    </p>
+                        </p>
 
 
-    <div class="mt-2">
+                        <div class="mt-2">
 
-        <a
-            href="{{ route('home') }}"
-            class="
-                text-sm font-medium
-                text-[#008080]
-                underline underline-offset-4
-                transition
-                hover:text-[#006666]
-                dark:text-teal-400
-                dark:hover:text-teal-300
-            ">
-            Back to Home
-        </a>
+                            <a
+                                href="{{ route('home') }}"
+                                class="
+                                    text-sm font-medium
+                                    text-[#008080]
+                                    underline underline-offset-4
+                                    transition
+                                    hover:text-[#006666]
+                                    dark:text-teal-400
+                                    dark:hover:text-teal-300
+                                ">
+                                Back to Home
+                            </a>
 
-    </div>
+                        </div>
 
-</div>
+                    </div>
 
                 </form>
 
@@ -599,7 +584,6 @@
     </div>
 
 
-    {{-- Password Visibility --}}
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const toggleButtons =
@@ -607,18 +591,15 @@
 
             toggleButtons.forEach((toggleButton) => {
                 toggleButton.addEventListener('click', () => {
-                    const targetId =
-                        toggleButton.dataset.passwordTarget;
-
-                    const passwordInput =
-                        document.getElementById(targetId);
+                    const targetId = toggleButton.dataset.passwordTarget;
+                    const passwordInput = document.getElementById(targetId);
 
                     if (!passwordInput) {
                         return;
                     }
 
-                    const isVisible =
-                        passwordInput.type === 'text';
+                    // Toggle password visibility
+                    const isVisible = passwordInput.type === 'text';
 
                     passwordInput.type =
                         isVisible ? 'password' : 'text';
@@ -628,15 +609,8 @@
                         'Show password' :
                         'Hide password';
 
-                    toggleButton.setAttribute(
-                        'aria-label',
-                        label
-                    );
-
-                    toggleButton.setAttribute(
-                        'title',
-                        label
-                    );
+                    toggleButton.setAttribute('aria-label', label);
+                    toggleButton.setAttribute('title', label);
                 });
             });
         });
