@@ -119,13 +119,13 @@ class DemoDataSeeder extends Seeder
         |--------------------------------------------------------------------------
         */
 
-        $servicePlan = ServicePlan::firstOrCreate(
+        $servicePlan = ServicePlan::updateOrCreate(
             [
-                'name' => 'Fiber 100',
+                'name' => 'Fiber 250',
             ],
             [
-                'description' => '100 Mbps residential internet plan',
-                'speed_mbps' => 100,
+                'description' => '250 Mbps internet plan',
+                'speed_mbps' => 250,
                 'monthly_fee' => 1499,
                 'is_custom' => false,
                 'duration_months' => 12,
