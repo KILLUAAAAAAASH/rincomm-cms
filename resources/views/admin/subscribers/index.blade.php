@@ -5,11 +5,11 @@
 @section('page-title', 'All Subscribers')
 
 @section('content')
-
 <div class="space-y-4">
 
     {{-- Page Header --}}
     <div>
+
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
             All Subscribers
         </h1>
@@ -17,6 +17,7 @@
         <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
             View and find approved Rincomm subscriber records.
         </p>
+
     </div>
 
 
@@ -33,7 +34,8 @@
         <i
             data-lucide="users"
             class="mt-0.5 h-4 w-4 shrink-0 text-[#008080]"
-            aria-hidden="true"></i>
+            aria-hidden="true">
+        </i>
 
         <p class="text-sm leading-5 text-gray-600 dark:text-gray-300">
             Subscriber records are created only after an internet service application is approved.
@@ -58,7 +60,9 @@
             {{-- Search --}}
             <div class="relative min-w-0 flex-1">
 
-                <label for="subscriber-search" class="sr-only">
+                <label
+                    for="subscriber-search"
+                    class="sr-only">
                     Search subscribers
                 </label>
 
@@ -68,9 +72,11 @@
                         pointer-events-none absolute
                         left-3 top-1/2 h-4 w-4
                         -translate-y-1/2
-                        text-gray-500 dark:text-gray-400
+                        text-gray-500
+                        dark:text-gray-400
                     "
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
                 <input
                     id="subscriber-search"
@@ -87,19 +93,23 @@
                         outline-none transition
                         placeholder:text-gray-500
                         focus:border-[#008080]
-                        focus:ring-2 focus:ring-[#008080]/20
+                        focus:ring-2
+                        focus:ring-[#008080]/20
                         dark:border-neutral-700
                         dark:bg-neutral-950
                         dark:text-gray-100
                         dark:placeholder:text-gray-500
                     ">
+
             </div>
 
 
             {{-- Status Filter --}}
             <div class="lg:w-48">
 
-                <label for="subscriber-status" class="sr-only">
+                <label
+                    for="subscriber-status"
+                    class="sr-only">
                     Filter by subscriber status
                 </label>
 
@@ -113,7 +123,8 @@
                         text-sm text-gray-800
                         outline-none transition
                         focus:border-[#008080]
-                        focus:ring-2 focus:ring-[#008080]/20
+                        focus:ring-2
+                        focus:ring-[#008080]/20
                         dark:border-neutral-700
                         dark:bg-neutral-950
                         dark:text-gray-100
@@ -124,11 +135,13 @@
                     </option>
 
                     @foreach ($statuses as $subscriberStatus)
+
                     <option
                         value="{{ $subscriberStatus }}"
                         @selected($status===$subscriberStatus)>
                         {{ ucfirst($subscriberStatus) }}
                     </option>
+
                     @endforeach
 
                 </select>
@@ -147,7 +160,8 @@
                     transition
                     hover:bg-[#006666]
                     focus:outline-none
-                    focus:ring-2 focus:ring-[#008080]
+                    focus:ring-2
+                    focus:ring-[#008080]
                     focus:ring-offset-2
                     dark:focus:ring-offset-neutral-900
                 ">
@@ -155,9 +169,11 @@
                 <i
                     data-lucide="list-filter"
                     class="h-4 w-4"
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
                 Apply
+
             </button>
 
 
@@ -175,7 +191,8 @@
                         transition
                         hover:bg-gray-50
                         focus:outline-none
-                        focus:ring-2 focus:ring-gray-400
+                        focus:ring-2
+                        focus:ring-gray-400
                         focus:ring-offset-2
                         dark:border-neutral-700
                         dark:text-gray-200
@@ -186,9 +203,11 @@
                 <i
                     data-lucide="x"
                     class="h-4 w-4"
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
                 Clear
+
             </a>
 
             @endif
@@ -226,13 +245,16 @@
                 <i
                     data-lucide="users"
                     class="h-6 w-6 text-gray-500 dark:text-gray-400"
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
             </div>
+
 
             <h2 class="mt-4 text-base font-semibold text-gray-900 dark:text-white">
                 No subscribers found
             </h2>
+
 
             <p class="mx-auto mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400">
 
@@ -475,7 +497,8 @@
                                     <i
                                         data-lucide="{{ $statusDisplay['icon'] }}"
                                         class="h-3.5 w-3.5"
-                                        aria-hidden="true"></i>
+                                        aria-hidden="true">
+                                    </i>
 
                                     {{ $statusDisplay['label'] }}
 
@@ -528,7 +551,8 @@
                                     <i
                                         data-lucide="chevron-right"
                                         class="h-4 w-4"
-                                        aria-hidden="true"></i>
+                                        aria-hidden="true">
+                                    </i>
 
                                 </a>
 
@@ -628,7 +652,8 @@
                         <i
                             data-lucide="{{ $statusDisplay['icon'] }}"
                             class="h-3.5 w-3.5"
-                            aria-hidden="true"></i>
+                            aria-hidden="true">
+                        </i>
 
                         {{ $statusDisplay['label'] }}
 
@@ -720,7 +745,8 @@
                         <i
                             data-lucide="chevron-right"
                             class="h-4 w-4"
-                            aria-hidden="true"></i>
+                            aria-hidden="true">
+                        </i>
 
                     </a>
 
@@ -737,5 +763,4 @@
     </div>
 
 </div>
-
 @endsection

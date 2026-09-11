@@ -8,7 +8,7 @@
 
 <div class="space-y-6">
 
-    {{-- Page Header --}}
+    {{-- Header --}}
     <div>
 
         <h1
@@ -32,10 +32,10 @@
     </div>
 
 
-    {{-- Operational Summary --}}
+    {{-- Summary cards --}}
     <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
 
-        {{-- Total Subscribers --}}
+        {{-- Subscribers --}}
         <div
             class="
                 border border-neutral-200
@@ -48,26 +48,15 @@
 
                 <div>
 
-                    <p
-                        class="
-                            text-sm
-                            text-neutral-500
-                            dark:text-neutral-400
-                        ">
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400">
                         Total Subscribers
                     </p>
 
-                    <p
-                        class="
-                            mt-2 text-3xl font-bold
-                            text-neutral-900
-                            dark:text-neutral-100
-                        ">
+                    <p class="mt-2 text-3xl font-bold text-neutral-900 dark:text-neutral-100">
                         {{ $totalCustomers }}
                     </p>
 
                 </div>
-
 
                 <div
                     class="
@@ -92,7 +81,7 @@
         </div>
 
 
-        {{-- Active Subscriptions --}}
+        {{-- Subscriptions --}}
         <div
             class="
                 border border-neutral-200
@@ -105,26 +94,15 @@
 
                 <div>
 
-                    <p
-                        class="
-                            text-sm
-                            text-neutral-500
-                            dark:text-neutral-400
-                        ">
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400">
                         Active Subscriptions
                     </p>
 
-                    <p
-                        class="
-                            mt-2 text-3xl font-bold
-                            text-neutral-900
-                            dark:text-neutral-100
-                        ">
+                    <p class="mt-2 text-3xl font-bold text-neutral-900 dark:text-neutral-100">
                         {{ $activeSubscriptions }}
                     </p>
 
                 </div>
-
 
                 <div
                     class="
@@ -149,7 +127,7 @@
         </div>
 
 
-        {{-- Open Tickets --}}
+        {{-- Tickets --}}
         <div
             class="
                 border border-neutral-200
@@ -162,26 +140,15 @@
 
                 <div>
 
-                    <p
-                        class="
-                            text-sm
-                            text-neutral-500
-                            dark:text-neutral-400
-                        ">
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400">
                         Open Tickets
                     </p>
 
-                    <p
-                        class="
-                            mt-2 text-3xl font-bold
-                            text-neutral-900
-                            dark:text-neutral-100
-                        ">
+                    <p class="mt-2 text-3xl font-bold text-neutral-900 dark:text-neutral-100">
                         {{ $openTickets }}
                     </p>
 
                 </div>
-
 
                 <div
                     class="
@@ -206,7 +173,7 @@
         </div>
 
 
-        {{-- Pending Job Orders --}}
+        {{-- Job orders --}}
         <div
             class="
                 border border-neutral-200
@@ -219,26 +186,15 @@
 
                 <div>
 
-                    <p
-                        class="
-                            text-sm
-                            text-neutral-500
-                            dark:text-neutral-400
-                        ">
+                    <p class="text-sm text-neutral-500 dark:text-neutral-400">
                         Pending Job Orders
                     </p>
 
-                    <p
-                        class="
-                            mt-2 text-3xl font-bold
-                            text-neutral-900
-                            dark:text-neutral-100
-                        ">
+                    <p class="mt-2 text-3xl font-bold text-neutral-900 dark:text-neutral-100">
                         {{ $pendingJobOrders }}
                     </p>
 
                 </div>
-
 
                 <div
                     class="
@@ -265,7 +221,7 @@
     </div>
 
 
-    {{-- Pending Applications --}}
+    {{-- Pending applications --}}
     <section
         class="
             border border-neutral-200
@@ -274,7 +230,7 @@
             dark:bg-neutral-900
         ">
 
-        {{-- Section Header --}}
+        {{-- Section header --}}
         <div
             class="
                 flex flex-col gap-3
@@ -290,15 +246,9 @@
 
                 <div class="flex flex-wrap items-center gap-2">
 
-                    <h2
-                        class="
-                            text-base font-semibold
-                            text-neutral-900
-                            dark:text-neutral-100
-                        ">
+                    <h2 class="text-base font-semibold text-neutral-900 dark:text-neutral-100">
                         Pending Applications
                     </h2>
-
 
                     <span
                         class="
@@ -310,25 +260,16 @@
                             dark:bg-amber-950/40
                             dark:text-amber-300
                         ">
-
                         {{ $pendingApplicationsCount }}
-
                     </span>
 
                 </div>
 
-
-                <p
-                    class="
-                        mt-1 text-sm
-                        text-neutral-500
-                        dark:text-neutral-400
-                    ">
+                <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                     Review recently submitted internet service applications awaiting action.
                 </p>
 
             </div>
-
 
             <a
                 href="{{ route('admin.applications.index', ['status' => 'pending']) }}"
@@ -360,7 +301,7 @@
 
         @if ($pendingApplications->isEmpty())
 
-        {{-- Empty State --}}
+        {{-- Empty state --}}
         <div class="px-6 py-10 text-center">
 
             <div
@@ -381,40 +322,22 @@
 
             </div>
 
-
-            <h3
-                class="
-                        mt-3 text-sm font-semibold
-                        text-neutral-900
-                        dark:text-neutral-100
-                    ">
+            <h3 class="mt-3 text-sm font-semibold text-neutral-900 dark:text-neutral-100">
                 No pending applications
             </h3>
 
-
-            <p
-                class="
-                        mt-1 text-sm
-                        text-neutral-500
-                        dark:text-neutral-400
-                    ">
+            <p class="mt-1 text-sm text-neutral-500 dark:text-neutral-400">
                 New service applications awaiting review will appear here.
             </p>
 
         </div>
 
-
         @else
 
-        {{-- Desktop / Tablet Table --}}
+        {{-- Desktop table --}}
         <div class="hidden overflow-x-auto lg:block">
 
-            <table
-                class="
-                        min-w-full
-                        divide-y divide-neutral-200
-                        dark:divide-neutral-800
-                    ">
+            <table class="min-w-full divide-y divide-neutral-200 dark:divide-neutral-800">
 
                 <thead class="bg-neutral-50 dark:bg-neutral-800">
 
@@ -431,7 +354,6 @@
                             Application
                         </th>
 
-
                         <th
                             scope="col"
                             class="
@@ -442,7 +364,6 @@
                                 ">
                             Applicant
                         </th>
-
 
                         <th
                             scope="col"
@@ -455,7 +376,6 @@
                             Plan
                         </th>
 
-
                         <th
                             scope="col"
                             class="
@@ -466,7 +386,6 @@
                                 ">
                             Submitted
                         </th>
-
 
                         <th
                             scope="col"
@@ -484,11 +403,7 @@
                 </thead>
 
 
-                <tbody
-                    class="
-                            divide-y divide-neutral-100
-                            dark:divide-neutral-800
-                        ">
+                <tbody class="divide-y divide-neutral-100 dark:divide-neutral-800">
 
                     @foreach ($pendingApplications as $application)
 
@@ -502,22 +417,11 @@
                     );
                     @endphp
 
-
-                    <tr
-                        class="
-                                    transition
-                                    hover:bg-neutral-50/70
-                                    dark:hover:bg-neutral-800/40
-                                ">
+                    <tr class="transition hover:bg-neutral-50/70 dark:hover:bg-neutral-800/40">
 
                         <td class="whitespace-nowrap px-4 py-4">
 
-                            <p
-                                class="
-                                            text-sm font-medium
-                                            text-neutral-900
-                                            dark:text-neutral-100
-                                        ">
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                                 {{ $application->application_number }}
                             </p>
 
@@ -546,12 +450,7 @@
 
                         <td class="px-4 py-4">
 
-                            <p
-                                class="
-                                            text-sm font-medium
-                                            text-neutral-900
-                                            dark:text-neutral-100
-                                        ">
+                            <p class="text-sm font-medium text-neutral-900 dark:text-neutral-100">
                                 {{ $applicantName }}
                             </p>
 
@@ -560,15 +459,8 @@
 
                         <td class="px-4 py-4">
 
-                            <p
-                                class="
-                                            text-sm
-                                            text-neutral-700
-                                            dark:text-neutral-300
-                                        ">
-
+                            <p class="text-sm text-neutral-700 dark:text-neutral-300">
                                 {{ $application->servicePlan?->name ?? 'Plan unavailable' }}
-
                             </p>
 
                         </td>
@@ -582,9 +474,7 @@
                                         text-neutral-600
                                         dark:text-neutral-300
                                     ">
-
                             {{ $application->submitted_at?->format('M d, Y') ?? 'Not available' }}
-
                         </td>
 
 
@@ -629,13 +519,8 @@
         </div>
 
 
-        {{-- Mobile Cards --}}
-        <div
-            class="
-                    divide-y divide-neutral-200
-                    lg:hidden
-                    dark:divide-neutral-800
-                ">
+        {{-- Mobile cards --}}
+        <div class="divide-y divide-neutral-200 lg:hidden dark:divide-neutral-800">
 
             @foreach ($pendingApplications as $application)
 
@@ -649,26 +534,15 @@
             );
             @endphp
 
-
             <article class="p-4">
 
-                <div
-                    class="
-                                flex items-start
-                                justify-between gap-3
-                            ">
+                <div class="flex items-start justify-between gap-3">
 
                     <div class="min-w-0">
 
-                        <p
-                            class="
-                                        text-xs font-medium
-                                        text-[#008080]
-                                        dark:text-[#5EEAD4]
-                                    ">
+                        <p class="text-xs font-medium text-[#008080] dark:text-[#5EEAD4]">
                             {{ $application->application_number }}
                         </p>
-
 
                         <h3
                             class="
@@ -681,7 +555,6 @@
                         </h3>
 
                     </div>
-
 
                     <span
                         class="
@@ -711,25 +584,12 @@
 
                     <div>
 
-                        <dt
-                            class="
-                                        text-xs
-                                        text-neutral-500
-                                        dark:text-neutral-400
-                                    ">
+                        <dt class="text-xs text-neutral-500 dark:text-neutral-400">
                             Service Plan
                         </dt>
 
-
-                        <dd
-                            class="
-                                        mt-1 text-sm
-                                        text-neutral-700
-                                        dark:text-neutral-300
-                                    ">
-
+                        <dd class="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
                             {{ $application->servicePlan?->name ?? 'Plan unavailable' }}
-
                         </dd>
 
                     </div>
@@ -737,25 +597,12 @@
 
                     <div>
 
-                        <dt
-                            class="
-                                        text-xs
-                                        text-neutral-500
-                                        dark:text-neutral-400
-                                    ">
+                        <dt class="text-xs text-neutral-500 dark:text-neutral-400">
                             Submitted
                         </dt>
 
-
-                        <dd
-                            class="
-                                        mt-1 text-sm
-                                        text-neutral-700
-                                        dark:text-neutral-300
-                                    ">
-
+                        <dd class="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
                             {{ $application->submitted_at?->format('M d, Y') ?? 'Not available' }}
-
                         </dd>
 
                     </div>
@@ -763,12 +610,7 @@
                 </dl>
 
 
-                <div
-                    class="
-                                mt-4 border-t
-                                border-neutral-200 pt-3
-                                dark:border-neutral-800
-                            ">
+                <div class="mt-4 border-t border-neutral-200 pt-3 dark:border-neutral-800">
 
                     <a
                         href="{{ route('admin.applications.show', $application) }}"

@@ -263,11 +263,7 @@ $statusLabels = [
             </div>
 
 
-            <div
-                class="
-                    flex flex-wrap items-center gap-2
-                    sm:justify-end
-                ">
+            <div class="flex flex-wrap items-center gap-2 sm:justify-end">
 
                 {{-- Subscriber Status --}}
                 <span
@@ -517,12 +513,10 @@ $statusLabels = [
                                     text-gray-700
                                     dark:text-gray-300
                                 ">
-
                                 {{ $subscriber->installation_address
                                     ?: $subscriber->address
                                     ?: 'Not recorded'
                                 }}
-
                             </dd>
 
                         </div>
@@ -541,9 +535,7 @@ $statusLabels = [
                                     text-gray-700
                                     dark:text-gray-300
                                 ">
-
                                 {{ $subscriber->billing_address ?: 'Not provided' }}
-
                             </dd>
 
                         </div>
@@ -646,7 +638,6 @@ $statusLabels = [
 
                     </dl>
 
-
                     @else
 
                     <p class="text-sm text-gray-500 dark:text-gray-400">
@@ -680,13 +671,11 @@ $statusLabels = [
                             @if ($latestSubscription->servicePlan)
 
                             <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-
                                 {{ number_format(
                                             (float) $latestSubscription->servicePlan->speed_mbps,
                                             0
                                         ) }}
                                 Mbps
-
                             </p>
 
                             @endif
@@ -803,7 +792,6 @@ $statusLabels = [
 
                     </dl>
 
-
                     @else
 
                     <div
@@ -899,9 +887,7 @@ $statusLabels = [
         <h2
             id="subscriber-status-modal-title"
             class="mt-4 text-lg font-semibold text-gray-900 dark:text-white">
-
             Manage Subscriber Status
-
         </h2>
 
 
@@ -970,9 +956,7 @@ $statusLabels = [
                 <label
                     for="subscriber_status"
                     class="text-sm font-medium text-gray-900 dark:text-white">
-
                     New Status
-
                 </label>
 
 
@@ -1014,9 +998,7 @@ $statusLabels = [
                     <option
                         value="{{ $transition }}"
                         @selected(old('status')===$transition)>
-
                         {{ $statusLabels[$transition] ?? ucfirst($transition) }}
-
                     </option>
 
                     @endforeach
@@ -1156,9 +1138,7 @@ $statusLabels = [
                             dark:text-gray-300
                             dark:hover:bg-neutral-800
                         ">
-
                     Cancel
-
                 </button>
 
 

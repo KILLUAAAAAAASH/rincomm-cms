@@ -33,12 +33,16 @@
                 dark:bg-green-950/40
                 dark:text-green-300
             ">
+
         <i
             data-lucide="circle-check"
             class="mt-0.5 h-5 w-5 shrink-0"
-            aria-hidden="true"></i>
+            aria-hidden="true">
+        </i>
 
-        <span>{{ session('success') }}</span>
+        <span>
+            {{ session('success') }}
+        </span>
     </div>
     @endif
 
@@ -57,12 +61,16 @@
                 dark:bg-red-950/40
                 dark:text-red-300
             ">
+
         <i
             data-lucide="triangle-alert"
             class="mt-0.5 h-5 w-5 shrink-0"
-            aria-hidden="true"></i>
+            aria-hidden="true">
+        </i>
 
-        <span>{{ session('error') }}</span>
+        <span>
+            {{ session('error') }}
+        </span>
     </div>
     @endif
 
@@ -80,7 +88,8 @@
         <i
             data-lucide="clipboard-list"
             class="mt-0.5 h-4 w-4 shrink-0 text-[#008080]"
-            aria-hidden="true"></i>
+            aria-hidden="true">
+        </i>
 
         <p class="text-sm leading-5 text-gray-600 dark:text-gray-300">
             Review submitted applications before creating subscriber and subscription records.
@@ -105,7 +114,9 @@
             {{-- Search --}}
             <div class="relative min-w-0 flex-1">
 
-                <label for="application-search" class="sr-only">
+                <label
+                    for="application-search"
+                    class="sr-only">
                     Search service applications
                 </label>
 
@@ -115,9 +126,11 @@
                         pointer-events-none absolute
                         left-3 top-1/2 h-4 w-4
                         -translate-y-1/2
-                        text-gray-500 dark:text-gray-400
+                        text-gray-500
+                        dark:text-gray-400
                     "
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
                 <input
                     id="application-search"
@@ -134,19 +147,23 @@
                         outline-none transition
                         placeholder:text-gray-500
                         focus:border-[#008080]
-                        focus:ring-2 focus:ring-[#008080]/20
+                        focus:ring-2
+                        focus:ring-[#008080]/20
                         dark:border-neutral-700
                         dark:bg-neutral-950
                         dark:text-gray-100
                         dark:placeholder:text-gray-500
                     ">
+
             </div>
 
 
             {{-- Status Filter --}}
             <div class="lg:w-48">
 
-                <label for="application-status" class="sr-only">
+                <label
+                    for="application-status"
+                    class="sr-only">
                     Filter by application status
                 </label>
 
@@ -160,27 +177,39 @@
                         text-sm text-gray-800
                         outline-none transition
                         focus:border-[#008080]
-                        focus:ring-2 focus:ring-[#008080]/20
+                        focus:ring-2
+                        focus:ring-[#008080]/20
                         dark:border-neutral-700
                         dark:bg-neutral-950
                         dark:text-gray-100
                     ">
-                    <option value="pending" @selected($status==='pending' )>
+
+                    <option
+                        value="pending"
+                        @selected($status==='pending' )>
                         Pending
                     </option>
 
-                    <option value="approved" @selected($status==='approved' )>
+                    <option
+                        value="approved"
+                        @selected($status==='approved' )>
                         Approved
                     </option>
 
-                    <option value="rejected" @selected($status==='rejected' )>
+                    <option
+                        value="rejected"
+                        @selected($status==='rejected' )>
                         Rejected
                     </option>
 
-                    <option value="cancelled" @selected($status==='cancelled' )>
+                    <option
+                        value="cancelled"
+                        @selected($status==='cancelled' )>
                         Cancelled
                     </option>
+
                 </select>
+
             </div>
 
 
@@ -195,16 +224,20 @@
                     transition
                     hover:bg-[#006666]
                     focus:outline-none
-                    focus:ring-2 focus:ring-[#008080]
+                    focus:ring-2
+                    focus:ring-[#008080]
                     focus:ring-offset-2
                     dark:focus:ring-offset-neutral-900
                 ">
+
                 <i
                     data-lucide="list-filter"
                     class="h-4 w-4"
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
                 Apply
+
             </button>
 
 
@@ -221,19 +254,23 @@
                         transition
                         hover:bg-gray-50
                         focus:outline-none
-                        focus:ring-2 focus:ring-gray-400
+                        focus:ring-2
+                        focus:ring-gray-400
                         focus:ring-offset-2
                         dark:border-neutral-700
                         dark:text-gray-200
                         dark:hover:bg-neutral-800
                         dark:focus:ring-offset-neutral-900
                     ">
+
                 <i
                     data-lucide="x"
                     class="h-4 w-4"
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
                 Clear
+
             </a>
             @endif
 
@@ -264,10 +301,13 @@
                         bg-gray-100
                         dark:bg-neutral-800
                     ">
+
                 <i
                     data-lucide="clipboard-list"
                     class="h-6 w-6 text-gray-500 dark:text-gray-400"
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
+
             </div>
 
             <h2 class="mt-4 text-base font-semibold text-gray-900 dark:text-white">
@@ -307,6 +347,7 @@
                                 bg-gray-50
                                 dark:bg-neutral-800
                             ">
+
                         <tr>
 
                             <th
@@ -314,7 +355,8 @@
                                 class="
                                         px-4 py-3 text-left
                                         text-xs font-semibold uppercase tracking-wide
-                                        text-gray-500 dark:text-gray-400
+                                        text-gray-500
+                                        dark:text-gray-400
                                     ">
                                 Application
                             </th>
@@ -324,7 +366,8 @@
                                 class="
                                         px-4 py-3 text-left
                                         text-xs font-semibold uppercase tracking-wide
-                                        text-gray-500 dark:text-gray-400
+                                        text-gray-500
+                                        dark:text-gray-400
                                     ">
                                 Applicant
                             </th>
@@ -334,7 +377,8 @@
                                 class="
                                         px-4 py-3 text-left
                                         text-xs font-semibold uppercase tracking-wide
-                                        text-gray-500 dark:text-gray-400
+                                        text-gray-500
+                                        dark:text-gray-400
                                     ">
                                 Contact
                             </th>
@@ -344,7 +388,8 @@
                                 class="
                                         px-4 py-3 text-center
                                         text-xs font-semibold uppercase tracking-wide
-                                        text-gray-500 dark:text-gray-400
+                                        text-gray-500
+                                        dark:text-gray-400
                                     ">
                                 Status
                             </th>
@@ -354,12 +399,14 @@
                                 class="
                                         px-4 py-3 text-left
                                         text-xs font-semibold uppercase tracking-wide
-                                        text-gray-500 dark:text-gray-400
+                                        text-gray-500
+                                        dark:text-gray-400
                                     ">
                                 Submitted
                             </th>
 
                         </tr>
+
                     </thead>
 
 
@@ -395,13 +442,16 @@
                         <tr class="transition hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
 
                             <td class="px-4 py-4">
+
                                 <p class="break-all text-sm font-medium text-gray-900 dark:text-white">
                                     {{ $application->application_number }}
                                 </p>
+
                             </td>
 
 
                             <td class="px-4 py-4">
+
                                 <div class="min-w-0">
 
                                     <p class="text-sm font-medium text-gray-900 dark:text-white">
@@ -417,10 +467,12 @@
                                     </p>
 
                                 </div>
+
                             </td>
 
 
                             <td class="px-4 py-4">
+
                                 <div class="min-w-0">
 
                                     <p class="break-all text-sm text-gray-700 dark:text-gray-300">
@@ -432,6 +484,7 @@
                                     </p>
 
                                 </div>
+
                             </td>
 
 
@@ -444,12 +497,15 @@
                                                 text-xs font-medium
                                                 {{ $statusDisplay['class'] }}
                                             ">
+
                                     <i
                                         data-lucide="{{ $statusDisplay['icon'] }}"
                                         class="h-3.5 w-3.5"
-                                        aria-hidden="true"></i>
+                                        aria-hidden="true">
+                                    </i>
 
                                     {{ $statusDisplay['label'] }}
+
                                 </span>
 
                             </td>
@@ -528,6 +584,7 @@
 
                     </div>
 
+
                     <span
                         class="
                                     inline-flex shrink-0 items-center gap-1.5
@@ -535,12 +592,15 @@
                                     text-xs font-medium
                                     {{ $statusDisplay['class'] }}
                                 ">
+
                         <i
                             data-lucide="{{ $statusDisplay['icon'] }}"
                             class="h-3.5 w-3.5"
-                            aria-hidden="true"></i>
+                            aria-hidden="true">
+                        </i>
 
                         {{ $statusDisplay['label'] }}
+
                     </span>
 
                 </div>
@@ -549,6 +609,7 @@
                 <dl class="mt-5 grid gap-4 text-sm sm:grid-cols-2">
 
                     <div>
+
                         <dt class="text-xs text-gray-400">
                             Email
                         </dt>
@@ -556,10 +617,12 @@
                         <dd class="mt-1 break-all text-gray-700 dark:text-gray-300">
                             {{ $application->email }}
                         </dd>
+
                     </div>
 
 
                     <div>
+
                         <dt class="text-xs text-gray-400">
                             Phone
                         </dt>
@@ -567,10 +630,12 @@
                         <dd class="mt-1 text-gray-700 dark:text-gray-300">
                             {{ $application->phone }}
                         </dd>
+
                     </div>
 
 
                     <div>
+
                         <dt class="text-xs text-gray-400">
                             Submitted
                         </dt>
@@ -578,6 +643,7 @@
                         <dd class="mt-1 text-gray-700 dark:text-gray-300">
                             {{ $application->submitted_at?->format('M d, Y') ?? 'Not submitted' }}
                         </dd>
+
                     </div>
 
                 </dl>
