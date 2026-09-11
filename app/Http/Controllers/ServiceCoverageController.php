@@ -10,9 +10,6 @@ use Illuminate\View\View;
 
 class ServiceCoverageController extends Controller
 {
-    /**
-     * Display the public service coverage form.
-     */
     public function create(Request $request): View
     {
         $selectedPlan = null;
@@ -48,9 +45,6 @@ class ServiceCoverageController extends Controller
         ));
     }
 
-    /**
-     * Check whether the submitted location is serviceable.
-     */
     public function check(Request $request): RedirectResponse
     {
         $validated = $request->validate(

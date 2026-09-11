@@ -39,7 +39,7 @@ class UpdateHeroSlideRequest extends FormRequest
 
             'title' => [
                 Rule::requiredIf(
-                    fn () => in_array(
+                    fn() => in_array(
                         $this->input('content_type'),
                         ['image_text', 'image_text_cta'],
                         true
@@ -52,7 +52,7 @@ class UpdateHeroSlideRequest extends FormRequest
 
             'description' => [
                 Rule::requiredIf(
-                    fn () => in_array(
+                    fn() => in_array(
                         $this->input('content_type'),
                         ['image_text', 'image_text_cta'],
                         true
@@ -63,8 +63,7 @@ class UpdateHeroSlideRequest extends FormRequest
                 'max:1500',
             ],
 
-            // Optional during editing.
-            // If no new image is uploaded, the existing image stays.
+            // Keep the current image when no replacement is uploaded.
             'image' => [
                 'nullable',
                 'image',
@@ -80,8 +79,7 @@ class UpdateHeroSlideRequest extends FormRequest
 
             'cta_text' => [
                 Rule::requiredIf(
-                    fn () =>
-                        $this->input('content_type') === 'image_text_cta'
+                    fn() => $this->input('content_type') === 'image_text_cta'
                 ),
                 'nullable',
                 'string',
@@ -90,8 +88,7 @@ class UpdateHeroSlideRequest extends FormRequest
 
             'cta_url' => [
                 Rule::requiredIf(
-                    fn () =>
-                        $this->input('content_type') === 'image_text_cta'
+                    fn() => $this->input('content_type') === 'image_text_cta'
                 ),
                 'nullable',
                 'string',
@@ -104,13 +101,13 @@ class UpdateHeroSlideRequest extends FormRequest
             ],
 
             'ends_at' => [
-    'nullable',
-    'date',
-    Rule::when(
-        $this->filled('starts_at'),
-        ['after:starts_at']
-    ),
-],
+                'nullable',
+                'date',
+                Rule::when(
+                    $this->filled('starts_at'),
+                    ['after:starts_at']
+                ),
+            ],
 
             'display_order' => [
                 'nullable',
@@ -129,28 +126,19 @@ class UpdateHeroSlideRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-
-            /*
-             * Get the slide currently being edited.
-             */
             $heroSlide = $this->route('hero_slide');
 
             $heroSlideId = $heroSlide instanceof HeroSlide
                 ? $heroSlide->id
                 : $heroSlide;
 
-            /*
-             * Maximum of 5 active slides.
-             *
-             * The current slide is excluded from the count so an
-             * already-active slide can still be edited normally.
-             */
+            // Exclude the current slide when checking the five-slide limit.
             if ($this->boolean('is_active')) {
                 $activeSlideCount = HeroSlide::where('is_active', true)
                     ->when(
                         $heroSlideId,
-                        fn ($query) =>
-                            $query->where('id', '!=', $heroSlideId)
+                        fn($query) =>
+                        $query->where('id', '!=', $heroSlideId)
                     )
                     ->count();
 
@@ -162,17 +150,15 @@ class UpdateHeroSlideRequest extends FormRequest
                 }
             }
 
-            /*
-             * Restrict CTA links to safe internal or web links.
-             */
+            // Allow internal links, section links, and normal web URLs.
             $ctaUrl = $this->input('cta_url');
 
             if (
                 $ctaUrl &&
-                !str_starts_with($ctaUrl, '#') &&
-                !str_starts_with($ctaUrl, '/') &&
-                !str_starts_with($ctaUrl, 'http://') &&
-                !str_starts_with($ctaUrl, 'https://')
+                ! str_starts_with($ctaUrl, '#') &&
+                ! str_starts_with($ctaUrl, '/') &&
+                ! str_starts_with($ctaUrl, 'http://') &&
+                ! str_starts_with($ctaUrl, 'https://')
             ) {
                 $validator->errors()->add(
                     'cta_url',
@@ -186,25 +172,25 @@ class UpdateHeroSlideRequest extends FormRequest
     {
         return [
             'image.max' =>
-                'The carousel image must not be larger than 5 MB.',
+            'The carousel image must not be larger than 5 MB.',
 
             'image.mimes' =>
-                'The carousel image must be JPG, JPEG, PNG, or WebP.',
+            'The carousel image must be JPG, JPEG, PNG, or WebP.',
 
             'title.required' =>
-                'A title is required for this slide type.',
+            'A title is required for this slide type.',
 
             'description.required' =>
-                'A description is required for this slide type.',
+            'A description is required for this slide type.',
 
             'cta_text.required' =>
-                'Button text is required when the slide includes a CTA.',
+            'Button text is required when the slide includes a CTA.',
 
             'cta_url.required' =>
-                'A button link is required when the slide includes a CTA.',
+            'A button link is required when the slide includes a CTA.',
 
             'ends_at.after' =>
-                'The end date must be later than the start date.',
+            'The end date must be later than the start date.',
         ];
     }
 }

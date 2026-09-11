@@ -9,9 +9,6 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the authenticated user's profile.
-     */
     public function edit(Request $request): View
     {
         $user = $request->user();
@@ -26,12 +23,6 @@ class ProfileController extends Controller
         ]);
     }
 
-    /**
-     * Update the authenticated user's current profile name.
-     *
-     * Email changes are intentionally deferred until the verified-email
-     * OTP workflow is implemented.
-     */
     public function update(Request $request): RedirectResponse
     {
         $user = $request->user();
@@ -40,19 +31,7 @@ class ProfileController extends Controller
             ? $user->customer
             : null;
 
-        /*
-        |--------------------------------------------------------------------------
-        | Customer with linked subscriber profile
-        |--------------------------------------------------------------------------
-        |
-        | The Customer record owns the structured subscriber name while the User
-        | record owns authentication identity. Both current names are kept in
-        | sync in a single database transaction.
-        |
-        | Historical ServiceApplication records are intentionally not modified.
-        |
-        */
-
+        // Keep the User name and Customer name in sync.
         if ($customer) {
             $validated = $request->validate(
                 [
@@ -125,16 +104,7 @@ class ProfileController extends Controller
                 );
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | User without linked Customer profile
-        |--------------------------------------------------------------------------
-        |
-        | Administrator, Staff, Technician, and customer-role applicants without
-        | a Customer record continue to use the User name directly.
-        |
-        */
-
+        // Users without a Customer record update their account name directly.
         $validated = $request->validate(
             [
                 'name' => [

@@ -32,9 +32,6 @@ class HeroSlide extends Model
         'is_active' => 'boolean',
     ];
 
-    /**
-     * Slides that should currently appear on the public website.
-     */
     public function scopePublished(Builder $query): Builder
     {
         return $query
@@ -51,9 +48,6 @@ class HeroSlide extends Model
             });
     }
 
-    /**
-     * Default public carousel ordering.
-     */
     public function scopeOrdered(Builder $query): Builder
     {
         return $query

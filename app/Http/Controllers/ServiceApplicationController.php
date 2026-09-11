@@ -16,17 +16,9 @@ use Illuminate\View\View;
 
 class ServiceApplicationController extends Controller
 {
-
-    /**
-     * Display the authenticated service application form.
-     */
     public function create(Request $request): View|RedirectResponse
     {
-
-        /*
- * An existing Rincomm subscriber must not enter
- * the new-subscriber application workflow.
- */
+        // Existing subscribers should not enter the new application flow.
         $existingCustomer = Customer::query()
             ->where('user_id', $request->user()->id)
             ->exists();
@@ -40,7 +32,6 @@ class ServiceApplicationController extends Controller
                 );
         }
 
-
         $coverage = $request->session()->get(
             'service_application.coverage'
         );
@@ -49,10 +40,7 @@ class ServiceApplicationController extends Controller
             'service_application.plan_id'
         );
 
-        /*
-         * The applicant must first complete the public
-         * coverage check and select an internet plan.
-         */
+        // Coverage checking and plan selection must be completed first.
         if (
             ! is_array($coverage) ||
             empty($coverage['service_area_id']) ||
@@ -66,19 +54,12 @@ class ServiceApplicationController extends Controller
                 );
         }
 
-        /*
-         * Revalidate the coverage record against MySQL.
-         * Session data alone must never authorize coverage.
-         */
+        // Check the current database records instead of trusting session data alone.
         $serviceArea = ServiceArea::query()
             ->whereKey($coverage['service_area_id'])
             ->where('is_serviceable', true)
             ->first();
 
-        /*
-         * Revalidate the selected plan in case it was
-         * disabled after the original coverage check.
-         */
         $servicePlan = ServicePlan::query()
             ->whereKey($planId)
             ->where('is_active', true)
@@ -98,10 +79,7 @@ class ServiceApplicationController extends Controller
                 );
         }
 
-        /*
-         * Prevent the same account from starting another
-         * application while one is already in progress.
-         */
+        // Only one draft or pending application is allowed per account.
         $existingApplication = ServiceApplication::query()
             ->where('user_id', $request->user()->id)
             ->whereIn('status', [
@@ -127,16 +105,9 @@ class ServiceApplicationController extends Controller
         ]);
     }
 
-    /**
-     * Submit a new service application.
-     */
     public function store(Request $request): RedirectResponse
     {
-
-        /*
- * Existing subscribers cannot submit a
- * new-subscriber service application.
- */
+        // Existing subscribers cannot submit a new-subscriber application.
         if (
             Customer::query()
             ->where('user_id', $request->user()->id)
@@ -149,11 +120,7 @@ class ServiceApplicationController extends Controller
                     'Your account is already registered as a Rincomm subscriber.'
                 );
         }
-        /*
-         * Validate applicant-provided information.
-         * Coverage and plan IDs are intentionally not accepted
-         * from the submitted form as authoritative values.
-         */
+
         $validated = $request->validate([
             'first_name' => [
                 'required',
@@ -200,10 +167,6 @@ class ServiceApplicationController extends Controller
             'service_application.plan_id'
         );
 
-        /*
-         * The service application cannot be submitted
-         * without a valid coverage-check session.
-         */
         if (
             ! is_array($coverage) ||
             empty($coverage['service_area_id']) ||
@@ -217,10 +180,7 @@ class ServiceApplicationController extends Controller
                 );
         }
 
-        /*
-         * Revalidate serviceability and plan availability
-         * immediately before writing anything to MySQL.
-         */
+        // Recheck coverage and plan availability before creating the application.
         $serviceArea = ServiceArea::query()
             ->whereKey($coverage['service_area_id'])
             ->where('is_serviceable', true)
@@ -251,11 +211,7 @@ class ServiceApplicationController extends Controller
             $serviceArea,
             $servicePlan
         ): void {
-            /*
-             * Lock this user's row while checking and creating
-             * the application. This reduces the risk of two
-             * simultaneous submissions creating duplicates.
-             */
+            // Lock the account while checking for duplicate submissions.
             User::query()
                 ->whereKey($request->user()->id)
                 ->lockForUpdate()
@@ -306,10 +262,7 @@ class ServiceApplicationController extends Controller
             ]);
         });
 
-        /*
-         * Coverage and plan selections have served their purpose.
-         * Remove them only after a successful database transaction.
-         */
+        // Clear the application session only after a successful submission.
         $request->session()->forget([
             'service_application.coverage',
             'service_application.plan_id',

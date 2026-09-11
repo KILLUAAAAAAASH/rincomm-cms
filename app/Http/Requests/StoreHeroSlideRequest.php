@@ -39,7 +39,7 @@ class StoreHeroSlideRequest extends FormRequest
 
             'title' => [
                 Rule::requiredIf(
-                    fn () => in_array(
+                    fn() => in_array(
                         $this->input('content_type'),
                         ['image_text', 'image_text_cta'],
                         true
@@ -52,7 +52,7 @@ class StoreHeroSlideRequest extends FormRequest
 
             'description' => [
                 Rule::requiredIf(
-                    fn () => in_array(
+                    fn() => in_array(
                         $this->input('content_type'),
                         ['image_text', 'image_text_cta'],
                         true
@@ -78,8 +78,7 @@ class StoreHeroSlideRequest extends FormRequest
 
             'cta_text' => [
                 Rule::requiredIf(
-                    fn () =>
-                        $this->input('content_type') === 'image_text_cta'
+                    fn() => $this->input('content_type') === 'image_text_cta'
                 ),
                 'nullable',
                 'string',
@@ -88,8 +87,7 @@ class StoreHeroSlideRequest extends FormRequest
 
             'cta_url' => [
                 Rule::requiredIf(
-                    fn () =>
-                        $this->input('content_type') === 'image_text_cta'
+                    fn() => $this->input('content_type') === 'image_text_cta'
                 ),
                 'nullable',
                 'string',
@@ -102,13 +100,13 @@ class StoreHeroSlideRequest extends FormRequest
             ],
 
             'ends_at' => [
-              'nullable',
-              'date',
-            Rule::when(
-                $this->filled('starts_at'),
-                ['after:starts_at']
-    ),
-],
+                'nullable',
+                'date',
+                Rule::when(
+                    $this->filled('starts_at'),
+                    ['after:starts_at']
+                ),
+            ],
 
             'display_order' => [
                 'nullable',
@@ -127,9 +125,7 @@ class StoreHeroSlideRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
-            /*
-             * Prevent more than 5 slides from being marked active.
-             */
+            // Limit the carousel to five active slides.
             if (
                 $this->boolean('is_active') &&
                 HeroSlide::where('is_active', true)->count() >= 5
@@ -140,22 +136,15 @@ class StoreHeroSlideRequest extends FormRequest
                 );
             }
 
-            /*
-             * Prevent unsafe CTA links.
-             * We allow:
-             * #section
-             * /internal-path
-             * http://...
-             * https://...
-             */
+            // Allow internal links, section links, and normal web URLs.
             $ctaUrl = $this->input('cta_url');
 
             if (
                 $ctaUrl &&
-                !str_starts_with($ctaUrl, '#') &&
-                !str_starts_with($ctaUrl, '/') &&
-                !str_starts_with($ctaUrl, 'http://') &&
-                !str_starts_with($ctaUrl, 'https://')
+                ! str_starts_with($ctaUrl, '#') &&
+                ! str_starts_with($ctaUrl, '/') &&
+                ! str_starts_with($ctaUrl, 'http://') &&
+                ! str_starts_with($ctaUrl, 'https://')
             ) {
                 $validator->errors()->add(
                     'cta_url',
@@ -169,28 +158,28 @@ class StoreHeroSlideRequest extends FormRequest
     {
         return [
             'image.required' =>
-                'Please upload an image for the carousel slide.',
+            'Please upload an image for the carousel slide.',
 
             'image.max' =>
-                'The carousel image must not be larger than 5 MB.',
+            'The carousel image must not be larger than 5 MB.',
 
             'image.mimes' =>
-                'The carousel image must be JPG, JPEG, PNG, or WebP.',
+            'The carousel image must be JPG, JPEG, PNG, or WebP.',
 
             'title.required' =>
-                'A title is required for this slide type.',
+            'A title is required for this slide type.',
 
             'description.required' =>
-                'A description is required for this slide type.',
+            'A description is required for this slide type.',
 
             'cta_text.required' =>
-                'Button text is required when the slide includes a CTA.',
+            'Button text is required when the slide includes a CTA.',
 
             'cta_url.required' =>
-                'A button link is required when the slide includes a CTA.',
+            'A button link is required when the slide includes a CTA.',
 
             'ends_at.after' =>
-                'The end date must be later than the start date.',
+            'The end date must be later than the start date.',
         ];
     }
 }

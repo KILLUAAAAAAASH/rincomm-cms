@@ -16,12 +16,6 @@ use RuntimeException;
 
 class DemoDataSeeder extends Seeder
 {
-    /**
-     * Seed a controlled Rincomm development/demo dataset.
-     *
-     * Existing records are preserved. This seeder creates missing demo
-     * records but does not reset operational statuses on every run.
-     */
     public function run(): void
     {
         if (app()->environment('production')) {
@@ -30,23 +24,12 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Administrator
-        |--------------------------------------------------------------------------
-        */
-
+        // Demo administrator and staff accounts
         $this->createDemoUser(
             name: 'Rincomm Administrator',
             email: 'admin@rincomm.test',
             role: 'admin'
         );
-
-        /*
-        |--------------------------------------------------------------------------
-        | Staff
-        |--------------------------------------------------------------------------
-        */
 
         $this->createDemoUser(
             name: 'Rincomm Staff',
@@ -54,17 +37,7 @@ class DemoDataSeeder extends Seeder
             role: 'staff'
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Confirmed Rincomm Service Area
-        |--------------------------------------------------------------------------
-        |
-        | This record restores the Week 3 coverage-check foundation.
-        | These values were recovered from the original confirmed development
-        | command used to create the Acocolao service-area record.
-        |
-        */
-
+        // Service area used for coverage testing
         ServiceArea::firstOrCreate(
             [
                 'province' => 'Tarlac',
@@ -80,12 +53,7 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Demo Customer Account
-        |--------------------------------------------------------------------------
-        */
-
+        // Demo customer
         $customerUser = $this->createDemoUser(
             name: 'Miguel Santos',
             email: 'miguel.santos@rincomm.test',
@@ -113,12 +81,7 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Demo Internet Plan
-        |--------------------------------------------------------------------------
-        */
-
+        // Internet plan used by the demo customer
         $servicePlan = ServicePlan::updateOrCreate(
             [
                 'name' => 'Fiber 250',
@@ -133,12 +96,7 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Demo Subscription
-        |--------------------------------------------------------------------------
-        */
-
+        // Active subscription for the demo customer
         Subscription::firstOrCreate(
             [
                 'customer_id' => $customer->id,
@@ -154,12 +112,7 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Demo Technician
-        |--------------------------------------------------------------------------
-        */
-
+        // Demo technician
         $technicianUser = $this->createDemoUser(
             name: 'Pedro Santos',
             email: 'technician@rincomm.test',
@@ -177,12 +130,7 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Demo Ticket
-        |--------------------------------------------------------------------------
-        */
-
+        // Sample technical support ticket
         $ticket = ServiceRequest::firstOrCreate(
             [
                 'ticket_number' => 'TKT-0001',
@@ -197,12 +145,7 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        /*
-        |--------------------------------------------------------------------------
-        | Demo Job Order
-        |--------------------------------------------------------------------------
-        */
-
+        // Sample job order assigned to the demo technician
         JobOrder::firstOrCreate(
             [
                 'job_order_number' => 'JO-0001',
@@ -223,12 +166,6 @@ class DemoDataSeeder extends Seeder
         );
     }
 
-    /**
-     * Create a development-only login fixture.
-     *
-     * Existing users are intentionally left unchanged so reseeding cannot
-     * reset passwords, account statuses, roles, or verification state.
-     */
     private function createDemoUser(
         string $name,
         string $email,
