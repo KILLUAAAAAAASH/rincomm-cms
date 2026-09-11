@@ -5,9 +5,10 @@
 @section('page-title', 'All Subscribers')
 
 @section('content')
+
 <div class="space-y-4">
 
-    {{-- Page Header --}}
+    {{-- Page header --}}
     <div>
 
         <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
@@ -21,7 +22,7 @@
     </div>
 
 
-    {{-- Subscriber Information --}}
+    {{-- Subscriber information --}}
     <div
         class="
             flex items-start gap-2.5
@@ -44,7 +45,7 @@
     </div>
 
 
-    {{-- Search and Filters --}}
+    {{-- Search and filters --}}
     <form
         method="GET"
         action="{{ route('admin.subscribers.index') }}"
@@ -55,7 +56,12 @@
             dark:bg-neutral-900
         ">
 
-        <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
+        <div
+            class="
+                flex flex-col gap-2
+                lg:flex-row
+                lg:items-center
+            ">
 
             {{-- Search --}}
             <div class="relative min-w-0 flex-1">
@@ -86,7 +92,7 @@
                     placeholder="Search customer code, name, email, or phone"
                     autocomplete="off"
                     class="
-                        min-h-11 w-full
+                        min-h-10 w-full min-w-0
                         border border-gray-300
                         bg-white py-2 pl-10 pr-3
                         text-sm text-gray-900
@@ -104,8 +110,8 @@
             </div>
 
 
-            {{-- Status Filter --}}
-            <div class="lg:w-48">
+            {{-- Status filter --}}
+            <div class="min-w-0 lg:w-36 lg:shrink-0 xl:w-44">
 
                 <label
                     for="subscriber-status"
@@ -117,7 +123,7 @@
                     id="subscriber-status"
                     name="status"
                     class="
-                        min-h-11 w-full
+                        min-h-10 w-full
                         border border-gray-300
                         bg-white px-3 py-2
                         text-sm text-gray-800
@@ -153,9 +159,10 @@
             <button
                 type="submit"
                 class="
-                    inline-flex min-h-11 shrink-0
-                    items-center justify-center gap-2
-                    bg-[#008080] px-4 py-2
+                    inline-flex min-h-10 shrink-0
+                    items-center justify-center gap-1.5
+                    bg-[#008080]
+                    px-3 py-2
                     text-sm font-semibold text-white
                     transition
                     hover:bg-[#006666]
@@ -183,10 +190,10 @@
             <a
                 href="{{ route('admin.subscribers.index') }}"
                 class="
-                        inline-flex min-h-11 shrink-0
-                        items-center justify-center gap-2
+                        inline-flex min-h-10 shrink-0
+                        items-center justify-center gap-1.5
                         border border-gray-300
-                        px-4 py-2
+                        px-3 py-2
                         text-sm font-medium text-gray-700
                         transition
                         hover:bg-gray-50
@@ -217,14 +224,14 @@
     </form>
 
 
-    {{-- Subscriber Results --}}
+    {{-- Subscriber results --}}
     <div
         aria-live="polite"
         aria-busy="false">
 
         @if ($subscribers->isEmpty())
 
-        {{-- Empty State --}}
+        {{-- Empty state --}}
         <div
             class="
                     border border-dashed border-gray-300
@@ -250,11 +257,9 @@
 
             </div>
 
-
             <h2 class="mt-4 text-base font-semibold text-gray-900 dark:text-white">
                 No subscribers found
             </h2>
-
 
             <p class="mx-auto mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400">
 
@@ -270,7 +275,7 @@
 
         @else
 
-        {{-- Desktop / Tablet Table --}}
+        {{-- Tablet / desktop table --}}
         <div
             class="
                     hidden overflow-hidden
@@ -281,19 +286,16 @@
                     dark:bg-neutral-900
                 ">
 
-            <div class="max-h-[60vh] overflow-auto">
+            <div class="max-h-[60vh] overflow-y-auto">
 
-                <table
-                    class="
-                            min-w-full
-                            divide-y divide-gray-200
-                            dark:divide-gray-800
-                        ">
+                <table class="w-full table-fixed">
 
                     <thead
                         class="
                                 sticky top-0 z-10
+                                border-b border-gray-200
                                 bg-gray-50
+                                dark:border-neutral-800
                                 dark:bg-neutral-800
                             ">
 
@@ -302,11 +304,12 @@
                             <th
                                 scope="col"
                                 class="
-                                        px-2 py-3 text-left
-                                        text-xs font-semibold uppercase tracking-wide
+                                        w-[22%] px-3 py-2.5
+                                        text-left text-[11px]
+                                        font-semibold uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
-                                        xl:px-5
+                                        xl:w-[19%] xl:px-4
                                     ">
                                 Subscriber
                             </th>
@@ -314,11 +317,12 @@
                             <th
                                 scope="col"
                                 class="
-                                        px-2 py-3 text-left
-                                        text-xs font-semibold uppercase tracking-wide
+                                        w-[29%] px-3 py-2.5
+                                        text-left text-[11px]
+                                        font-semibold uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
-                                        xl:px-5
+                                        xl:w-[24%] xl:px-4
                                     ">
                                 Contact
                             </th>
@@ -326,11 +330,12 @@
                             <th
                                 scope="col"
                                 class="
-                                        px-2 py-3 text-left
-                                        text-xs font-semibold uppercase tracking-wide
+                                        w-[20%] px-3 py-2.5
+                                        text-left text-[11px]
+                                        font-semibold uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
-                                        xl:px-5
+                                        xl:w-[18%] xl:px-4
                                     ">
                                 Location
                             </th>
@@ -338,11 +343,12 @@
                             <th
                                 scope="col"
                                 class="
-                                        px-2 py-3 text-center
-                                        text-xs font-semibold uppercase tracking-wide
+                                        w-[16%] px-2 py-2.5
+                                        text-center text-[11px]
+                                        font-semibold uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
-                                        xl:px-5
+                                        xl:w-[13%] xl:px-4
                                     ">
                                 Status
                             </th>
@@ -350,11 +356,13 @@
                             <th
                                 scope="col"
                                 class="
-                                        px-2 py-3 text-left
-                                        text-xs font-semibold uppercase tracking-wide
+                                        hidden w-[15%]
+                                        px-4 py-2.5
+                                        text-left text-[11px]
+                                        font-semibold uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
-                                        xl:px-5
+                                        xl:table-cell
                                     ">
                                 Created
                             </th>
@@ -362,11 +370,12 @@
                             <th
                                 scope="col"
                                 class="
-                                        px-2 py-3 text-right
-                                        text-xs font-semibold uppercase tracking-wide
+                                        w-[13%] px-2 py-2.5
+                                        text-right text-[11px]
+                                        font-semibold uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
-                                        xl:px-5
+                                        xl:w-[11%] xl:px-4
                                     ">
                                 Action
                             </th>
@@ -376,7 +385,7 @@
                     </thead>
 
 
-                    <tbody class="divide-y divide-gray-100 dark:divide-gray-800">
+                    <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
 
                         @foreach ($subscribers as $subscriber)
 
@@ -422,25 +431,45 @@
                         @endphp
 
 
-                        <tr
-                            class="
-                                        transition
-                                        hover:bg-gray-50/70
-                                        dark:hover:bg-gray-800/40
-                                    ">
+                        <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
 
                             {{-- Subscriber --}}
-                            <td class="px-2 py-3 xl:px-5 xl:py-4">
+                            <td class="px-3 py-3 align-middle xl:px-4">
 
-                                <div class="min-w-[150px]">
+                                <div class="min-w-0">
 
-                                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                    <p
+                                        class="
+                                                    truncate text-xs font-semibold
+                                                    text-gray-900
+                                                    dark:text-white
+                                                    xl:text-sm
+                                                "
+                                        title="{{ $fullName }}">
                                         {{ $fullName }}
                                     </p>
 
-                                    <p class="mt-1 text-xs font-medium text-[#008080] dark:text-[#5EEAD4]">
-                                        {{ $subscriber->customer_code }}
-                                    </p>
+                                    <div class="mt-0.5 flex min-w-0 items-center gap-1.5">
+
+                                        <span
+                                            class="
+                                                        truncate text-[10px] font-medium
+                                                        text-[#008080]
+                                                        dark:text-[#5EEAD4]
+                                                        xl:text-xs
+                                                    ">
+                                            {{ $subscriber->customer_code }}
+                                        </span>
+
+                                        <span
+                                            class="
+                                                        truncate text-[9px] text-gray-400
+                                                        xl:hidden
+                                                    ">
+                                            · {{ $subscriber->created_at?->format('M d, Y') ?? 'N/A' }}
+                                        </span>
+
+                                    </div>
 
                                 </div>
 
@@ -448,15 +477,22 @@
 
 
                             {{-- Contact --}}
-                            <td class="px-2 py-3 xl:px-5 xl:py-4">
+                            <td class="px-3 py-3 align-middle xl:px-4">
 
-                                <div class="min-w-[180px]">
+                                <div class="min-w-0">
 
-                                    <p class="break-all text-sm text-gray-700 dark:text-gray-300">
+                                    <p
+                                        class="
+                                                    truncate text-[10px]
+                                                    text-gray-700
+                                                    dark:text-gray-300
+                                                    xl:text-sm
+                                                "
+                                        title="{{ $subscriber->email ?: 'No email recorded' }}">
                                         {{ $subscriber->email ?: 'No email recorded' }}
                                     </p>
 
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                                    <p class="mt-0.5 truncate text-[9px] text-gray-500 dark:text-gray-400 xl:text-xs">
                                         {{ $subscriber->phone ?: 'No phone recorded' }}
                                     </p>
 
@@ -466,16 +502,16 @@
 
 
                             {{-- Location --}}
-                            <td class="px-2 py-3 xl:px-5 xl:py-4">
+                            <td class="px-3 py-3 align-middle xl:px-4">
 
-                                <div class="min-w-[120px]">
+                                <div class="min-w-0">
 
-                                    <p class="text-sm text-gray-700 dark:text-gray-300">
+                                    <p class="truncate text-[10px] text-gray-700 dark:text-gray-300 xl:text-sm">
                                         {{ $subscriber->city ?: 'Not specified' }}
                                     </p>
 
-                                    <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                                        {{ $subscriber->province ?: 'Province not specified' }}
+                                    <p class="mt-0.5 truncate text-[9px] text-gray-500 dark:text-gray-400 xl:text-xs">
+                                        {{ $subscriber->province ?: 'Not specified' }}
                                     </p>
 
                                 </div>
@@ -484,19 +520,21 @@
 
 
                             {{-- Status --}}
-                            <td class="px-2 py-3 text-center xl:px-5 xl:py-4">
+                            <td class="px-2 py-3 text-center align-middle xl:px-4">
 
                                 <span
                                     class="
-                                                inline-flex items-center gap-1.5
-                                                px-2.5 py-1
-                                                text-xs font-medium
+                                                inline-flex items-center gap-1
+                                                whitespace-nowrap
+                                                px-2 py-1
+                                                text-[9px] font-medium
                                                 {{ $statusDisplay['class'] }}
+                                                xl:text-xs
                                             ">
 
                                     <i
                                         data-lucide="{{ $statusDisplay['icon'] }}"
-                                        class="h-3.5 w-3.5"
+                                        class="h-3 w-3 xl:h-3.5 xl:w-3.5"
                                         aria-hidden="true">
                                     </i>
 
@@ -510,29 +548,27 @@
                             {{-- Created --}}
                             <td
                                 class="
-                                            whitespace-nowrap
-                                            px-2 py-3
-                                            text-xs text-gray-600
+                                            hidden whitespace-nowrap
+                                            px-4 py-3 align-middle
+                                            text-sm text-gray-600
                                             dark:text-gray-300
-                                            xl:px-5 xl:py-4 xl:text-sm
+                                            xl:table-cell
                                         ">
-
                                 {{ $subscriber->created_at?->format('M d, Y') ?? 'Not available' }}
-
                             </td>
 
 
                             {{-- Action --}}
-                            <td class="px-2 py-3 text-right xl:px-5 xl:py-4">
+                            <td class="px-2 py-3 text-right align-middle xl:px-4">
 
                                 <a
                                     href="{{ route('admin.subscribers.show', $subscriber) }}"
                                     class="
-                                                inline-flex min-h-9
-                                                items-center justify-center gap-1.5
+                                                inline-flex items-center
+                                                justify-center gap-1
                                                 whitespace-nowrap
-                                                px-2 py-2
-                                                text-xs font-semibold
+                                                px-1.5 py-2
+                                                text-[10px] font-semibold
                                                 text-[#008080]
                                                 transition
                                                 hover:bg-[#008080]/5
@@ -540,18 +576,14 @@
                                                 focus:outline-none
                                                 focus:ring-2
                                                 focus:ring-[#008080]/30
-                                                xl:min-h-11
-                                                xl:gap-2
-                                                xl:px-4
-                                                xl:text-sm
+                                                xl:px-2 xl:text-xs
                                             ">
 
                                     View
 
                                     <i
                                         data-lucide="chevron-right"
-                                        class="h-4 w-4"
-                                        aria-hidden="true">
+                                        class="h-3.5 w-3.5">
                                     </i>
 
                                 </a>
@@ -571,7 +603,7 @@
         </div>
 
 
-        {{-- Mobile Cards --}}
+        {{-- Mobile cards --}}
         <div class="grid gap-4 lg:hidden">
 
             @foreach ($subscribers as $subscriber)
@@ -643,7 +675,8 @@
 
                     <span
                         class="
-                                    inline-flex shrink-0 items-center gap-1.5
+                                    inline-flex shrink-0
+                                    items-center gap-1.5
                                     px-2.5 py-1
                                     text-xs font-medium
                                     {{ $statusDisplay['class'] }}
@@ -651,8 +684,7 @@
 
                         <i
                             data-lucide="{{ $statusDisplay['icon'] }}"
-                            class="h-3.5 w-3.5"
-                            aria-hidden="true">
+                            class="h-3.5 w-3.5">
                         </i>
 
                         {{ $statusDisplay['label'] }}
@@ -662,7 +694,7 @@
                 </div>
 
 
-                <dl class="mt-5 grid gap-4 text-sm sm:grid-cols-2">
+                <dl class="mt-4 grid gap-4 sm:grid-cols-2">
 
                     <div>
 
@@ -670,7 +702,7 @@
                             Email
                         </dt>
 
-                        <dd class="mt-1 break-all text-gray-700 dark:text-gray-300">
+                        <dd class="mt-1 break-all text-sm text-gray-700 dark:text-gray-300">
                             {{ $subscriber->email ?: 'Not recorded' }}
                         </dd>
 
@@ -683,7 +715,7 @@
                             Phone
                         </dt>
 
-                        <dd class="mt-1 text-gray-700 dark:text-gray-300">
+                        <dd class="mt-1 text-sm text-gray-700 dark:text-gray-300">
                             {{ $subscriber->phone ?: 'Not recorded' }}
                         </dd>
 
@@ -696,14 +728,12 @@
                             Location
                         </dt>
 
-                        <dd class="mt-1 text-gray-700 dark:text-gray-300">
-
+                        <dd class="mt-1 text-sm text-gray-700 dark:text-gray-300">
                             {{ $subscriber->city ?: 'Not specified' }}
 
                             @if ($subscriber->province)
                             , {{ $subscriber->province }}
                             @endif
-
                         </dd>
 
                     </div>
@@ -715,7 +745,7 @@
                             Subscriber Since
                         </dt>
 
-                        <dd class="mt-1 text-gray-700 dark:text-gray-300">
+                        <dd class="mt-1 text-sm text-gray-700 dark:text-gray-300">
                             {{ $subscriber->created_at?->format('M d, Y') ?? 'Not available' }}
                         </dd>
 
@@ -731,21 +761,18 @@
                         class="
                                     inline-flex min-h-11 w-full
                                     items-center justify-center gap-2
-                                    text-sm font-semibold text-[#008080]
+                                    text-sm font-semibold
+                                    text-[#008080]
                                     transition
                                     hover:bg-[#008080]/5
                                     hover:text-[#006666]
-                                    focus:outline-none
-                                    focus:ring-2
-                                    focus:ring-[#008080]/30
                                 ">
 
                         View Subscriber
 
                         <i
                             data-lucide="chevron-right"
-                            class="h-4 w-4"
-                            aria-hidden="true">
+                            class="h-4 w-4">
                         </i>
 
                     </a>
@@ -763,4 +790,5 @@
     </div>
 
 </div>
+
 @endsection
