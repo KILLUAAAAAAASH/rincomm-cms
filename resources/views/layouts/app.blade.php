@@ -202,6 +202,33 @@
                 </a>
 
 
+                {{-- Activity logs --}}
+                <a
+                    href="{{ route('admin.activity-logs.index') }}"
+                    class="
+        flex items-center gap-3
+        rounded-xl px-4 py-3
+        text-sm transition
+
+        {{ request()->routeIs('admin.activity-logs.*')
+            ? 'bg-[#008080] font-medium text-white shadow-sm'
+            : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+               dark:text-neutral-300 dark:hover:bg-[#008080]/15 dark:hover:text-[#5EEAD4]'
+        }}
+    ">
+
+                    <i
+                        data-lucide="history"
+                        class="h-5 w-5"
+                        aria-hidden="true"></i>
+
+                    <span>
+                        Activity Logs
+                    </span>
+
+                </a>
+
+
                 {{-- Hero slides --}}
                 <a
                     href="{{ route('admin.hero-slides.index') }}"

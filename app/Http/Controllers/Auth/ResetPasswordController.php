@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -15,6 +16,10 @@ use Illuminate\View\View;
 
 class ResetPasswordController extends Controller
 {
+    public function __construct(
+        private readonly ActivityLogger $activityLogger
+    ) {}
+
     /**
      * Display the reset password form.
      */
@@ -48,7 +53,7 @@ class ResetPasswordController extends Controller
                 'password_confirmation',
                 'token'
             ),
-            function (User $user, string $password): void {
+            function (User $user, string $password) use ($request): void {
                 $user->forceFill([
                     'password' => Hash::make($password),
                 ]);
@@ -57,17 +62,28 @@ class ResetPasswordController extends Controller
                 $user->save();
 
                 event(new PasswordReset($user));
+
+                $this->activityLogger->record(
+                    action: 'user.password_reset',
+                    actor: $user,
+                    target: $user,
+                    description: 'Successfully reset the account password.',
+                    metadata: [
+                        'role' => $user->role,
+                    ],
+                    request: $request
+                );
             }
         );
 
         return $status === Password::PASSWORD_RESET
             ? redirect()
-                ->route('login')
-                ->with('status', __($status))
+            ->route('login')
+            ->with('status', __($status))
             : back()
-                ->withInput($request->only('email'))
-                ->withErrors([
-                    'email' => __($status),
-                ]);
+            ->withInput($request->only('email'))
+            ->withErrors([
+                'email' => __($status),
+            ]);
     }
 }

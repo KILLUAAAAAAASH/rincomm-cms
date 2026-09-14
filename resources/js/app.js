@@ -73,6 +73,7 @@ import {
     Wrench,
     X,
     createIcons,
+    History,
 } from 'lucide';
 
 const icons = {
@@ -144,6 +145,7 @@ const icons = {
     WifiOff,
     Wrench,
     X,
+    History,
 };
 
 document.addEventListener('DOMContentLoaded', () => {

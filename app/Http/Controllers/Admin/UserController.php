@@ -4,12 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
 class UserController extends Controller
 {
+    public function __construct(
+        private readonly ActivityLogger $activityLogger
+    ) {}
+
     /**
      * Display the user account list.
      */
@@ -89,10 +94,20 @@ class UserController extends Controller
                     'required',
                     'in:active,inactive',
                 ],
+                'deactivation_reason' => [
+                    'nullable',
+                    'required_if:account_status,inactive',
+                    'string',
+                    'max:500',
+                ],
             ],
             [
                 'account_status.required' => 'Please select an account status.',
                 'account_status.in' => 'The selected account status is invalid.',
+
+                'deactivation_reason.required_if' => 'Please provide a reason for deactivating this account.',
+                'deactivation_reason.string' => 'The deactivation reason must be valid text.',
+                'deactivation_reason.max' => 'The deactivation reason must not exceed 500 characters.',
             ]
         );
 
@@ -128,8 +143,48 @@ class UserController extends Controller
             }
         }
 
+        $previousStatus = $user->account_status;
+
+        $deactivationReason = $validated['account_status'] === 'inactive'
+            ? trim($validated['deactivation_reason'])
+            : null;
+
         $user->account_status = $validated['account_status'];
         $user->save();
+
+        if ($previousStatus !== $user->account_status) {
+            $metadata = [
+                'old_status' => $previousStatus,
+                'new_status' => $user->account_status,
+            ];
+
+            if ($deactivationReason !== null) {
+                $metadata['reason'] = $deactivationReason;
+            }
+
+            if ($user->account_status === 'active') {
+                $action = 'user.activated';
+
+                $description = "Activated the account of {$user->name}.";
+            } else {
+                $action = 'user.deactivated';
+
+                $description = sprintf(
+                    'Deactivated the account of %s. Reason: %s',
+                    $user->name,
+                    $deactivationReason
+                );
+            }
+
+            $this->activityLogger->record(
+                action: $action,
+                actor: $request->user(),
+                target: $user,
+                description: $description,
+                metadata: $metadata,
+                request: $request
+            );
+        }
 
         $message = $user->account_status === 'active'
             ? 'User account activated successfully.'

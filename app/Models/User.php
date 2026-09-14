@@ -12,6 +12,25 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    protected $fillable = [
+        'name',
+        'email',
+        'password',
+    ];
+
+    protected $hidden = [
+        'password',
+        'remember_token',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
+    }
+
     public function hasRole(string $role): bool
     {
         return $this->role === $role;
@@ -40,25 +59,6 @@ class User extends Authenticatable
     public function isActive(): bool
     {
         return $this->account_status === 'active';
-    }
-
-    protected $fillable = [
-        'name',
-        'email',
-        'password',
-    ];
-
-    protected $hidden = [
-        'password',
-        'remember_token',
-    ];
-
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-        ];
     }
 
     public function customer(): HasOne
@@ -94,5 +94,15 @@ class User extends Authenticatable
     public function reviewedServiceApplications(): HasMany
     {
         return $this->hasMany(ServiceApplication::class, 'reviewed_by');
+    }
+
+    public function performedActivities(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class, 'actor_user_id');
+    }
+
+    public function activityLogs(): HasMany
+    {
+        return $this->hasMany(ActivityLog::class, 'target_user_id');
     }
 }

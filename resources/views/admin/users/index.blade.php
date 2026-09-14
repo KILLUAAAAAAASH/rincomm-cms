@@ -5,9 +5,10 @@
 @section('page-title', 'User Management')
 
 @section('content')
+
 <div class="space-y-6">
 
-    {{-- Success Message --}}
+    {{-- Success message --}}
     @if (session('success'))
 
     <div
@@ -26,8 +27,7 @@
         <i
             data-lucide="circle-check"
             class="mt-0.5 h-5 w-5 shrink-0"
-            aria-hidden="true">
-        </i>
+            aria-hidden="true"></i>
 
         <span>
             {{ session('success') }}
@@ -38,7 +38,7 @@
     @endif
 
 
-    {{-- Error Message --}}
+    {{-- Error message --}}
     @if (session('error'))
 
     <div
@@ -56,8 +56,7 @@
         <i
             data-lucide="triangle-alert"
             class="mt-0.5 h-5 w-5 shrink-0"
-            aria-hidden="true">
-        </i>
+            aria-hidden="true"></i>
 
         <span>
             {{ session('error') }}
@@ -68,7 +67,36 @@
     @endif
 
 
-    {{-- Information Card --}}
+    {{-- Validation error --}}
+    @if ($errors->has('deactivation_reason'))
+
+    <div
+        role="alert"
+        class="
+                flex items-start gap-3
+                border border-red-200
+                bg-red-50 px-4 py-3
+                text-sm text-red-700
+                dark:border-red-900
+                dark:bg-red-950/40
+                dark:text-red-300
+            ">
+
+        <i
+            data-lucide="triangle-alert"
+            class="mt-0.5 h-5 w-5 shrink-0"
+            aria-hidden="true"></i>
+
+        <span>
+            {{ $errors->first('deactivation_reason') }}
+        </span>
+
+    </div>
+
+    @endif
+
+
+    {{-- Information card --}}
     <div
         class="
             border border-gray-200
@@ -90,8 +118,7 @@
                 <i
                     data-lucide="shield-check"
                     class="h-5 w-5 text-[#008080]"
-                    aria-hidden="true">
-                </i>
+                    aria-hidden="true"></i>
 
             </div>
 
@@ -104,6 +131,7 @@
 
                 <p class="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
                     Deactivated accounts cannot access protected Rincomm system areas.
+                    A reason is required whenever an account is deactivated.
                     Role and subscriber service status are managed separately.
                 </p>
 
@@ -114,7 +142,7 @@
     </div>
 
 
-    {{-- User Search and Filters --}}
+    {{-- User search and filters --}}
     <form
         method="GET"
         action="{{ route('admin.users.index') }}"
@@ -146,8 +174,7 @@
                         text-gray-500
                         dark:text-gray-400
                     "
-                    aria-hidden="true">
-                </i>
+                    aria-hidden="true"></i>
 
                 <input
                     id="user-search"
@@ -176,7 +203,7 @@
             </div>
 
 
-            {{-- Role Filter --}}
+            {{-- Role filter --}}
             <div class="lg:w-44">
 
                 <label
@@ -236,7 +263,7 @@
             </div>
 
 
-            {{-- Status Filter --}}
+            {{-- Status filter --}}
             <div class="lg:w-44">
 
                 <label
@@ -284,7 +311,7 @@
             </div>
 
 
-            {{-- Clear Filters --}}
+            {{-- Clear filters --}}
             @if ($search !== '' || $role !== '' || $status !== '')
 
             <a
@@ -310,8 +337,7 @@
                 <i
                     data-lucide="x"
                     class="h-4 w-4"
-                    aria-hidden="true">
-                </i>
+                    aria-hidden="true"></i>
 
                 Clear
 
@@ -324,7 +350,7 @@
     </form>
 
 
-    {{-- User Results --}}
+    {{-- User results --}}
     <div
         data-user-results
         aria-live="polite"
@@ -332,7 +358,7 @@
 
         @if ($users->isEmpty())
 
-        {{-- Empty State --}}
+        {{-- Empty state --}}
         <div
             class="
                     border border-dashed border-gray-300
@@ -353,8 +379,7 @@
                 <i
                     data-lucide="users"
                     class="h-6 w-6 text-gray-500 dark:text-gray-400"
-                    aria-hidden="true">
-                </i>
+                    aria-hidden="true"></i>
 
             </div>
 
@@ -370,7 +395,7 @@
 
         @else
 
-        {{-- Desktop / Tablet Table --}}
+        {{-- Desktop / tablet table --}}
         <div
             class="
                     hidden overflow-hidden
@@ -554,8 +579,7 @@
                                         <i
                                             data-lucide="{{ $roleIcon }}"
                                             class="h-3.5 w-3.5"
-                                            aria-hidden="true">
-                                        </i>
+                                            aria-hidden="true"></i>
 
                                         {{ ucfirst($user->role) }}
 
@@ -582,8 +606,7 @@
                                         <i
                                             data-lucide="circle-check"
                                             class="h-3.5 w-3.5"
-                                            aria-hidden="true">
-                                        </i>
+                                            aria-hidden="true"></i>
 
                                         Active
 
@@ -604,8 +627,7 @@
                                         <i
                                             data-lucide="circle-minus"
                                             class="h-3.5 w-3.5"
-                                            aria-hidden="true">
-                                        </i>
+                                            aria-hidden="true"></i>
 
                                         Inactive
 
@@ -677,16 +699,9 @@
                                                 <i
                                                     data-lucide="user-check"
                                                     class="h-4 w-4"
-                                                    aria-hidden="true">
-                                                </i>
+                                                    aria-hidden="true"></i>
 
-                                                <span class="xl:hidden">
-                                                    Activate
-                                                </span>
-
-                                                <span class="hidden xl:inline">
-                                                    Activate
-                                                </span>
+                                                Activate
 
                                             </button>
 
@@ -715,8 +730,7 @@
                                             <i
                                                 data-lucide="shield"
                                                 class="h-4 w-4"
-                                                aria-hidden="true">
-                                            </i>
+                                                aria-hidden="true"></i>
 
                                             Protected
 
@@ -752,8 +766,7 @@
                                             <i
                                                 data-lucide="user-x"
                                                 class="h-4 w-4"
-                                                aria-hidden="true">
-                                            </i>
+                                                aria-hidden="true"></i>
 
                                             Deactivate
 
@@ -778,7 +791,7 @@
         </div>
 
 
-        {{-- Mobile Cards --}}
+        {{-- Mobile cards --}}
         <div class="grid gap-4 lg:hidden">
 
             @foreach ($users as $user)
@@ -882,8 +895,7 @@
                                     <i
                                         data-lucide="{{ $roleIcon }}"
                                         class="h-3.5 w-3.5"
-                                        aria-hidden="true">
-                                    </i>
+                                        aria-hidden="true"></i>
 
                                     {{ ucfirst($user->role) }}
 
@@ -916,8 +928,7 @@
                                     <i
                                         data-lucide="circle-check"
                                         class="h-3.5 w-3.5"
-                                        aria-hidden="true">
-                                    </i>
+                                        aria-hidden="true"></i>
 
                                     Active
 
@@ -938,8 +949,7 @@
                                     <i
                                         data-lucide="circle-minus"
                                         class="h-3.5 w-3.5"
-                                        aria-hidden="true">
-                                    </i>
+                                        aria-hidden="true"></i>
 
                                     Inactive
 
@@ -1011,8 +1021,7 @@
                                 <i
                                     data-lucide="user-check"
                                     class="h-4 w-4"
-                                    aria-hidden="true">
-                                </i>
+                                    aria-hidden="true"></i>
 
                                 Activate
 
@@ -1038,8 +1047,7 @@
                             <i
                                 data-lucide="shield"
                                 class="h-4 w-4"
-                                aria-hidden="true">
-                            </i>
+                                aria-hidden="true"></i>
 
                             Protected Account
 
@@ -1069,8 +1077,7 @@
                             <i
                                 data-lucide="user-x"
                                 class="h-4 w-4"
-                                aria-hidden="true">
-                            </i>
+                                aria-hidden="true"></i>
 
                             Deactivate Account
 
@@ -1101,7 +1108,7 @@
     </div>
 
 
-    {{-- Activation Confirmation Modal --}}
+    {{-- Activation confirmation modal --}}
     <div
         id="user-activate-modal"
         class="fixed inset-0 z-50 hidden items-center justify-center p-4"
@@ -1112,8 +1119,7 @@
 
         <div
             id="user-activate-overlay"
-            class="absolute inset-0 bg-black/50">
-        </div>
+            class="absolute inset-0 bg-black/50"></div>
 
 
         <div
@@ -1134,8 +1140,7 @@
                 <i
                     data-lucide="user-check"
                     class="h-5 w-5 text-green-600 dark:text-green-400"
-                    aria-hidden="true">
-                </i>
+                    aria-hidden="true"></i>
 
             </div>
 
@@ -1207,8 +1212,7 @@
                     <i
                         data-lucide="user-check"
                         class="h-4 w-4"
-                        aria-hidden="true">
-                    </i>
+                        aria-hidden="true"></i>
 
                     Activate Account
 
@@ -1221,7 +1225,7 @@
     </div>
 
 
-    {{-- Deactivation Confirmation Modal --}}
+    {{-- Deactivation confirmation modal --}}
     <div
         id="user-deactivate-modal"
         class="fixed inset-0 z-50 hidden items-center justify-center p-4"
@@ -1232,8 +1236,7 @@
 
         <div
             id="user-deactivate-overlay"
-            class="absolute inset-0 bg-black/50">
-        </div>
+            class="absolute inset-0 bg-black/50"></div>
 
 
         <div
@@ -1254,8 +1257,7 @@
                 <i
                     data-lucide="user-x"
                     class="h-5 w-5 text-red-600 dark:text-red-400"
-                    aria-hidden="true">
-                </i>
+                    aria-hidden="true"></i>
 
             </div>
 
@@ -1280,10 +1282,7 @@
                 id="user-deactivate-form"
                 method="POST"
                 data-lock-submit
-                class="
-                    mt-6 flex flex-col-reverse gap-2
-                    sm:flex-row sm:justify-end
-                ">
+                class="mt-6">
 
                 @csrf
                 @method('PATCH')
@@ -1294,45 +1293,105 @@
                     value="inactive">
 
 
-                <button
-                    id="user-deactivate-cancel"
-                    type="button"
+                {{-- Deactivation reason --}}
+                <div>
+
+                    <label
+                        for="deactivation-reason"
+                        class="block text-sm font-medium text-gray-800 dark:text-gray-200">
+                        Reason for deactivation
+                        <span class="text-red-600 dark:text-red-400">*</span>
+                    </label>
+
+                    <textarea
+                        id="deactivation-reason"
+                        name="deactivation_reason"
+                        rows="4"
+                        maxlength="500"
+                        required
+                        placeholder="Enter the reason for deactivating this account."
+                        class="
+                            mt-2 block w-full resize-none
+                            border border-gray-300
+                            bg-white px-3 py-2.5
+                            text-sm text-gray-900
+                            outline-none transition
+                            placeholder:text-gray-400
+                            focus:border-red-500
+                            focus:ring-2
+                            focus:ring-red-500/20
+                            dark:border-neutral-700
+                            dark:bg-neutral-950
+                            dark:text-gray-100
+                            dark:placeholder:text-gray-500
+                        "></textarea>
+
+                    <div class="mt-1.5 flex items-start justify-between gap-3">
+
+                        <p class="text-xs leading-5 text-gray-500 dark:text-gray-400">
+                            This reason will be stored in the Activity Log for audit purposes.
+                        </p>
+
+                        <span class="shrink-0 text-xs text-gray-400">
+                            Max 500
+                        </span>
+
+                    </div>
+
+                </div>
+
+
+                <div
                     class="
-                        min-h-11 border border-gray-200
-                        px-4 py-2.5
-                        text-sm font-medium
-                        text-gray-700
-                        transition
-                        hover:bg-gray-50
-                        dark:border-gray-700
-                        dark:text-gray-300
-                        dark:hover:bg-gray-800
-                    ">
-                    Cancel
-                </button>
-
-
-                <button
-                    type="submit"
-                    data-loading-text="Deactivating..."
-                    class="
-                        inline-flex min-h-11
-                        items-center justify-center gap-2
-                        bg-red-600 px-4 py-2.5
-                        text-sm font-medium text-white
-                        transition
-                        hover:bg-red-700
+                        mt-6 flex flex-col-reverse gap-2
+                        sm:flex-row sm:justify-end
                     ">
 
-                    <i
-                        data-lucide="user-x"
-                        class="h-4 w-4"
-                        aria-hidden="true">
-                    </i>
+                    <button
+                        id="user-deactivate-cancel"
+                        type="button"
+                        class="
+                            min-h-11 border border-gray-200
+                            px-4 py-2.5
+                            text-sm font-medium
+                            text-gray-700
+                            transition
+                            hover:bg-gray-50
+                            dark:border-gray-700
+                            dark:text-gray-300
+                            dark:hover:bg-gray-800
+                        ">
+                        Cancel
+                    </button>
 
-                    Deactivate Account
 
-                </button>
+                    <button
+                        type="submit"
+                        data-loading-text="Deactivating..."
+                        class="
+                            inline-flex min-h-11
+                            items-center justify-center gap-2
+                            bg-red-600 px-4 py-2.5
+                            text-sm font-medium text-white
+                            transition
+                            hover:bg-red-700
+                            focus:outline-none
+                            focus:ring-2
+                            focus:ring-red-500
+                            focus:ring-offset-2
+                            dark:focus:ring-offset-neutral-900
+                        ">
+
+                        <i
+                            data-lucide="user-x"
+                            class="h-4 w-4"
+                            aria-hidden="true"></i>
+
+                        Deactivate Account
+
+                    </button>
+
+                </div>
 
             </form>
 
@@ -1341,4 +1400,20 @@
     </div>
 
 </div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const reasonInput = document.getElementById('deactivation-reason');
+
+        document.querySelectorAll('[data-user-deactivate]').forEach(function(button) {
+            button.addEventListener('click', function() {
+                if (reasonInput) {
+                    reasonInput.value = '';
+                }
+            });
+        });
+    });
+</script>
+
 @endsection

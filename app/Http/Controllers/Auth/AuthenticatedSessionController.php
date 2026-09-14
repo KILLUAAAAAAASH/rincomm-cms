@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Services\ActivityLogger;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -11,6 +12,10 @@ use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
+    public function __construct(
+        private readonly ActivityLogger $activityLogger
+    ) {}
+
     /**
      * Display the login page.
      */
@@ -25,18 +30,18 @@ class AuthenticatedSessionController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $credentials = $request->validate(
-    [
-        'email' => ['bail', 'required', 'email'],
-        'password' => ['bail', 'required', 'string', 'min:8'],
-    ],
-    [
-        'email.required' => 'Please enter your email address.',
-        'email.email' => 'Please enter a valid email address.',
+            [
+                'email' => ['bail', 'required', 'email'],
+                'password' => ['bail', 'required', 'string', 'min:8'],
+            ],
+            [
+                'email.required' => 'Please enter your email address.',
+                'email.email' => 'Please enter a valid email address.',
 
-        'password.required' => 'Please enter your password.',
-        'password.min' => 'Password must be at least 8 characters.',
-    ]
-);
+                'password.required' => 'Please enter your password.',
+                'password.min' => 'Password must be at least 8 characters.',
+            ]
+        );
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
             throw ValidationException::withMessages([
@@ -59,12 +64,29 @@ class AuthenticatedSessionController extends Controller
             ]);
         }
 
-        return match ($user->role) {
-    'admin', 'staff' => redirect()->route('dashboard'),
-    'technician' => redirect()->route('technician.dashboard'),
-    'customer' => redirect()->route('customer.dashboard'),
-    default => $this->logoutUnknownRole($request),
-};
+        $routeName = match ($user->role) {
+            'admin', 'staff' => 'dashboard',
+            'technician' => 'technician.dashboard',
+            'customer' => 'customer.dashboard',
+            default => null,
+        };
+
+        if ($routeName === null) {
+            return $this->logoutUnknownRole($request);
+        }
+
+        $this->activityLogger->record(
+            action: 'user.logged_in',
+            actor: $user,
+            target: $user,
+            description: 'Signed in to the Rincomm system.',
+            metadata: [
+                'role' => $user->role,
+            ],
+            request: $request
+        );
+
+        return redirect()->route($routeName);
     }
 
     /**
@@ -72,6 +94,21 @@ class AuthenticatedSessionController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = $request->user();
+
+        if ($user) {
+            $this->activityLogger->record(
+                action: 'user.logged_out',
+                actor: $user,
+                target: $user,
+                description: 'Signed out of the Rincomm system.',
+                metadata: [
+                    'role' => $user->role,
+                ],
+                request: $request
+            );
+        }
+
         Auth::logout();
 
         $request->session()->invalidate();

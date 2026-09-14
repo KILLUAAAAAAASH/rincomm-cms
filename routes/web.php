@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\ServiceApplicationController as AdminServiceApplicationController;
 use App\Http\Controllers\Admin\SubscriberController;
@@ -65,7 +66,6 @@ Route::middleware('guest')->group(function () {
         ->name('register.store');
 });
 
-
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
@@ -115,6 +115,9 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
 
     Route::patch('/admin/users/{user}/status', [UserController::class, 'updateStatus'])
         ->name('admin.users.status');
+
+    Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])
+        ->name('admin.activity-logs.index');
 
 
     /*

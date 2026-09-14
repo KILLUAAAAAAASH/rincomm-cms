@@ -125,6 +125,7 @@
                         method="POST"
                         action="{{ route('login') }}"
                         class="mt-5 space-y-4"
+                        autocomplete="on"
                         data-lock-submit
                         novalidate>
                         @csrf
@@ -152,6 +153,8 @@
                                 required
                                 autofocus
                                 autocomplete="username"
+                                autocapitalize="none"
+                                spellcheck="false"
                                 placeholder="you@example.com"
                                 class="
                                     block min-h-11 w-full
