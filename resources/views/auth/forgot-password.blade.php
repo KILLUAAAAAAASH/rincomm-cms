@@ -99,29 +99,6 @@
                     sm:p-6
                 ">
 
-                {{-- Logo --}}
-                <div class="mb-1 flex h-20 items-center justify-center">
-
-                    <a
-                        href="{{ route('home') }}"
-                        class="inline-flex h-20 w-56 items-center justify-center"
-                        aria-label="Rincomm Home">
-
-                        <img
-                            src="{{ asset('images/rincomm-logo.svg') }}"
-                            alt="Rincomm Logo"
-                            class="
-                                pointer-events-none
-                                h-52 w-52
-                                max-w-none
-                                -translate-y-4
-                                object-contain
-                            ">
-
-                    </a>
-
-                </div>
-
 
                 {{-- Header --}}
                 <div class="mb-5 text-center">

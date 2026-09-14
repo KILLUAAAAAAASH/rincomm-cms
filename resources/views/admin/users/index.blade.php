@@ -264,7 +264,7 @@
                     ">
 
                     <option value="">
-                        All statuses
+                        All status
                     </option>
 
                     <option
