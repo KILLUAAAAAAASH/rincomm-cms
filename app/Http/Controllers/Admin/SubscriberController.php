@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Customer;
+use App\Models\ServiceArea;
+use App\Models\ServicePlan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -80,6 +82,12 @@ class SubscriberController extends Controller
         $subscriber->load([
             'user:id,name,email,role,account_status,created_at',
 
+            'documents' => function ($query) {
+                $query
+                    ->with('uploader:id,name,email')
+                    ->latest();
+            },
+
             'subscriptions' => function ($query) {
                 $query
                     ->select([
@@ -99,9 +107,74 @@ class SubscriberController extends Controller
                     ])
                     ->latest('id');
             },
+
+            'planChangeRequests' => function ($query) {
+                $query
+                    ->with([
+                        'currentPlan:id,name,speed_mbps,monthly_fee',
+                        'requestedPlan:id,name,speed_mbps,monthly_fee',
+                        'requester:id,name,email',
+                    ])
+                    ->latest('id');
+            },
+
+            'relocationRequests' => function ($query) {
+                $query
+                    ->with([
+                        'requestedServiceArea:id,province,city_municipality,barangay,postal_code,is_serviceable',
+                        'requester:id,name,email',
+                        'reviewer:id,name,email',
+                    ])
+                    ->latest('id');
+            },
         ]);
 
         $latestSubscription = $subscriber->subscriptions->first();
+
+        $activeSubscription = $subscriber->subscriptions
+            ->firstWhere('status', 'active');
+
+        $pendingPlanChangeRequest = $subscriber->planChangeRequests
+            ->firstWhere('status', 'pending');
+
+        $pendingRelocationRequest = $subscriber->relocationRequests
+            ->firstWhere('status', 'pending');
+
+        $availablePlans = collect();
+
+        if ($activeSubscription) {
+            $availablePlans = ServicePlan::query()
+                ->select([
+                    'id',
+                    'name',
+                    'description',
+                    'speed_mbps',
+                    'monthly_fee',
+                    'duration_months',
+                    'is_custom',
+                    'is_active',
+                ])
+                ->where('is_active', true)
+                ->whereKeyNot($activeSubscription->service_plan_id)
+                ->orderBy('monthly_fee')
+                ->orderBy('speed_mbps')
+                ->get();
+        }
+
+        $serviceableAreas = ServiceArea::query()
+            ->select([
+                'id',
+                'province',
+                'city_municipality',
+                'barangay',
+                'postal_code',
+                'is_serviceable',
+            ])
+            ->where('is_serviceable', true)
+            ->orderBy('province')
+            ->orderBy('city_municipality')
+            ->orderBy('barangay')
+            ->get();
 
         $allowedStatusTransitions = $this->allowedStatusTransitions(
             $subscriber->status
@@ -110,8 +183,149 @@ class SubscriberController extends Controller
         return view('admin.subscribers.show', [
             'subscriber' => $subscriber,
             'latestSubscription' => $latestSubscription,
+            'activeSubscription' => $activeSubscription,
+            'pendingPlanChangeRequest' => $pendingPlanChangeRequest,
+            'pendingRelocationRequest' => $pendingRelocationRequest,
+            'availablePlans' => $availablePlans,
+            'serviceableAreas' => $serviceableAreas,
             'allowedStatusTransitions' => $allowedStatusTransitions,
         ]);
+    }
+
+    /**
+     * Display the subscriber profile edit form.
+     */
+    public function edit(Customer $subscriber): View
+    {
+        $subscriber->load([
+            'user:id,name,email,role,account_status',
+        ]);
+
+        return view('admin.subscribers.edit', [
+            'subscriber' => $subscriber,
+        ]);
+    }
+
+    /**
+     * Update editable subscriber profile information.
+     */
+    public function update(
+        Request $request,
+        Customer $subscriber
+    ): RedirectResponse {
+        $validated = $request->validate(
+            [
+                'first_name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
+                'middle_name' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
+                'last_name' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
+                'phone' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
+                'address' => [
+                    'required',
+                    'string',
+                    'max:255',
+                ],
+                'city' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
+                'province' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
+                'postal_code' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
+                'billing_address' => [
+                    'nullable',
+                    'string',
+                    'max:255',
+                ],
+            ],
+            [
+                'first_name.required' => 'First name is required.',
+                'first_name.max' => 'First name cannot exceed 255 characters.',
+
+                'middle_name.max' => 'Middle name cannot exceed 255 characters.',
+
+                'last_name.required' => 'Last name is required.',
+                'last_name.max' => 'Last name cannot exceed 255 characters.',
+
+                'phone.max' => 'Phone number cannot exceed 255 characters.',
+
+                'address.required' => 'Address is required.',
+                'address.max' => 'Address cannot exceed 255 characters.',
+
+                'city.max' => 'City or municipality cannot exceed 255 characters.',
+                'province.max' => 'Province cannot exceed 255 characters.',
+                'postal_code.max' => 'Postal code cannot exceed 255 characters.',
+
+                'billing_address.max' => 'Billing address cannot exceed 255 characters.',
+            ]
+        );
+
+        DB::transaction(function () use ($subscriber, $validated) {
+            $lockedSubscriber = Customer::query()
+                ->with('user')
+                ->whereKey($subscriber->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $lockedSubscriber->fill([
+                'first_name' => $validated['first_name'],
+                'middle_name' => $validated['middle_name'] ?? null,
+                'last_name' => $validated['last_name'],
+                'phone' => $validated['phone'] ?? null,
+                'address' => $validated['address'],
+                'city' => $validated['city'] ?? null,
+                'province' => $validated['province'] ?? null,
+                'postal_code' => $validated['postal_code'] ?? null,
+                'billing_address' => $validated['billing_address'] ?? null,
+            ]);
+
+            $lockedSubscriber->save();
+
+            if ($lockedSubscriber->user) {
+                $fullName = trim(
+                    implode(' ', array_filter([
+                        $lockedSubscriber->first_name,
+                        $lockedSubscriber->middle_name,
+                        $lockedSubscriber->last_name,
+                    ]))
+                );
+
+                if ($lockedSubscriber->user->name !== $fullName) {
+                    $lockedSubscriber->user->name = $fullName;
+                    $lockedSubscriber->user->save();
+                }
+            }
+        });
+
+        return redirect()
+            ->route('admin.subscribers.show', $subscriber)
+            ->with(
+                'success',
+                'Subscriber profile updated successfully.'
+            );
     }
 
     /**
@@ -147,10 +361,6 @@ class SubscriberController extends Controller
             $subscriber,
             $validated
         ) {
-            /*
-             * Lock the current customer row so two administrators cannot
-             * perform conflicting status changes at the same time.
-             */
             $lockedSubscriber = Customer::query()
                 ->whereKey($subscriber->getKey())
                 ->lockForUpdate()
@@ -229,13 +439,6 @@ class SubscriberController extends Controller
                 'disconnected',
             ],
 
-            /*
-             * Pending activation belongs to the installation/service
-             * activation workflow, not this manual status control.
-             *
-             * Disconnected service will later require the proper
-             * reconnection workflow.
-             */
             'pending',
             'disconnected' => [],
 

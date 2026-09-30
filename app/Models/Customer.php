@@ -62,4 +62,19 @@ class Customer extends Model
     {
         return $this->hasMany(CustomerStatusHistory::class);
     }
+
+    public function documents(): HasMany
+    {
+        return $this->hasMany(CustomerDocument::class);
+    }
+
+    public function planChangeRequests(): HasMany
+    {
+        return $this->hasMany(PlanChangeRequest::class);
+    }
+
+    public function relocationRequests(): HasMany
+    {
+        return $this->hasMany(RelocationRequest::class);
+    }
 }

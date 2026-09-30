@@ -54,7 +54,10 @@ class ServiceApplicationController extends Controller
                 );
         }
 
-        // Check the current database records instead of trusting session data alone.
+        /*
+         * Recheck the current database records instead of trusting
+         * session data alone.
+         */
         $serviceArea = ServiceArea::query()
             ->whereKey($coverage['service_area_id'])
             ->where('is_serviceable', true)
@@ -211,7 +214,12 @@ class ServiceApplicationController extends Controller
             $serviceArea,
             $servicePlan
         ): void {
-            // Lock the account while checking for duplicate submissions.
+            /*
+             * Lock the account while checking for duplicate submissions.
+             *
+             * This prevents simultaneous requests from creating multiple
+             * active applications for the same user.
+             */
             User::query()
                 ->whereKey($request->user()->id)
                 ->lockForUpdate()
@@ -223,7 +231,8 @@ class ServiceApplicationController extends Controller
 
             if ($existingCustomer) {
                 throw ValidationException::withMessages([
-                    'application' => 'Your account is already registered as a Rincomm subscriber.',
+                    'application' =>
+                    'Your account is already registered as a Rincomm subscriber.',
                 ]);
             }
 
@@ -237,12 +246,25 @@ class ServiceApplicationController extends Controller
 
             if ($existingApplication) {
                 throw ValidationException::withMessages([
-                    'application' => 'You already have a service application in progress.',
+                    'application' =>
+                    'You already have a service application in progress.',
                 ]);
             }
 
-            ServiceApplication::create([
-                'application_number' => 'APP-' . Str::ulid(),
+            /*
+             * The human-readable application number depends on the
+             * database-generated primary key.
+             *
+             * A temporary unique value is used only during this
+             * transaction. Once MySQL assigns the application ID,
+             * it is replaced with a staff-friendly number such as:
+             *
+             * APP-2026-0001
+             *
+             * Using the primary key avoids MAX() + 1 race conditions.
+             */
+            $application = ServiceApplication::create([
+                'application_number' => 'TMP-' . Str::ulid(),
                 'user_id' => $request->user()->id,
                 'service_area_id' => $serviceArea->id,
                 'service_plan_id' => $servicePlan->id,
@@ -254,11 +276,22 @@ class ServiceApplicationController extends Controller
                 'phone' => $validated['phone'],
                 'email' => $validated['email'],
 
-                'installation_address' => $validated['installation_address'],
-                'billing_address' => $validated['billing_address'] ?? null,
+                'installation_address' =>
+                $validated['installation_address'],
+
+                'billing_address' =>
+                $validated['billing_address'] ?? null,
 
                 'status' => 'pending',
                 'submitted_at' => now(),
+            ]);
+
+            $application->update([
+                'application_number' => sprintf(
+                    'APP-%s-%04d',
+                    now()->format('Y'),
+                    $application->id
+                ),
             ]);
         });
 

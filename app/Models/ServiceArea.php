@@ -31,4 +31,12 @@ class ServiceArea extends Model
     {
         return $this->hasMany(ServiceApplication::class);
     }
+
+    public function relocationRequests(): HasMany
+    {
+        return $this->hasMany(
+            RelocationRequest::class,
+            'requested_service_area_id'
+        );
+    }
 }

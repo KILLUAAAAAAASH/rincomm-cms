@@ -6,7 +6,7 @@
 
 @section('content')
 
-<div class="space-y-6">
+<div class="space-y-2">
 
     {{-- Success message --}}
     @if (session('success'))
@@ -96,46 +96,41 @@
     @endif
 
 
-    {{-- Information card --}}
+    {{-- Compact account access information --}}
     <div
         class="
+            flex items-center gap-2.5
             border border-gray-200
-            bg-white p-4 shadow-sm
+            bg-white px-3 py-2.5
             dark:border-neutral-800
             dark:bg-neutral-900
         ">
 
-        <div class="flex items-start gap-3">
+        <div
+            class="
+                flex h-8 w-8 shrink-0
+                items-center justify-center
+                bg-teal-50
+                dark:bg-teal-950/40
+            ">
 
-            <div
-                class="
-                    mt-0.5 flex h-10 w-10 shrink-0
-                    items-center justify-center
-                    bg-teal-50
-                    dark:bg-teal-950/40
-                ">
+            <i
+                data-lucide="shield-check"
+                class="h-4 w-4 text-[#008080]"
+                aria-hidden="true"></i>
 
-                <i
-                    data-lucide="shield-check"
-                    class="h-5 w-5 text-[#008080]"
-                    aria-hidden="true"></i>
+        </div>
 
-            </div>
+        <div class="min-w-0">
 
+            <p class="text-xs font-semibold text-gray-900 dark:text-white">
+                Account Access Control
+            </p>
 
-            <div>
-
-                <p class="text-sm font-medium text-gray-900 dark:text-white">
-                    Account Access Control
-                </p>
-
-                <p class="mt-1 text-sm leading-6 text-gray-500 dark:text-gray-400">
-                    Deactivated accounts cannot access protected Rincomm system areas.
-                    A reason is required whenever an account is deactivated.
-                    Role and subscriber service status are managed separately.
-                </p>
-
-            </div>
+            <p class="mt-0.5 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                Deactivated accounts cannot access protected areas. A reason is required for deactivation.
+                Role and subscriber service status are managed separately.
+            </p>
 
         </div>
 
@@ -149,7 +144,7 @@
         data-user-filters
         class="
             border border-gray-200
-            bg-white p-3 shadow-sm
+            bg-white p-3
             dark:border-neutral-800
             dark:bg-neutral-900
         ">
@@ -400,7 +395,7 @@
             class="
                     hidden overflow-hidden
                     border border-gray-200
-                    bg-white shadow-sm
+                    bg-white
                     lg:block
                     dark:border-neutral-800
                     dark:bg-neutral-900
@@ -421,7 +416,7 @@
 
                             <th
                                 class="
-                                        px-2 py-3 xl:px-5
+                                        px-3 py-2.5 xl:px-4
                                         text-xs font-semibold uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
@@ -431,7 +426,7 @@
 
                             <th
                                 class="
-                                        px-2 py-3 xl:px-5
+                                        px-3 py-2.5 xl:px-4
                                         text-xs font-semibold uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
@@ -441,7 +436,7 @@
 
                             <th
                                 class="
-                                        px-2 py-3 xl:px-5
+                                        px-3 py-2.5 xl:px-4
                                         text-xs font-semibold uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
@@ -451,7 +446,7 @@
 
                             <th
                                 class="
-                                        px-2 py-3 xl:px-5
+                                        px-3 py-2.5 xl:px-4
                                         text-xs font-semibold uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
@@ -461,7 +456,7 @@
 
                             <th
                                 class="
-                                        px-2 py-3 xl:px-5
+                                        px-3 py-2.5 xl:px-4
                                         text-xs font-semibold uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
@@ -501,7 +496,7 @@
                             <tr class="transition hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
 
                                 {{-- User --}}
-                                <td class="px-2 py-3 xl:px-5 xl:py-4">
+                                <td class="px-3 py-3 xl:px-4">
 
                                     <div class="flex min-w-[175px] items-center gap-2 xl:min-w-[240px] xl:gap-3">
 
@@ -564,7 +559,7 @@
 
 
                                 {{-- Role --}}
-                                <td class="px-2 py-3 xl:px-5 xl:py-4">
+                                <td class="px-3 py-3 xl:px-4">
 
                                     <span
                                         class="
@@ -589,7 +584,7 @@
 
 
                                 {{-- Status --}}
-                                <td class="px-2 py-3 text-center xl:px-5 xl:py-4">
+                                <td class="px-3 py-3 text-center xl:px-4">
 
                                     @if ($user->account_status === 'active')
 
@@ -652,7 +647,7 @@
 
 
                                 {{-- Action --}}
-                                <td class="px-2 py-3 xl:px-5 xl:py-4">
+                                <td class="px-3 py-3 xl:px-4">
 
                                     <div class="ml-auto w-32">
 
@@ -1332,9 +1327,6 @@
                             This reason will be stored in the Activity Log for audit purposes.
                         </p>
 
-                        <span class="shrink-0 text-xs text-gray-400">
-                            Max 500
-                        </span>
 
                     </div>
 

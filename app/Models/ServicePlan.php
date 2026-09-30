@@ -43,4 +43,19 @@ class ServicePlan extends Model
         return $this->hasMany(ServiceApplication::class);
     }
 
+    public function currentPlanChangeRequests(): HasMany
+    {
+        return $this->hasMany(
+            PlanChangeRequest::class,
+            'current_service_plan_id'
+        );
+    }
+
+    public function requestedPlanChangeRequests(): HasMany
+    {
+        return $this->hasMany(
+            PlanChangeRequest::class,
+            'requested_service_plan_id'
+        );
+    }
 }

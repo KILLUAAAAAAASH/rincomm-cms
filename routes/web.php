@@ -1,9 +1,15 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\CustomerDocumentController;
 use App\Http\Controllers\Admin\HeroSlideController;
+use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\PlanChangeRequestController;
+use App\Http\Controllers\Admin\RelocationRequestController;
 use App\Http\Controllers\Admin\ServiceApplicationController as AdminServiceApplicationController;
+use App\Http\Controllers\Admin\ServicePlanController;
 use App\Http\Controllers\Admin\SubscriberController;
+use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -45,24 +51,28 @@ Route::middleware('guest')->group(function () {
         ->name('login');
 
     Route::post('/login', [AuthenticatedSessionController::class, 'store'])
+        ->middleware('throttle:5,1')
         ->name('login.store');
 
     Route::get('/forgot-password', [ForgotPasswordController::class, 'create'])
         ->name('password.request');
 
     Route::post('/forgot-password', [ForgotPasswordController::class, 'store'])
+        ->middleware('throttle:3,1')
         ->name('password.email');
 
     Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])
         ->name('password.reset');
 
     Route::post('/reset-password', [ResetPasswordController::class, 'store'])
+        ->middleware('throttle:5,1')
         ->name('password.update');
 
     Route::get('/register', [RegisteredUserController::class, 'create'])
         ->name('register');
 
     Route::post('/register', [RegisteredUserController::class, 'store'])
+        ->middleware('throttle:3,1')
         ->name('register.store');
 });
 
@@ -129,16 +139,108 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     Route::get('/admin/subscribers', [SubscriberController::class, 'index'])
         ->name('admin.subscribers.index');
 
+    Route::get('/admin/subscribers/{subscriber}/edit', [SubscriberController::class, 'edit'])
+        ->name('admin.subscribers.edit');
+
+    Route::patch('/admin/subscribers/{subscriber}', [SubscriberController::class, 'update'])
+        ->name('admin.subscribers.update');
+
     Route::get('/admin/subscribers/{subscriber}', [SubscriberController::class, 'show'])
         ->name('admin.subscribers.show');
 
     Route::patch('/admin/subscribers/{subscriber}/status', [SubscriberController::class, 'updateStatus'])
         ->name('admin.subscribers.status');
 
+    Route::patch(
+        '/admin/subscribers/{subscriber}/subscriptions/{subscription}/activate',
+        [SubscriptionController::class, 'activate']
+    )->name('admin.subscribers.subscriptions.activate');
+
+    Route::patch(
+        '/admin/subscribers/{subscriber}/subscriptions/{subscription}/discount',
+        [SubscriptionController::class, 'updateDiscount']
+    )->name('admin.subscribers.subscriptions.discount');
+
 
     /*
     |--------------------------------------------------------------------------
-    | Service Applications
+    | Customer Documents
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/admin/subscribers/{subscriber}/documents',
+        [CustomerDocumentController::class, 'store']
+    )->name('admin.subscribers.documents.store');
+
+    Route::get(
+        '/admin/subscribers/{subscriber}/documents/{document}',
+        [CustomerDocumentController::class, 'show']
+    )->name('admin.subscribers.documents.show');
+
+    Route::get(
+        '/admin/subscribers/{subscriber}/documents/{document}/download',
+        [CustomerDocumentController::class, 'download']
+    )->name('admin.subscribers.documents.download');
+
+    Route::delete(
+        '/admin/subscribers/{subscriber}/documents/{document}',
+        [CustomerDocumentController::class, 'destroy']
+    )->name('admin.subscribers.documents.destroy');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Plan Change Requests
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/admin/subscribers/{subscriber}/plan-change-requests',
+        [PlanChangeRequestController::class, 'store']
+    )->name('admin.subscribers.plan-change-requests.store');
+
+    Route::patch(
+        '/admin/subscribers/{subscriber}/plan-change-requests/{planChangeRequest}/approve',
+        [PlanChangeRequestController::class, 'approve']
+    )->name('admin.subscribers.plan-change-requests.approve');
+
+    Route::patch(
+        '/admin/subscribers/{subscriber}/plan-change-requests/{planChangeRequest}/reject',
+        [PlanChangeRequestController::class, 'reject']
+    )->name('admin.subscribers.plan-change-requests.reject');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Relocation Requests
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/admin/subscribers/{subscriber}/relocation-requests',
+        [RelocationRequestController::class, 'store']
+    )->name('admin.subscribers.relocation-requests.store');
+
+    Route::patch(
+        '/admin/subscribers/{subscriber}/relocation-requests/{relocationRequest}/approve',
+        [RelocationRequestController::class, 'approve']
+    )->name('admin.subscribers.relocation-requests.approve');
+
+    Route::patch(
+        '/admin/subscribers/{subscriber}/relocation-requests/{relocationRequest}/reject',
+        [RelocationRequestController::class, 'reject']
+    )->name('admin.subscribers.relocation-requests.reject');
+
+    Route::patch(
+        '/admin/subscribers/{subscriber}/relocation-requests/{relocationRequest}/complete',
+        [RelocationRequestController::class, 'complete']
+    )->name('admin.subscribers.relocation-requests.complete');
+
+
+    /*
+    |--------------------------------------------------------------------------
+       | Service Applications
     |--------------------------------------------------------------------------
     */
 
@@ -154,6 +256,43 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     Route::post('/admin/applications/{application}/reject', [AdminServiceApplicationController::class, 'reject'])
         ->name('admin.applications.reject');
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Service Plans
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/admin/service-plans', [ServicePlanController::class, 'index'])
+        ->name('admin.service-plans.index');
+
+    Route::get('/admin/service-plans/create', [ServicePlanController::class, 'create'])
+        ->name('admin.service-plans.create');
+
+    Route::post('/admin/service-plans', [ServicePlanController::class, 'store'])
+        ->name('admin.service-plans.store');
+
+    Route::get('/admin/service-plans/{servicePlan}/edit', [ServicePlanController::class, 'edit'])
+        ->name('admin.service-plans.edit');
+
+    Route::patch('/admin/service-plans/{servicePlan}', [ServicePlanController::class, 'update'])
+        ->name('admin.service-plans.update');
+
+    Route::patch('/admin/service-plans/{servicePlan}/status', [ServicePlanController::class, 'updateStatus'])
+        ->name('admin.service-plans.status');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Billing & Invoicing
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/admin/invoices', [InvoiceController::class, 'index'])
+        ->name('admin.invoices.index');
+
+    Route::get('/admin/invoices/{invoice}', [InvoiceController::class, 'show'])
+        ->name('admin.invoices.show');
 
     /*
     |--------------------------------------------------------------------------
@@ -196,3 +335,6 @@ Route::middleware(['auth', 'active', 'role:customer'])->group(function () {
     Route::post('/customer/application', [ServiceApplicationController::class, 'store'])
         ->name('customer.application.store');
 });
+
+
+

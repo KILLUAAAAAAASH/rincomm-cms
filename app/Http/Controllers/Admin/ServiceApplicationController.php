@@ -22,7 +22,7 @@ class ServiceApplicationController extends Controller
     public function index(Request $request): View
     {
         $search = trim((string) $request->query('search', ''));
-        $status = (string) $request->query('status', 'pending');
+        $status = (string) $request->query('status', '');
 
         $allowedStatuses = [
             'pending',
@@ -31,8 +31,8 @@ class ServiceApplicationController extends Controller
             'cancelled',
         ];
 
-        if (! in_array($status, $allowedStatuses, true)) {
-            $status = 'pending';
+        if ($status !== '' && ! in_array($status, $allowedStatuses, true)) {
+            $status = '';
         }
 
         $applications = ServiceApplication::query()
@@ -64,7 +64,12 @@ class ServiceApplicationController extends Controller
                     });
                 }
             )
-            ->where('status', $status)
+            ->when(
+                $status !== '',
+                function ($query) use ($status) {
+                    $query->where('status', $status);
+                }
+            )
             ->orderByDesc('submitted_at')
             ->orderByDesc('id')
             ->paginate(20)

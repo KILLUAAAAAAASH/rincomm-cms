@@ -30,6 +30,48 @@ class Subscription extends Model
         'is_custom_plan' => 'boolean',
     ];
 
+    public function hasLockInPeriod(): bool
+    {
+        return $this->lock_in_months > 0;
+    }
+
+    public function lockInStatus(): string
+    {
+        if (! $this->hasLockInPeriod()) {
+            return 'not_set';
+        }
+
+        if ($this->start_date === null || $this->end_date === null) {
+            return 'not_started';
+        }
+
+        $today = now()->startOfDay();
+
+        if ($today->lt($this->start_date->copy()->startOfDay())) {
+            return 'not_started';
+        }
+
+        if ($today->lte($this->end_date->copy()->startOfDay())) {
+            return 'active';
+        }
+
+        return 'completed';
+    }
+
+    public function remainingLockInDays(): ?int
+    {
+        if ($this->lockInStatus() !== 'active') {
+            return null;
+        }
+
+        return now()
+            ->startOfDay()
+            ->diffInDays(
+                $this->end_date->copy()->startOfDay(),
+                false
+            );
+    }
+
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
@@ -43,5 +85,15 @@ class Subscription extends Model
     public function invoices(): HasMany
     {
         return $this->hasMany(Invoice::class);
+    }
+
+    public function planChangeRequests(): HasMany
+    {
+        return $this->hasMany(PlanChangeRequest::class);
+    }
+
+    public function relocationRequests(): HasMany
+    {
+        return $this->hasMany(RelocationRequest::class);
     }
 }

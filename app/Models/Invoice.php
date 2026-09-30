@@ -30,6 +30,7 @@ class Invoice extends Model
         'billing_date' => 'date',
         'due_date' => 'date',
         'disconnection_notice_date' => 'date',
+        'disconnection_notice_triggered_at' => 'datetime',
         'subtotal' => 'decimal:2',
         'discount_amount' => 'decimal:2',
         'adjustment_amount' => 'decimal:2',

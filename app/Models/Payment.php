@@ -14,8 +14,11 @@ class Payment extends Model
     protected $fillable = [
         'invoice_id',
         'customer_id',
+        'payment_reference',
         'amount',
         'payment_method',
+        'payment_status',
+        'paid_at',
         'gateway_reference',
         'remarks',
     ];

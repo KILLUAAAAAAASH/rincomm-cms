@@ -5,6 +5,7 @@ import 'leaflet/dist/leaflet.css';
 
 import {
     Clock3,
+    ClockAlert,
     ListFilter,
     Activity,
     ArrowLeft,
@@ -19,12 +20,17 @@ import {
     ChevronRight,
     CircleAlert,
     CircleCheck,
+    CircleDot,
     CircleHelp,
     CircleMinus,
+    CirclePause,
+    CirclePlay,
+    CircleX,
     ClipboardList,
     CreditCard,
     Eye,
     FileText,
+    FilePenLine,
     Headphones,
     House,
     Images,
@@ -44,9 +50,13 @@ import {
     Moon,
     Pencil,
     Phone,
+    Percent,
     Plus,
+    Printer,
     RadioTower,
+    ReceiptText,
     Router,
+    RotateCcw,
     Save,
     Search,
     SearchCheck,
@@ -72,12 +82,19 @@ import {
     WifiOff,
     Wrench,
     X,
+    ArrowUpRight,
+    Ban,
+    Download,
+    EllipsisVertical,
+    RefreshCw,
+    Upload,
     createIcons,
     History,
 } from 'lucide';
 
 const icons = {
     Clock3,
+    ClockAlert,
     ListFilter,
     Activity,
     ArrowLeft,
@@ -91,13 +108,18 @@ const icons = {
     ChevronRight,
     CircleAlert,
     CircleCheck,
+    CircleDot,
     CircleHelp,
     CircleMinus,
+    CirclePause,
+    CirclePlay,
+    CircleX,
     ClipboardList,
     Contact,
     CreditCard,
     Eye,
     FileText,
+    FilePenLine,
     Headphones,
     House,
     Image,
@@ -117,9 +139,13 @@ const icons = {
     Moon,
     Pencil,
     Phone,
+    Percent,
     Plus,
+    Printer,
     RadioTower,
+    ReceiptText,
     Router,
+    RotateCcw,
     Save,
     Search,
     SearchCheck,
@@ -145,6 +171,12 @@ const icons = {
     WifiOff,
     Wrench,
     X,
+    ArrowUpRight,
+    Ban,
+    Download,
+    EllipsisVertical,
+    RefreshCw,
+    Upload,
     History,
 };
 
@@ -463,7 +495,28 @@ function initPublicMobileDrawer() {
 
     const breakpoint = 1024;
 
-    const closeDrawer = () => {
+    const moveFocusOutsideDrawer = (restoreFocus = false) => {
+        const activeElement = document.activeElement;
+
+        if (
+            !(activeElement instanceof HTMLElement) ||
+            !drawer.contains(activeElement)
+        ) {
+            return;
+        }
+
+        if (restoreFocus && window.innerWidth < breakpoint) {
+            openButton.focus();
+            return;
+        }
+
+        activeElement.blur();
+    };
+
+    const closeDrawer = (restoreFocus = false) => {
+        moveFocusOutsideDrawer(restoreFocus);
+
+        drawer.setAttribute('inert', '');
         drawer.classList.remove('translate-x-0', 'pointer-events-auto');
         drawer.classList.add('translate-x-full', 'pointer-events-none');
         overlay.classList.add('hidden');
@@ -478,12 +531,14 @@ function initPublicMobileDrawer() {
             return;
         }
 
+        drawer.removeAttribute('inert');
         drawer.classList.remove('translate-x-full', 'pointer-events-none');
         drawer.classList.add('translate-x-0', 'pointer-events-auto');
         overlay.classList.remove('hidden');
         document.body.classList.add('overflow-hidden');
         openButton.setAttribute('aria-expanded', 'true');
         drawer.setAttribute('aria-hidden', 'false');
+        closeButton.focus();
     };
 
     const dropdownButtons = document.querySelectorAll('[data-mobile-dropdown]');
@@ -514,28 +569,49 @@ function initPublicMobileDrawer() {
                 }
 
                 otherButton.setAttribute('aria-expanded', 'false');
-                otherButton.querySelector('svg')?.classList.remove('rotate-180');
+
+                otherButton
+                    .querySelector('svg')
+                    ?.classList.remove('rotate-180');
             });
 
             target.classList.toggle('hidden', isOpen);
-            button.setAttribute('aria-expanded', isOpen ? 'false' : 'true');
-            button.querySelector('svg')?.classList.toggle('rotate-180', !isOpen);
+
+            button.setAttribute(
+                'aria-expanded',
+                isOpen ? 'false' : 'true'
+            );
+
+            button
+                .querySelector('svg')
+                ?.classList.toggle('rotate-180', !isOpen);
         });
     });
 
     closeDrawer();
 
     openButton.addEventListener('click', openDrawer);
-    closeButton.addEventListener('click', closeDrawer);
-    overlay.addEventListener('click', closeDrawer);
+
+    closeButton.addEventListener('click', () => {
+        closeDrawer(true);
+    });
+
+    overlay.addEventListener('click', () => {
+        closeDrawer(true);
+    });
 
     document.querySelectorAll('.public-drawer-link').forEach((link) => {
-        link.addEventListener('click', closeDrawer);
+        link.addEventListener('click', () => {
+            closeDrawer();
+        });
     });
 
     document.addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') {
-            closeDrawer();
+        if (
+            event.key === 'Escape' &&
+            drawer.getAttribute('aria-hidden') === 'false'
+        ) {
+            closeDrawer(true);
         }
     });
 
@@ -639,6 +715,12 @@ function initHeroDeleteModal() {
 
         if (title) {
             title.textContent = button.dataset.deleteTitle || 'this hero slide';
+        }
+
+        const actionMenu = button.closest('details');
+
+        if (actionMenu) {
+            actionMenu.removeAttribute('open');
         }
 
         modal.classList.remove('hidden');
@@ -902,7 +984,10 @@ function initHeroCarousel() {
 
     const startAutoplay = () => {
         stopAutoplay();
-        autoplayTimer = setInterval(() => showSlide(currentIndex + 1), autoplayDelay);
+        autoplayTimer = setInterval(
+            () => showSlide(currentIndex + 1),
+            autoplayDelay
+        );
     };
 
     const restartAutoplay = () => {
@@ -986,6 +1071,7 @@ function initCoverageMap() {
         }
 
         const isServiceable = Boolean(area.is_serviceable);
+
         const marker = L.circleMarker([latitude, longitude], {
             radius: 8,
             weight: 3,
@@ -1002,7 +1088,9 @@ function initCoverageMap() {
             .filter(Boolean)
             .join(', ');
 
-        const statusText = isServiceable ? 'Serviceable' : 'Not Serviceable';
+        const statusText = isServiceable
+            ? 'Serviceable'
+            : 'Not Serviceable';
 
         marker.bindPopup(`
             <div style="min-width: 180px">
@@ -1037,3 +1125,5 @@ function escapeMapText(value) {
         .replaceAll('"', '&quot;')
         .replaceAll("'", '&#039;');
 }
+
+

@@ -6,15 +6,15 @@
 
 @section('content')
 
-<div class="space-y-4">
+<div class="space-y-2">
 
     {{-- Page header --}}
     <div>
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
+        <h1 class="text-xl font-semibold tracking-tight text-gray-900 dark:text-white">
             Activity Logs
         </h1>
 
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
             Review important user account and authentication activity.
         </p>
     </div>
@@ -23,10 +23,9 @@
     {{-- Information --}}
     <div
         class="
-            flex items-start gap-2.5
+            flex items-start gap-2
             border border-gray-200
-            bg-white px-4 py-3
-            shadow-sm
+            bg-white px-3 py-2.5
             dark:border-neutral-800
             dark:bg-neutral-900
         ">
@@ -35,7 +34,7 @@
             class="mt-0.5 h-4 w-4 shrink-0 text-[#008080]"
             aria-hidden="true"></i>
 
-        <p class="text-sm leading-5 text-gray-600 dark:text-gray-300">
+        <p class="text-xs leading-5 text-gray-600 dark:text-gray-300">
             Activity records are retained for account monitoring and audit purposes.
         </p>
     </div>
@@ -48,7 +47,6 @@
         class="
             border border-gray-200
             bg-white p-3
-            shadow-sm
             dark:border-neutral-800
             dark:bg-neutral-900
         ">
@@ -315,15 +313,17 @@
         class="
                 hidden overflow-hidden
                 border border-gray-200
-                bg-white shadow-sm
+                bg-white
                 xl:block
                 dark:border-neutral-800
                 dark:bg-neutral-900
             ">
 
+        <div class="h-[60vh] overflow-auto">
+
         <table class="w-full table-fixed">
 
-            <thead class="border-b border-gray-200 bg-gray-50 dark:border-neutral-800 dark:bg-neutral-800">
+            <thead class="sticky top-0 z-10 border-b border-gray-200 bg-gray-50 dark:border-neutral-800 dark:bg-neutral-800">
 
                 <tr>
 
@@ -504,11 +504,13 @@
 
         </table>
 
+        </div>
+
     </div>
 
 
     {{-- Tablet and mobile cards --}}
-    <div class="grid gap-3 xl:hidden">
+    <div class="grid gap-2 xl:hidden">
 
         @foreach ($logs as $log)
 
@@ -523,7 +525,6 @@
             class="
                         border border-gray-200
                         bg-white p-4
-                        shadow-sm
                         dark:border-neutral-800
                         dark:bg-neutral-900
                     ">

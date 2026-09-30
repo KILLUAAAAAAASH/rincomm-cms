@@ -12,6 +12,8 @@ class PaymentReceipt extends Model
 
     protected $fillable = [
         'payment_id',
+        'receipt_number',
+        'issued_at',
         'amount_paid',
         'payment_method',
         'issued_by',

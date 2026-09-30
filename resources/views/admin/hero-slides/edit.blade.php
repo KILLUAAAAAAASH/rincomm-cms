@@ -6,35 +6,33 @@
 
 @section('content')
 
-<div
-    class="
-        space-y-3
-        xl:flex
-        xl:h-[calc(100dvh-7rem)]
-        xl:flex-col
-        xl:space-y-0
-    ">
+<div class="mx-auto max-w-7xl space-y-2">
 
     {{-- Header --}}
-    <div class="flex shrink-0 items-center gap-3 xl:mb-3">
+    <div class="flex items-center gap-3">
 
         <a
             href="{{ route('admin.hero-slides.index') }}"
             class="
                 inline-flex h-9 w-9 shrink-0
                 items-center justify-center
-                rounded-xl border border-neutral-200
-                text-neutral-600 transition
+                border border-gray-300
+                text-gray-600
+                transition
                 hover:border-[#008080]
                 hover:text-[#008080]
                 dark:border-neutral-700
-                dark:text-neutral-300
+                dark:text-gray-300
+                dark:hover:border-[#14B8A6]
+                dark:hover:text-[#5EEAD4]
             "
-            aria-label="Back to hero slides">
+            aria-label="Back to Hero Slides"
+            title="Back to Hero Slides">
 
             <i
                 data-lucide="arrow-left"
-                class="h-4 w-4">
+                class="h-4 w-4"
+                aria-hidden="true">
             </i>
 
         </a>
@@ -42,11 +40,23 @@
 
         <div class="min-w-0">
 
-            <h1 class="truncate text-xl font-semibold text-neutral-900 dark:text-neutral-100">
+            <h1
+                class="
+                    truncate
+                    text-xl font-semibold
+                    tracking-tight
+                    text-gray-900
+                    dark:text-white
+                ">
                 Edit Hero Slide
             </h1>
 
-            <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+            <p
+                class="
+                    mt-0.5 truncate
+                    text-xs text-gray-500
+                    dark:text-gray-400
+                ">
                 Update the homepage carousel content.
             </p>
 
@@ -55,44 +65,31 @@
     </div>
 
 
-    {{-- Slide form --}}
     <form
         action="{{ route('admin.hero-slides.update', $heroSlide) }}"
         method="POST"
         enctype="multipart/form-data"
         data-lock-submit
-        class="
-            space-y-3
-            xl:flex
-            xl:min-h-0
-            xl:flex-1
-            xl:flex-col
-            xl:space-y-0
-        ">
+        class="space-y-2">
 
         @csrf
         @method('PUT')
 
 
-        <div class="xl:min-h-0 xl:flex-1">
-
-            @include('admin.hero-slides._form', [
-            'compactHeroForm' => true,
-            ])
-
-        </div>
+        @include('admin.hero-slides._form')
 
 
-        {{-- Form actions --}}
+        {{-- Actions --}}
         <div
             class="
-                flex shrink-0 flex-col-reverse gap-2
-                border-t border-neutral-200
-                pt-3
+                flex flex-col-reverse gap-2
+                border border-gray-200
+                bg-gray-50
+                px-4 py-3
                 sm:flex-row
                 sm:justify-end
-                xl:mt-3
                 dark:border-neutral-800
+                dark:bg-neutral-950
             ">
 
             <a
@@ -100,13 +97,16 @@
                 class="
                     inline-flex min-h-9
                     items-center justify-center
-                    rounded-xl border border-neutral-300
-                    px-5 py-2
-                    text-sm font-medium text-neutral-700
+                    border border-gray-300
+                    bg-white
+                    px-4 py-2
+                    text-sm font-medium
+                    text-gray-700
                     transition
-                    hover:bg-neutral-50
+                    hover:bg-gray-50
                     dark:border-neutral-700
-                    dark:text-neutral-300
+                    dark:bg-neutral-900
+                    dark:text-gray-300
                     dark:hover:bg-neutral-800
                 ">
                 Cancel
@@ -117,17 +117,23 @@
                 type="submit"
                 class="
                     inline-flex min-h-9
-                    items-center justify-center gap-2
-                    rounded-xl bg-[#008080]
-                    px-5 py-2
-                    text-sm font-medium text-white
-                    shadow-sm transition
+                    items-center justify-center
+                    gap-2
+                    bg-[#008080]
+                    px-4 py-2
+                    text-sm font-semibold
+                    text-white
+                    transition
                     hover:bg-[#006666]
+                    focus:outline-none
+                    focus:ring-2
+                    focus:ring-[#008080]/20
                 ">
 
                 <i
                     data-lucide="save"
-                    class="h-4 w-4">
+                    class="h-4 w-4"
+                    aria-hidden="true">
                 </i>
 
                 Save Changes

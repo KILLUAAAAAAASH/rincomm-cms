@@ -1,66 +1,226 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
-@section('title', 'All Subscribers')
+@section('title', 'Subscribers')
 
-@section('page-title', 'All Subscribers')
+@section('page-title', 'Subscribers')
 
 @section('content')
 
-<div class="space-y-4">
+@php
+$featureKey = request('feature');
 
-    {{-- Page header --}}
-    <div>
+$featureContext = [
+    'customer-information' => [
+        'label' => 'Customer Profile',
+        'description' => 'Select a subscriber to manage profile information.',
+        'icon' => 'user',
+    ],
+    'customer-account-status' => [
+        'label' => 'Account Status',
+        'description' => 'Select a subscriber to manage account status.',
+        'icon' => 'settings-2',
+    ],
+    'customer-documents' => [
+        'label' => 'Customer Documents',
+        'description' => 'Select a subscriber to manage documents.',
+        'icon' => 'file-text',
+    ],
+    'relocation-transfer' => [
+        'label' => 'Relocation',
+        'description' => 'Select a subscriber to manage relocation.',
+        'icon' => 'map-pinned',
+    ],
+    'plan-change' => [
+        'label' => 'Plan Change',
+        'description' => 'Select a subscriber to manage a plan change.',
+        'icon' => 'settings-2',
+    ],
+][$featureKey] ?? null;
+@endphp
 
-        <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">
-            All Subscribers
-        </h1>
 
-        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-            View and find approved Rincomm subscriber records.
-        </p>
+<div class="mx-auto max-w-[1600px] space-y-4">
 
-    </div>
-
-
-    {{-- Subscriber information --}}
-    <div
+    {{-- Page heading --}}
+    <section
         class="
-            flex items-start gap-2.5
-            border border-gray-200
-            bg-white px-4 py-3 shadow-sm
-            dark:border-neutral-800
-            dark:bg-neutral-900
+            flex flex-col gap-3
+            sm:flex-row
+            sm:items-end
+            sm:justify-between
         ">
 
-        <i
-            data-lucide="users"
-            class="mt-0.5 h-4 w-4 shrink-0 text-[#008080]"
-            aria-hidden="true">
-        </i>
+        <div class="min-w-0">
 
-        <p class="text-sm leading-5 text-gray-600 dark:text-gray-300">
-            Subscriber records are created only after an internet service application is approved.
-        </p>
+            <div class="flex items-center gap-2">
 
-    </div>
+                <div
+                    class="
+                        flex h-9 w-9 shrink-0
+                        items-center justify-center
+                        border border-[#008080]/15
+                        bg-[#008080]/10
+                        text-[#008080]
+                        dark:border-[#14B8A6]/20
+                        dark:bg-[#008080]/20
+                        dark:text-[#5EEAD4]
+                    ">
+
+                    <i
+                        data-lucide="users"
+                        class="h-4.5 w-4.5"
+                        aria-hidden="true">
+                    </i>
+
+                </div>
 
 
-    {{-- Search and filters --}}
+                <div class="min-w-0">
+
+                    <h1
+                        class="
+                            truncate
+                            text-xl font-semibold
+                            text-gray-900
+                            dark:text-white
+                            sm:text-2xl
+                        ">
+                        Subscribers
+                    </h1>
+
+                    <p
+                        class="
+                            mt-0.5
+                            text-sm
+                            text-gray-500
+                            dark:text-gray-400
+                        ">
+                        Find and manage subscriber accounts.
+                    </p>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+        <div
+            class="
+                inline-flex w-fit items-center gap-2
+                border border-gray-200
+                bg-white
+                px-3 py-2
+                text-xs text-gray-500
+                dark:border-neutral-800
+                dark:bg-neutral-900
+                dark:text-gray-400
+            ">
+
+            <i
+                data-lucide="users"
+                class="h-3.5 w-3.5 text-[#008080] dark:text-[#5EEAD4]"
+                aria-hidden="true">
+            </i>
+
+            <span>
+                {{ number_format($subscribers->count()) }}
+                {{ $subscribers->count() === 1 ? 'subscriber' : 'subscribers' }}
+            </span>
+
+        </div>
+
+    </section>
+
+
+    {{-- Feature context --}}
+    @if ($featureContext)
+
+    <section
+        class="
+            flex items-center gap-3
+            border border-[#008080]/20
+            bg-[#008080]/5
+            px-4 py-3
+            dark:border-[#14B8A6]/20
+            dark:bg-[#008080]/10
+        ">
+
+        <div
+            class="
+                flex h-8 w-8 shrink-0
+                items-center justify-center
+                border border-[#008080]/10
+                bg-white
+                text-[#008080]
+                dark:border-neutral-700
+                dark:bg-neutral-900
+                dark:text-[#5EEAD4]
+            ">
+
+            <i
+                data-lucide="{{ $featureContext['icon'] }}"
+                class="h-4 w-4"
+                aria-hidden="true">
+            </i>
+
+        </div>
+
+
+        <div class="min-w-0">
+
+            <p
+                class="
+                    text-sm font-semibold
+                    text-gray-900
+                    dark:text-white
+                ">
+                {{ $featureContext['label'] }}
+            </p>
+
+            <p
+                class="
+                    truncate
+                    text-xs text-gray-500
+                    dark:text-gray-400
+                ">
+                {{ $featureContext['description'] }}
+            </p>
+
+        </div>
+
+    </section>
+
+    @endif
+
+
+    {{-- Search and filter toolbar --}}
     <form
         method="GET"
         action="{{ route('admin.subscribers.index') }}"
         class="
             border border-gray-200
-            bg-white p-3 shadow-sm
+            bg-white
+            p-3
             dark:border-neutral-800
             dark:bg-neutral-900
         ">
 
+        @if ($featureContext)
+
+        <input
+            type="hidden"
+            name="feature"
+            value="{{ $featureKey }}">
+
+        @endif
+
+
         <div
             class="
                 flex flex-col gap-2
-                lg:flex-row
-                lg:items-center
+                md:flex-row
+                md:items-center
             ">
 
             {{-- Search --}}
@@ -72,17 +232,20 @@
                     Search subscribers
                 </label>
 
+
                 <i
                     data-lucide="search"
                     class="
-                        pointer-events-none absolute
-                        left-3 top-1/2 h-4 w-4
+                        pointer-events-none
+                        absolute left-3 top-1/2
+                        h-4 w-4
                         -translate-y-1/2
-                        text-gray-500
-                        dark:text-gray-400
+                        text-gray-400
+                        dark:text-gray-500
                     "
                     aria-hidden="true">
                 </i>
+
 
                 <input
                     id="subscriber-search"
@@ -92,32 +255,34 @@
                     placeholder="Search customer code, name, email, or phone"
                     autocomplete="off"
                     class="
-                        min-h-10 w-full min-w-0
+                        min-h-10 w-full
                         border border-gray-300
-                        bg-white py-2 pl-10 pr-3
+                        bg-white
+                        py-2 pl-10 pr-3
                         text-sm text-gray-900
                         outline-none transition
-                        placeholder:text-gray-500
+                        placeholder:text-gray-400
                         focus:border-[#008080]
                         focus:ring-2
                         focus:ring-[#008080]/20
                         dark:border-neutral-700
                         dark:bg-neutral-950
-                        dark:text-gray-100
+                        dark:text-white
                         dark:placeholder:text-gray-500
                     ">
 
             </div>
 
 
-            {{-- Status filter --}}
-            <div class="min-w-0 lg:w-36 lg:shrink-0 xl:w-44">
+            {{-- Status --}}
+            <div class="md:w-44 md:shrink-0">
 
                 <label
                     for="subscriber-status"
                     class="sr-only">
-                    Filter by subscriber status
+                    Filter by status
                 </label>
+
 
                 <select
                     id="subscriber-status"
@@ -125,7 +290,8 @@
                     class="
                         min-h-10 w-full
                         border border-gray-300
-                        bg-white px-3 py-2
+                        bg-white
+                        px-3 py-2
                         text-sm text-gray-800
                         outline-none transition
                         focus:border-[#008080]
@@ -137,15 +303,18 @@
                     ">
 
                     <option value="">
-                        All statuses
+                        All Status
                     </option>
+
 
                     @foreach ($statuses as $subscriberStatus)
 
                     <option
                         value="{{ $subscriberStatus }}"
-                        @selected($status===$subscriberStatus)>
+                        @selected($status === $subscriberStatus)>
+
                         {{ ucfirst($subscriberStatus) }}
+
                     </option>
 
                     @endforeach
@@ -160,17 +329,16 @@
                 type="submit"
                 class="
                     inline-flex min-h-10 shrink-0
-                    items-center justify-center gap-1.5
+                    items-center justify-center gap-2
                     bg-[#008080]
-                    px-3 py-2
-                    text-sm font-semibold text-white
+                    px-4 py-2
+                    text-sm font-semibold
+                    text-white
                     transition
                     hover:bg-[#006666]
                     focus:outline-none
                     focus:ring-2
-                    focus:ring-[#008080]
-                    focus:ring-offset-2
-                    dark:focus:ring-offset-neutral-900
+                    focus:ring-[#008080]/30
                 ">
 
                 <i
@@ -179,7 +347,7 @@
                     aria-hidden="true">
                 </i>
 
-                Apply
+                Filter
 
             </button>
 
@@ -188,32 +356,36 @@
             @if ($search !== '' || $status !== '')
 
             <a
-                href="{{ route('admin.subscribers.index') }}"
+                href="{{ route(
+                    'admin.subscribers.index',
+                    $featureContext
+                        ? ['feature' => $featureKey]
+                        : []
+                ) }}"
+                aria-label="Clear subscriber filters"
+                title="Clear filters"
                 class="
-                        inline-flex min-h-10 shrink-0
-                        items-center justify-center gap-1.5
-                        border border-gray-300
-                        px-3 py-2
-                        text-sm font-medium text-gray-700
-                        transition
-                        hover:bg-gray-50
-                        focus:outline-none
-                        focus:ring-2
-                        focus:ring-gray-400
-                        focus:ring-offset-2
-                        dark:border-neutral-700
-                        dark:text-gray-200
-                        dark:hover:bg-neutral-800
-                        dark:focus:ring-offset-neutral-900
-                    ">
+                    inline-flex h-10 w-10 shrink-0
+                    items-center justify-center
+                    border border-gray-300
+                    text-gray-500
+                    transition
+                    hover:bg-gray-50
+                    hover:text-gray-900
+                    focus:outline-none
+                    focus:ring-2
+                    focus:ring-gray-300
+                    dark:border-neutral-700
+                    dark:text-gray-400
+                    dark:hover:bg-neutral-800
+                    dark:hover:text-white
+                ">
 
                 <i
                     data-lucide="x"
                     class="h-4 w-4"
                     aria-hidden="true">
                 </i>
-
-                Clear
 
             </a>
 
@@ -224,570 +396,1155 @@
     </form>
 
 
-    {{-- Subscriber results --}}
-    <div
-        aria-live="polite"
-        aria-busy="false">
+    {{-- Results --}}
+    @if ($subscribers->isEmpty())
 
-        @if ($subscribers->isEmpty())
+    <section
+        class="
+            border border-dashed border-gray-300
+            bg-white
+            px-6 py-14
+            text-center
+            dark:border-neutral-700
+            dark:bg-neutral-900
+        ">
 
-        {{-- Empty state --}}
         <div
             class="
-                    border border-dashed border-gray-300
-                    bg-white px-6 py-14
-                    text-center shadow-sm
-                    dark:border-gray-700
-                    dark:bg-neutral-900
-                ">
+                mx-auto flex h-12 w-12
+                items-center justify-center
+                border border-gray-200
+                bg-gray-100
+                text-gray-400
+                dark:border-neutral-700
+                dark:bg-neutral-800
+                dark:text-gray-500
+            ">
 
-            <div
-                class="
-                        mx-auto flex h-12 w-12
-                        items-center justify-center
-                        bg-gray-100
-                        dark:bg-neutral-800
-                    ">
-
-                <i
-                    data-lucide="users"
-                    class="h-6 w-6 text-gray-500 dark:text-gray-400"
-                    aria-hidden="true">
-                </i>
-
-            </div>
-
-            <h2 class="mt-4 text-base font-semibold text-gray-900 dark:text-white">
-                No subscribers found
-            </h2>
-
-            <p class="mx-auto mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400">
-
-                @if ($search !== '' || $status !== '')
-                No subscriber records match the current search and filters.
-                @else
-                Approved subscriber records will appear here.
-                @endif
-
-            </p>
+            <i
+                data-lucide="users"
+                class="h-5 w-5"
+                aria-hidden="true">
+            </i>
 
         </div>
 
-        @else
 
-        {{-- Tablet / desktop table --}}
-        <div
+        <h2
             class="
-                    hidden overflow-hidden
-                    border border-gray-200
-                    bg-white shadow-sm
-                    lg:block
-                    dark:border-neutral-800
-                    dark:bg-neutral-900
-                ">
+                mt-4
+                text-sm font-semibold
+                text-gray-900
+                dark:text-white
+            ">
+            No subscribers found
+        </h2>
 
-            <div class="max-h-[60vh] overflow-y-auto">
 
-                <table class="w-full table-fixed">
+        <p
+            class="
+                mx-auto mt-1
+                max-w-sm
+                text-sm text-gray-500
+                dark:text-gray-400
+            ">
 
-                    <thead
+            @if ($search !== '' || $status !== '')
+
+            Try changing your search or filter.
+
+            @else
+
+            Approved subscriber accounts will appear here.
+
+            @endif
+
+        </p>
+
+    </section>
+
+    @else
+
+
+    {{-- Desktop subscriber table --}}
+    <section
+        class="
+            hidden
+            border border-gray-200
+            bg-white
+            lg:block
+            dark:border-neutral-800
+            dark:bg-neutral-900
+        ">
+
+        <div class="px-4 py-3">
+
+            <div class="flex items-center justify-between gap-4">
+
+                <div>
+
+                    <h2
                         class="
-                                sticky top-0 z-10
-                                border-b border-gray-200
-                                bg-gray-50
-                                dark:border-neutral-800
-                                dark:bg-neutral-800
+                            text-sm font-semibold
+                            text-gray-900
+                            dark:text-white
+                        ">
+                        Subscriber Directory
+                    </h2>
+
+                    <p
+                        class="
+                            mt-0.5
+                            text-xs text-gray-500
+                            dark:text-gray-400
+                        ">
+                        Select a name or use More options.
+                    </p>
+
+                </div>
+
+
+                @if ($search !== '' || $status !== '')
+
+                <span
+                    class="
+                        border border-[#008080]/15
+                        bg-[#008080]/10
+                        px-2.5 py-1
+                        text-xs font-medium
+                        text-[#008080]
+                        dark:border-[#008080]/20
+                        dark:bg-[#008080]/20
+                        dark:text-[#5EEAD4]
+                    ">
+                    Filtered
+                </span>
+
+                @endif
+
+            </div>
+
+        </div>
+
+
+        <div class="border-t border-gray-100 dark:border-neutral-800">
+
+            <table class="w-full table-fixed">
+
+                <thead class="bg-gray-50/80 dark:bg-neutral-800/60">
+
+                    <tr>
+
+                        <th
+                            scope="col"
+                            class="
+                                w-[18%]
+                                px-4 py-3
+                                text-left
+                                text-[11px] font-semibold
+                                uppercase tracking-wide
+                                text-gray-500
+                                dark:text-gray-400
+                            ">
+                            Customer Code
+                        </th>
+
+
+                        <th
+                            scope="col"
+                            class="
+                                w-[24%]
+                                px-4 py-3
+                                text-left
+                                text-[11px] font-semibold
+                                uppercase tracking-wide
+                                text-gray-500
+                                dark:text-gray-400
+                            ">
+                            Name
+                        </th>
+
+
+                        <th
+                            scope="col"
+                            class="
+                                w-[24%]
+                                px-4 py-3
+                                text-left
+                                text-[11px] font-semibold
+                                uppercase tracking-wide
+                                text-gray-500
+                                dark:text-gray-400
+                            ">
+                            Contact
+                        </th>
+
+
+                        <th
+                            scope="col"
+                            class="
+                                w-[18%]
+                                px-4 py-3
+                                text-left
+                                text-[11px] font-semibold
+                                uppercase tracking-wide
+                                text-gray-500
+                                dark:text-gray-400
+                            ">
+                            Location
+                        </th>
+
+
+                        <th
+                            scope="col"
+                            class="
+                                w-[11%]
+                                px-4 py-3
+                                text-left
+                                text-[11px] font-semibold
+                                uppercase tracking-wide
+                                text-gray-500
+                                dark:text-gray-400
+                            ">
+                            Status
+                        </th>
+
+
+                        <th
+                            scope="col"
+                            class="
+                                w-[5%]
+                                px-3 py-3
+                                text-center
+                                text-[11px] font-semibold
+                                uppercase tracking-wide
+                                text-gray-500
+                                dark:text-gray-400
                             ">
 
-                        <tr>
+                            <span class="sr-only">
+                                Actions
+                            </span>
 
-                            <th
-                                scope="col"
-                                class="
-                                        w-[22%] px-3 py-2.5
-                                        text-left text-[11px]
-                                        font-semibold uppercase tracking-wide
-                                        text-gray-500
-                                        dark:text-gray-400
-                                        xl:w-[19%] xl:px-4
-                                    ">
-                                Subscriber
-                            </th>
+                        </th>
 
-                            <th
-                                scope="col"
-                                class="
-                                        w-[29%] px-3 py-2.5
-                                        text-left text-[11px]
-                                        font-semibold uppercase tracking-wide
-                                        text-gray-500
-                                        dark:text-gray-400
-                                        xl:w-[24%] xl:px-4
-                                    ">
-                                Contact
-                            </th>
+                    </tr>
 
-                            <th
-                                scope="col"
-                                class="
-                                        w-[20%] px-3 py-2.5
-                                        text-left text-[11px]
-                                        font-semibold uppercase tracking-wide
-                                        text-gray-500
-                                        dark:text-gray-400
-                                        xl:w-[18%] xl:px-4
-                                    ">
-                                Location
-                            </th>
-
-                            <th
-                                scope="col"
-                                class="
-                                        w-[16%] px-2 py-2.5
-                                        text-center text-[11px]
-                                        font-semibold uppercase tracking-wide
-                                        text-gray-500
-                                        dark:text-gray-400
-                                        xl:w-[13%] xl:px-4
-                                    ">
-                                Status
-                            </th>
-
-                            <th
-                                scope="col"
-                                class="
-                                        hidden w-[15%]
-                                        px-4 py-2.5
-                                        text-left text-[11px]
-                                        font-semibold uppercase tracking-wide
-                                        text-gray-500
-                                        dark:text-gray-400
-                                        xl:table-cell
-                                    ">
-                                Created
-                            </th>
-
-                            <th
-                                scope="col"
-                                class="
-                                        w-[13%] px-2 py-2.5
-                                        text-right text-[11px]
-                                        font-semibold uppercase tracking-wide
-                                        text-gray-500
-                                        dark:text-gray-400
-                                        xl:w-[11%] xl:px-4
-                                    ">
-                                Action
-                            </th>
-
-                        </tr>
-
-                    </thead>
+                </thead>
 
 
-                    <tbody class="divide-y divide-gray-100 dark:divide-neutral-800">
+                <tbody
+                    class="
+                        divide-y divide-gray-100
+                        dark:divide-neutral-800
+                    ">
 
-                        @foreach ($subscribers as $subscriber)
+                    @foreach ($subscribers as $subscriber)
 
-                        @php
-                        $statusDisplay = match ($subscriber->status) {
+                    @php
+                    $statusDisplay = match ($subscriber->status) {
                         'pending' => [
-                        'label' => 'Pending',
-                        'icon' => 'clock-3',
-                        'class' => 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
+                            'label' => 'Pending',
+                            'icon' => 'clock-3',
+                            'class' =>
+                                'bg-amber-50 text-amber-700
+                                 dark:bg-amber-950/40 dark:text-amber-300',
                         ],
                         'active' => [
-                        'label' => 'Active',
-                        'icon' => 'circle-check',
-                        'class' => 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300',
+                            'label' => 'Active',
+                            'icon' => 'circle-check',
+                            'class' =>
+                                'bg-green-50 text-green-700
+                                 dark:bg-green-950/40 dark:text-green-300',
                         ],
                         'inactive' => [
-                        'label' => 'Inactive',
-                        'icon' => 'circle-minus',
-                        'class' => 'bg-gray-100 text-gray-700 dark:bg-neutral-800 dark:text-gray-300',
+                            'label' => 'Inactive',
+                            'icon' => 'circle-minus',
+                            'class' =>
+                                'bg-gray-100 text-gray-600
+                                 dark:bg-neutral-800 dark:text-gray-300',
                         ],
                         'suspended' => [
-                        'label' => 'Suspended',
-                        'icon' => 'pause-circle',
-                        'class' => 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300',
+                            'label' => 'Suspended',
+                            'icon' => 'circle-pause',
+                            'class' =>
+                                'bg-red-50 text-red-700
+                                 dark:bg-red-950/40 dark:text-red-300',
                         ],
                         'disconnected' => [
-                        'label' => 'Disconnected',
-                        'icon' => 'wifi-off',
-                        'class' => 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300',
+                            'label' => 'Disconnected',
+                            'icon' => 'wifi-off',
+                            'class' =>
+                                'bg-gray-100 text-gray-600
+                                 dark:bg-neutral-800 dark:text-gray-300',
                         ],
                         default => [
-                        'label' => ucfirst($subscriber->status),
-                        'icon' => 'circle-help',
-                        'class' => 'bg-gray-100 text-gray-700 dark:bg-neutral-800 dark:text-gray-300',
+                            'label' => ucfirst($subscriber->status),
+                            'icon' => 'circle-help',
+                            'class' =>
+                                'bg-gray-100 text-gray-600
+                                 dark:bg-neutral-800 dark:text-gray-300',
                         ],
-                        };
+                    };
 
-                        $fullName = trim(
-                        $subscriber->first_name . ' ' .
-                        ($subscriber->middle_name ? $subscriber->middle_name . ' ' : '') .
-                        $subscriber->last_name
+                    $fullName = trim(
+                        implode(' ', array_filter([
+                            $subscriber->first_name,
+                            $subscriber->middle_name,
+                            $subscriber->last_name,
+                        ]))
+                    );
+
+                    $location = implode(', ', array_filter([
+                        $subscriber->city,
+                        $subscriber->province,
+                    ]));
+
+                    $detailUrl = $featureContext
+                        ? route(
+                            'admin.subscribers.show',
+                            [
+                                'subscriber' => $subscriber,
+                                'feature' => $featureKey,
+                            ]
+                        ) . '#' . $featureKey
+                        : route(
+                            'admin.subscribers.show',
+                            $subscriber
                         );
-                        @endphp
+
+                    $profileUrl = route(
+                        'admin.subscribers.show',
+                        [
+                            'subscriber' => $subscriber,
+                            'feature' => 'customer-information',
+                        ]
+                    ) . '#customer-information';
+
+                    $documentsUrl = route(
+                        'admin.subscribers.show',
+                        [
+                            'subscriber' => $subscriber,
+                            'feature' => 'customer-documents',
+                        ]
+                    ) . '#customer-documents';
+
+                    $relocationUrl = route(
+                        'admin.subscribers.show',
+                        [
+                            'subscriber' => $subscriber,
+                            'feature' => 'relocation-transfer',
+                        ]
+                    ) . '#relocation-transfer';
+
+                    $planChangeUrl = route(
+                        'admin.subscribers.show',
+                        [
+                            'subscriber' => $subscriber,
+                            'feature' => 'plan-change',
+                        ]
+                    ) . '#plan-change';
+                    @endphp
 
 
-                        <tr class="hover:bg-gray-50/70 dark:hover:bg-gray-800/40">
+                    <tr
+                        class="
+                            group
+                            transition
+                            hover:bg-[#008080]/[0.035]
+                            dark:hover:bg-[#008080]/[0.07]
+                        ">
 
-                            {{-- Subscriber --}}
-                            <td class="px-3 py-3 align-middle xl:px-4">
+                        {{-- Code --}}
+                        <td class="px-4 py-3.5 align-middle">
 
-                                <div class="min-w-0">
+                            <span
+                                class="
+                                    truncate
+                                    text-xs font-semibold
+                                    text-[#008080]
+                                    dark:text-[#5EEAD4]
+                                ">
+                                {{ $subscriber->customer_code }}
+                            </span>
 
-                                    <p
-                                        class="
-                                                    truncate text-xs font-semibold
-                                                    text-gray-900
-                                                    dark:text-white
-                                                    xl:text-sm
-                                                "
-                                        title="{{ $fullName }}">
-                                        {{ $fullName }}
-                                    </p>
-
-                                    <div class="mt-0.5 flex min-w-0 items-center gap-1.5">
-
-                                        <span
-                                            class="
-                                                        truncate text-[10px] font-medium
-                                                        text-[#008080]
-                                                        dark:text-[#5EEAD4]
-                                                        xl:text-xs
-                                                    ">
-                                            {{ $subscriber->customer_code }}
-                                        </span>
-
-                                        <span
-                                            class="
-                                                        truncate text-[9px] text-gray-400
-                                                        xl:hidden
-                                                    ">
-                                            · {{ $subscriber->created_at?->format('M d, Y') ?? 'N/A' }}
-                                        </span>
-
-                                    </div>
-
-                                </div>
-
-                            </td>
+                        </td>
 
 
-                            {{-- Contact --}}
-                            <td class="px-3 py-3 align-middle xl:px-4">
+                        {{-- Name --}}
+                        <td class="px-4 py-3.5 align-middle">
 
-                                <div class="min-w-0">
+                            <a
+                                href="{{ $detailUrl }}"
+                                class="
+                                    block truncate
+                                    text-sm font-semibold
+                                    text-gray-900
+                                    transition
+                                    hover:text-[#008080]
+                                    focus:outline-none
+                                    focus:text-[#008080]
+                                    dark:text-white
+                                    dark:hover:text-[#5EEAD4]
+                                "
+                                title="{{ $fullName }}">
 
-                                    <p
-                                        class="
-                                                    truncate text-[10px]
-                                                    text-gray-700
-                                                    dark:text-gray-300
-                                                    xl:text-sm
-                                                "
-                                        title="{{ $subscriber->email ?: 'No email recorded' }}">
-                                        {{ $subscriber->email ?: 'No email recorded' }}
-                                    </p>
+                                {{ $fullName }}
 
-                                    <p class="mt-0.5 truncate text-[9px] text-gray-500 dark:text-gray-400 xl:text-xs">
-                                        {{ $subscriber->phone ?: 'No phone recorded' }}
-                                    </p>
+                            </a>
 
-                                </div>
-
-                            </td>
-
-
-                            {{-- Location --}}
-                            <td class="px-3 py-3 align-middle xl:px-4">
-
-                                <div class="min-w-0">
-
-                                    <p class="truncate text-[10px] text-gray-700 dark:text-gray-300 xl:text-sm">
-                                        {{ $subscriber->city ?: 'Not specified' }}
-                                    </p>
-
-                                    <p class="mt-0.5 truncate text-[9px] text-gray-500 dark:text-gray-400 xl:text-xs">
-                                        {{ $subscriber->province ?: 'Not specified' }}
-                                    </p>
-
-                                </div>
-
-                            </td>
+                        </td>
 
 
-                            {{-- Status --}}
-                            <td class="px-2 py-3 text-center align-middle xl:px-4">
+                        {{-- Contact --}}
+                        <td class="px-4 py-3.5 align-middle">
+
+                            <div class="min-w-0">
+
+                                <p
+                                    class="
+                                        truncate
+                                        text-sm text-gray-700
+                                        dark:text-gray-300
+                                    "
+                                    title="{{ $subscriber->email ?: 'No email recorded' }}">
+
+                                    {{ $subscriber->email ?: 'No email recorded' }}
+
+                                </p>
+
+                                @if ($subscriber->phone)
+
+                                <p
+                                    class="
+                                        mt-0.5 truncate
+                                        text-xs text-gray-400
+                                    ">
+                                    {{ $subscriber->phone }}
+                                </p>
+
+                                @endif
+
+                            </div>
+
+                        </td>
+
+
+                        {{-- Location --}}
+                        <td class="px-4 py-3.5 align-middle">
+
+                            <div
+                                class="
+                                    flex min-w-0
+                                    items-center gap-1.5
+                                    text-sm text-gray-600
+                                    dark:text-gray-300
+                                ">
+
+                                <i
+                                    data-lucide="map-pin"
+                                    class="
+                                        h-3.5 w-3.5 shrink-0
+                                        text-gray-400
+                                    "
+                                    aria-hidden="true">
+                                </i>
 
                                 <span
-                                    class="
-                                                inline-flex items-center gap-1
-                                                whitespace-nowrap
-                                                px-2 py-1
-                                                text-[9px] font-medium
-                                                {{ $statusDisplay['class'] }}
-                                                xl:text-xs
-                                            ">
+                                    class="truncate"
+                                    title="{{ $location ?: 'Not specified' }}">
 
-                                    <i
-                                        data-lucide="{{ $statusDisplay['icon'] }}"
-                                        class="h-3 w-3 xl:h-3.5 xl:w-3.5"
-                                        aria-hidden="true">
-                                    </i>
-
-                                    {{ $statusDisplay['label'] }}
+                                    {{ $location ?: 'Not specified' }}
 
                                 </span>
 
-                            </td>
+                            </div>
+
+                        </td>
 
 
-                            {{-- Created --}}
-                            <td
+                        {{-- Status --}}
+                        <td class="px-4 py-3.5 align-middle">
+
+                            <span
                                 class="
-                                            hidden whitespace-nowrap
-                                            px-4 py-3 align-middle
-                                            text-sm text-gray-600
-                                            dark:text-gray-300
-                                            xl:table-cell
-                                        ">
-                                {{ $subscriber->created_at?->format('M d, Y') ?? 'Not available' }}
-                            </td>
-
-
-                            {{-- Action --}}
-                            <td class="px-2 py-3 text-right align-middle xl:px-4">
-
-                                <a
-                                    href="{{ route('admin.subscribers.show', $subscriber) }}"
-                                    class="
-                                                inline-flex items-center
-                                                justify-center gap-1
-                                                whitespace-nowrap
-                                                px-1.5 py-2
-                                                text-[10px] font-semibold
-                                                text-[#008080]
-                                                transition
-                                                hover:bg-[#008080]/5
-                                                hover:text-[#006666]
-                                                focus:outline-none
-                                                focus:ring-2
-                                                focus:ring-[#008080]/30
-                                                xl:px-2 xl:text-xs
-                                            ">
-
-                                    View
-
-                                    <i
-                                        data-lucide="chevron-right"
-                                        class="h-3.5 w-3.5">
-                                    </i>
-
-                                </a>
-
-                            </td>
-
-                        </tr>
-
-                        @endforeach
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-
-        {{-- Mobile cards --}}
-        <div class="grid gap-4 lg:hidden">
-
-            @foreach ($subscribers as $subscriber)
-
-            @php
-            $statusDisplay = match ($subscriber->status) {
-            'pending' => [
-            'label' => 'Pending',
-            'icon' => 'clock-3',
-            'class' => 'bg-amber-50 text-amber-700 dark:bg-amber-950/40 dark:text-amber-300',
-            ],
-            'active' => [
-            'label' => 'Active',
-            'icon' => 'circle-check',
-            'class' => 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-300',
-            ],
-            'inactive' => [
-            'label' => 'Inactive',
-            'icon' => 'circle-minus',
-            'class' => 'bg-gray-100 text-gray-700 dark:bg-neutral-800 dark:text-gray-300',
-            ],
-            'suspended' => [
-            'label' => 'Suspended',
-            'icon' => 'pause-circle',
-            'class' => 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300',
-            ],
-            'disconnected' => [
-            'label' => 'Disconnected',
-            'icon' => 'wifi-off',
-            'class' => 'bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-300',
-            ],
-            default => [
-            'label' => ucfirst($subscriber->status),
-            'icon' => 'circle-help',
-            'class' => 'bg-gray-100 text-gray-700 dark:bg-neutral-800 dark:text-gray-300',
-            ],
-            };
-
-            $fullName = trim(
-            $subscriber->first_name . ' ' .
-            ($subscriber->middle_name ? $subscriber->middle_name . ' ' : '') .
-            $subscriber->last_name
-            );
-            @endphp
-
-
-            <article
-                class="
-                            border border-gray-200
-                            bg-white p-4 shadow-sm
-                            dark:border-neutral-800
-                            dark:bg-neutral-900
-                        ">
-
-                <div class="flex items-start justify-between gap-3">
-
-                    <div class="min-w-0">
-
-                        <p class="text-xs font-medium text-[#008080] dark:text-[#5EEAD4]">
-                            {{ $subscriber->customer_code }}
-                        </p>
-
-                        <h2 class="mt-1 break-words text-base font-semibold text-gray-900 dark:text-white">
-                            {{ $fullName }}
-                        </h2>
-
-                    </div>
-
-
-                    <span
-                        class="
-                                    inline-flex shrink-0
+                                    inline-flex
                                     items-center gap-1.5
+                                    whitespace-nowrap
+                                    rounded-full
                                     px-2.5 py-1
                                     text-xs font-medium
                                     {{ $statusDisplay['class'] }}
                                 ">
 
-                        <i
-                            data-lucide="{{ $statusDisplay['icon'] }}"
-                            class="h-3.5 w-3.5">
-                        </i>
+                                <i
+                                    data-lucide="{{ $statusDisplay['icon'] }}"
+                                    class="h-3 w-3"
+                                    aria-hidden="true">
+                                </i>
 
-                        {{ $statusDisplay['label'] }}
+                                {{ $statusDisplay['label'] }}
 
-                    </span>
+                            </span>
 
-                </div>
-
-
-                <dl class="mt-4 grid gap-4 sm:grid-cols-2">
-
-                    <div>
-
-                        <dt class="text-xs text-gray-400">
-                            Email
-                        </dt>
-
-                        <dd class="mt-1 break-all text-sm text-gray-700 dark:text-gray-300">
-                            {{ $subscriber->email ?: 'Not recorded' }}
-                        </dd>
-
-                    </div>
+                        </td>
 
 
-                    <div>
+                        {{-- More options --}}
+                        <td
+                            class="
+                                relative
+                                px-3 py-3.5
+                                text-center
+                                align-middle
+                            ">
 
-                        <dt class="text-xs text-gray-400">
-                            Phone
-                        </dt>
-
-                        <dd class="mt-1 text-sm text-gray-700 dark:text-gray-300">
-                            {{ $subscriber->phone ?: 'Not recorded' }}
-                        </dd>
-
-                    </div>
-
-
-                    <div>
-
-                        <dt class="text-xs text-gray-400">
-                            Location
-                        </dt>
-
-                        <dd class="mt-1 text-sm text-gray-700 dark:text-gray-300">
-                            {{ $subscriber->city ?: 'Not specified' }}
-
-                            @if ($subscriber->province)
-                            , {{ $subscriber->province }}
-                            @endif
-                        </dd>
-
-                    </div>
-
-
-                    <div>
-
-                        <dt class="text-xs text-gray-400">
-                            Subscriber Since
-                        </dt>
-
-                        <dd class="mt-1 text-sm text-gray-700 dark:text-gray-300">
-                            {{ $subscriber->created_at?->format('M d, Y') ?? 'Not available' }}
-                        </dd>
-
-                    </div>
-
-                </dl>
-
-
-                <div class="mt-4 border-t border-gray-200 pt-3 dark:border-neutral-800">
-
-                    <a
-                        href="{{ route('admin.subscribers.show', $subscriber) }}"
-                        class="
-                                    inline-flex min-h-11 w-full
-                                    items-center justify-center gap-2
-                                    text-sm font-semibold
-                                    text-[#008080]
-                                    transition
-                                    hover:bg-[#008080]/5
-                                    hover:text-[#006666]
+                            <details
+                                class="
+                                    relative
+                                    inline-block
+                                    text-left
                                 ">
 
-                        View Subscriber
+                                <summary
+                                    aria-label="More options for {{ $fullName }}"
+                                    title="More options"
+                                    style="list-style: none;"
+                                    class="
+                                        inline-flex h-8 w-8
+                                        cursor-pointer
+                                        items-center justify-center
+                                        text-gray-500
+                                        transition
+                                        hover:bg-gray-100
+                                        hover:text-gray-900
+                                        focus:outline-none
+                                        focus:ring-2
+                                        focus:ring-[#008080]/30
+                                        dark:text-gray-400
+                                        dark:hover:bg-neutral-800
+                                        dark:hover:text-white
+                                        [&::-webkit-details-marker]:hidden
+                                    ">
 
-                        <i
-                            data-lucide="chevron-right"
-                            class="h-4 w-4">
-                        </i>
+                                    <span
+                                        class="
+                                            text-lg font-semibold
+                                            leading-none
+                                        "
+                                        aria-hidden="true">
+                                        &#8942;
+                                    </span>
+
+                                </summary>
+
+
+                                <div
+                                    class="
+                                        absolute right-0 z-40
+                                        mt-2 w-56
+                                        overflow-hidden
+                                        border border-gray-200
+                                        bg-white
+                                        p-1.5
+                                        text-left
+                                        shadow-xl
+                                        dark:border-neutral-700
+                                        dark:bg-neutral-900
+                                    ">
+
+                                    <a
+                                        href="{{ $detailUrl }}"
+                                        class="
+                                            flex items-center gap-2.5
+                                            px-3 py-2
+                                            text-sm font-medium
+                                            text-gray-700
+                                            transition
+                                            hover:bg-[#008080]/10
+                                            hover:text-[#008080]
+                                            dark:text-gray-200
+                                            dark:hover:bg-[#008080]/15
+                                            dark:hover:text-[#5EEAD4]
+                                        ">
+
+                                        <i
+                                            data-lucide="eye"
+                                            class="h-4 w-4 shrink-0"
+                                            aria-hidden="true">
+                                        </i>
+
+                                        Open subscriber
+
+                                    </a>
+
+
+                                    <a
+                                        href="{{ route(
+                                            'admin.subscribers.edit',
+                                            $subscriber
+                                        ) }}"
+                                        class="
+                                            flex items-center gap-2.5
+                                            px-3 py-2
+                                            text-sm
+                                            text-gray-600
+                                            transition
+                                            hover:bg-gray-50
+                                            hover:text-gray-900
+                                            dark:text-gray-300
+                                            dark:hover:bg-neutral-800
+                                            dark:hover:text-white
+                                        ">
+
+                                        <i
+                                            data-lucide="pencil"
+                                            class="h-4 w-4 shrink-0"
+                                            aria-hidden="true">
+                                        </i>
+
+                                        Edit profile
+
+                                    </a>
+
+
+                                    <div
+                                        class="
+                                            my-1
+                                            border-t border-gray-100
+                                            dark:border-neutral-800
+                                        ">
+                                    </div>
+
+
+                                    <a
+                                        href="{{ $documentsUrl }}"
+                                        class="
+                                            flex items-center gap-2.5
+                                            px-3 py-2
+                                            text-sm
+                                            text-gray-600
+                                            transition
+                                            hover:bg-gray-50
+                                            hover:text-gray-900
+                                            dark:text-gray-300
+                                            dark:hover:bg-neutral-800
+                                            dark:hover:text-white
+                                        ">
+
+                                        <i
+                                            data-lucide="file-text"
+                                            class="h-4 w-4 shrink-0"
+                                            aria-hidden="true">
+                                        </i>
+
+                                        Documents
+
+                                    </a>
+
+
+                                    <a
+                                        href="{{ $relocationUrl }}"
+                                        class="
+                                            flex items-center gap-2.5
+                                            px-3 py-2
+                                            text-sm
+                                            text-gray-600
+                                            transition
+                                            hover:bg-gray-50
+                                            hover:text-gray-900
+                                            dark:text-gray-300
+                                            dark:hover:bg-neutral-800
+                                            dark:hover:text-white
+                                        ">
+
+                                        <i
+                                            data-lucide="map-pinned"
+                                            class="h-4 w-4 shrink-0"
+                                            aria-hidden="true">
+                                        </i>
+
+                                        Relocation
+
+                                    </a>
+
+
+                                    <a
+                                        href="{{ $planChangeUrl }}"
+                                        class="
+                                            flex items-center gap-2.5
+                                            px-3 py-2
+                                            text-sm
+                                            text-gray-600
+                                            transition
+                                            hover:bg-gray-50
+                                            hover:text-gray-900
+                                            dark:text-gray-300
+                                            dark:hover:bg-neutral-800
+                                            dark:hover:text-white
+                                        ">
+
+                                        <i
+                                            data-lucide="settings-2"
+                                            class="h-4 w-4 shrink-0"
+                                            aria-hidden="true">
+                                        </i>
+
+                                        Change plan
+
+                                    </a>
+
+                                </div>
+
+                            </details>
+
+                        </td>
+
+                    </tr>
+
+                    @endforeach
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+
+        <footer
+            class="
+                flex items-center justify-between
+                border-t border-gray-100
+                px-4 py-3
+                dark:border-neutral-800
+            ">
+
+            <p
+                class="
+                    text-xs text-gray-500
+                    dark:text-gray-400
+                ">
+                Showing {{ number_format($subscribers->count()) }}
+                {{ $subscribers->count() === 1 ? 'record' : 'records' }}
+            </p>
+
+
+            <p
+                class="
+                    hidden text-xs
+                    text-gray-400
+                    xl:block
+                ">
+                Select a name to open subscriber details.
+            </p>
+
+        </footer>
+
+    </section>
+
+
+    {{-- Mobile / tablet cards --}}
+    <section class="grid gap-3 lg:hidden">
+
+        @foreach ($subscribers as $subscriber)
+
+        @php
+        $statusDisplay = match ($subscriber->status) {
+            'pending' => [
+                'label' => 'Pending',
+                'icon' => 'clock-3',
+                'class' =>
+                    'bg-amber-50 text-amber-700
+                     dark:bg-amber-950/40 dark:text-amber-300',
+            ],
+            'active' => [
+                'label' => 'Active',
+                'icon' => 'circle-check',
+                'class' =>
+                    'bg-green-50 text-green-700
+                     dark:bg-green-950/40 dark:text-green-300',
+            ],
+            'inactive' => [
+                'label' => 'Inactive',
+                'icon' => 'circle-minus',
+                'class' =>
+                    'bg-gray-100 text-gray-600
+                     dark:bg-neutral-800 dark:text-gray-300',
+            ],
+            'suspended' => [
+                'label' => 'Suspended',
+                'icon' => 'circle-pause',
+                'class' =>
+                    'bg-red-50 text-red-700
+                     dark:bg-red-950/40 dark:text-red-300',
+            ],
+            'disconnected' => [
+                'label' => 'Disconnected',
+                'icon' => 'wifi-off',
+                'class' =>
+                    'bg-gray-100 text-gray-600
+                     dark:bg-neutral-800 dark:text-gray-300',
+            ],
+            default => [
+                'label' => ucfirst($subscriber->status),
+                'icon' => 'circle-help',
+                'class' =>
+                    'bg-gray-100 text-gray-600
+                     dark:bg-neutral-800 dark:text-gray-300',
+            ],
+        };
+
+        $fullName = trim(
+            implode(' ', array_filter([
+                $subscriber->first_name,
+                $subscriber->middle_name,
+                $subscriber->last_name,
+            ]))
+        );
+
+        $location = implode(', ', array_filter([
+            $subscriber->city,
+            $subscriber->province,
+        ]));
+
+        $detailUrl = $featureContext
+            ? route(
+                'admin.subscribers.show',
+                [
+                    'subscriber' => $subscriber,
+                    'feature' => $featureKey,
+                ]
+            ) . '#' . $featureKey
+            : route(
+                'admin.subscribers.show',
+                $subscriber
+            );
+
+        $documentsUrl = route(
+            'admin.subscribers.show',
+            [
+                'subscriber' => $subscriber,
+                'feature' => 'customer-documents',
+            ]
+        ) . '#customer-documents';
+
+        $relocationUrl = route(
+            'admin.subscribers.show',
+            [
+                'subscriber' => $subscriber,
+                'feature' => 'relocation-transfer',
+            ]
+        ) . '#relocation-transfer';
+
+        $planChangeUrl = route(
+            'admin.subscribers.show',
+            [
+                'subscriber' => $subscriber,
+                'feature' => 'plan-change',
+            ]
+        ) . '#plan-change';
+        @endphp
+
+
+        <article
+            class="
+                border border-gray-200
+                bg-white
+                p-4
+                dark:border-neutral-800
+                dark:bg-neutral-900
+            ">
+
+            <div class="flex items-start gap-3">
+
+                <div class="min-w-0 flex-1">
+
+                    <p
+                        class="
+                            text-xs font-semibold
+                            text-[#008080]
+                            dark:text-[#5EEAD4]
+                        ">
+                        {{ $subscriber->customer_code }}
+                    </p>
+
+
+                    <a
+                        href="{{ $detailUrl }}"
+                        class="
+                            mt-1 block truncate
+                            text-base font-semibold
+                            text-gray-900
+                            hover:text-[#008080]
+                            dark:text-white
+                            dark:hover:text-[#5EEAD4]
+                        ">
+
+                        {{ $fullName }}
 
                     </a>
 
                 </div>
 
-            </article>
 
-            @endforeach
+                <span
+                    class="
+                        inline-flex shrink-0
+                        items-center gap-1
+                        rounded-full
+                        px-2.5 py-1
+                        text-[11px] font-medium
+                        {{ $statusDisplay['class'] }}
+                    ">
 
-        </div>
+                    <i
+                        data-lucide="{{ $statusDisplay['icon'] }}"
+                        class="h-3 w-3"
+                        aria-hidden="true">
+                    </i>
 
-        @endif
+                    {{ $statusDisplay['label'] }}
 
-    </div>
+                </span>
+
+
+                <details class="relative shrink-0">
+
+                    <summary
+                        aria-label="More options for {{ $fullName }}"
+                        title="More options"
+                        style="list-style: none;"
+                        class="
+                            inline-flex h-8 w-8
+                            cursor-pointer
+                            items-center justify-center
+                            text-gray-500
+                            hover:bg-gray-100
+                            dark:text-gray-400
+                            dark:hover:bg-neutral-800
+                            [&::-webkit-details-marker]:hidden
+                        ">
+
+                        <span
+                            class="text-lg font-semibold leading-none"
+                            aria-hidden="true">
+                            &#8942;
+                        </span>
+
+                    </summary>
+
+
+                    <div
+                        class="
+                            absolute right-0 z-40
+                            mt-2 w-52
+                            overflow-hidden
+                            border border-gray-200
+                            bg-white
+                            p-1.5
+                            shadow-xl
+                            dark:border-neutral-700
+                            dark:bg-neutral-900
+                        ">
+
+                        <a
+                            href="{{ $detailUrl }}"
+                            class="
+                                flex items-center gap-2
+                                px-3 py-2
+                                text-sm text-gray-700
+                                hover:bg-[#008080]/10
+                                hover:text-[#008080]
+                                dark:text-gray-200
+                                dark:hover:bg-[#008080]/15
+                                dark:hover:text-[#5EEAD4]
+                            ">
+
+                            <i
+                                data-lucide="eye"
+                                class="h-4 w-4"
+                                aria-hidden="true">
+                            </i>
+
+                            Open subscriber
+
+                        </a>
+
+
+                        <a
+                            href="{{ route(
+                                'admin.subscribers.edit',
+                                $subscriber
+                            ) }}"
+                            class="
+                                flex items-center gap-2
+                                px-3 py-2
+                                text-sm text-gray-600
+                                hover:bg-gray-50
+                                dark:text-gray-300
+                                dark:hover:bg-neutral-800
+                            ">
+
+                            <i
+                                data-lucide="pencil"
+                                class="h-4 w-4"
+                                aria-hidden="true">
+                            </i>
+
+                            Edit profile
+
+                        </a>
+
+
+                        <a
+                            href="{{ $documentsUrl }}"
+                            class="
+                                flex items-center gap-2
+                                px-3 py-2
+                                text-sm text-gray-600
+                                hover:bg-gray-50
+                                dark:text-gray-300
+                                dark:hover:bg-neutral-800
+                            ">
+
+                            <i
+                                data-lucide="file-text"
+                                class="h-4 w-4"
+                                aria-hidden="true">
+                            </i>
+
+                            Documents
+
+                        </a>
+
+
+                        <a
+                            href="{{ $relocationUrl }}"
+                            class="
+                                flex items-center gap-2
+                                px-3 py-2
+                                text-sm text-gray-600
+                                hover:bg-gray-50
+                                dark:text-gray-300
+                                dark:hover:bg-neutral-800
+                            ">
+
+                            <i
+                                data-lucide="map-pinned"
+                                class="h-4 w-4"
+                                aria-hidden="true">
+                            </i>
+
+                            Relocation
+
+                        </a>
+
+
+                        <a
+                            href="{{ $planChangeUrl }}"
+                            class="
+                                flex items-center gap-2
+                                px-3 py-2
+                                text-sm text-gray-600
+                                hover:bg-gray-50
+                                dark:text-gray-300
+                                dark:hover:bg-neutral-800
+                            ">
+
+                            <i
+                                data-lucide="settings-2"
+                                class="h-4 w-4"
+                                aria-hidden="true">
+                            </i>
+
+                            Change plan
+
+                        </a>
+
+                    </div>
+
+                </details>
+
+            </div>
+
+
+            <div
+                class="
+                    mt-4 grid gap-3
+                    border-t border-gray-100
+                    pt-4
+                    sm:grid-cols-2
+                    dark:border-neutral-800
+                ">
+
+                <div class="min-w-0">
+
+                    <div
+                        class="
+                            flex items-center gap-1.5
+                            text-xs text-gray-400
+                        ">
+
+                        <i
+                            data-lucide="mail"
+                            class="h-3.5 w-3.5 shrink-0"
+                            aria-hidden="true">
+                        </i>
+
+                        Contact
+
+                    </div>
+
+                    <p
+                        class="
+                            mt-1 truncate
+                            text-sm text-gray-700
+                            dark:text-gray-300
+                        ">
+                        {{ $subscriber->email ?: 'No email recorded' }}
+                    </p>
+
+                </div>
+
+
+                <div class="min-w-0">
+
+                    <div
+                        class="
+                            flex items-center gap-1.5
+                            text-xs text-gray-400
+                        ">
+
+                        <i
+                            data-lucide="map-pin"
+                            class="h-3.5 w-3.5 shrink-0"
+                            aria-hidden="true">
+                        </i>
+
+                        Location
+
+                    </div>
+
+                    <p
+                        class="
+                            mt-1 truncate
+                            text-sm text-gray-700
+                            dark:text-gray-300
+                        ">
+                        {{ $location ?: 'Not specified' }}
+                    </p>
+
+                </div>
+
+            </div>
+
+        </article>
+
+        @endforeach
+
+    </section>
+
+    @endif
 
 </div>
 

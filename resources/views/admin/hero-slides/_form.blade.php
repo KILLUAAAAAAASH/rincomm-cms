@@ -1,20 +1,19 @@
 @php
-$compactHeroForm = $compactHeroForm ?? false;
 $slide = $heroSlide ?? null;
 
 $selectedContentType = old(
-'content_type',
-$slide?->content_type ?? 'image_text'
+    'content_type',
+    $slide?->content_type ?? 'image_text'
 );
 
 $selectedCategory = old(
-'category',
-$slide?->category ?? 'announcement'
+    'category',
+    $slide?->category ?? 'announcement'
 );
 
 $isActive = (bool) old(
-'is_active',
-$slide?->is_active ?? false
+    'is_active',
+    $slide?->is_active ?? false
 );
 @endphp
 
@@ -22,47 +21,48 @@ $slide?->is_active ?? false
 @if ($errors->any())
 
 <div
+    role="alert"
     class="
-            mb-3 rounded-xl
-            border border-red-200
-            bg-red-50 p-3
-            dark:border-red-900
-            dark:bg-red-950/30
-        ">
+        mb-2
+        flex items-start gap-2
+        border border-red-200
+        bg-red-50
+        px-3 py-2.5
+        text-red-700
+        dark:border-red-900
+        dark:bg-red-950/30
+        dark:text-red-300
+    ">
 
-    <div class="flex gap-3">
-
-        <i
-            data-lucide="circle-alert"
-            class="mt-0.5 h-4 w-4 shrink-0 text-red-600"
-            aria-hidden="true">
-        </i>
+    <i
+        data-lucide="triangle-alert"
+        class="mt-0.5 h-4 w-4 shrink-0"
+        aria-hidden="true">
+    </i>
 
 
-        <div>
+    <div class="min-w-0">
 
-            <p class="text-xs font-semibold text-red-700 dark:text-red-300">
-                Please correct the following:
-            </p>
+        <p class="text-xs font-semibold">
+            Please correct the following:
+        </p>
 
-            <ul
-                class="
-                        mt-1 list-disc space-y-0.5 pl-5
-                        text-xs text-red-600
-                        dark:text-red-400
-                    ">
+        <ul
+            class="
+                mt-1 list-disc
+                space-y-0.5 pl-4
+                text-xs
+            ">
 
-                @foreach ($errors->all() as $error)
+            @foreach ($errors->all() as $error)
 
-                <li>
-                    {{ $error }}
-                </li>
+            <li>
+                {{ $error }}
+            </li>
 
-                @endforeach
+            @endforeach
 
-            </ul>
-
-        </div>
+        </ul>
 
     </div>
 
@@ -71,49 +71,70 @@ $slide?->is_active ?? false
 @endif
 
 
-@if ($compactHeroForm)
-
-{{-- Compact edit layout --}}
 <div
     class="
-            grid gap-3
-            md:grid-cols-2
+        grid gap-2
+        lg:grid-cols-2
+        xl:grid-cols-12
+    ">
 
-            xl:h-full
-            xl:min-h-0
-            xl:grid-cols-12
-        ">
-
-    {{-- Slide content --}}
+    {{-- ====================================================
+         SLIDE CONTENT
+    ===================================================== --}}
     <section
         class="
-                rounded-2xl border border-gray-200
-                bg-white p-3 shadow-sm
-                dark:border-gray-800
-                dark:bg-gray-900
+            border border-gray-200
+            bg-white p-4
+            dark:border-neutral-800
+            dark:bg-neutral-900
+            xl:col-span-5
+        ">
 
-                xl:col-span-5
+        <div
+            class="
+                border-b border-gray-100
+                pb-3
+                dark:border-neutral-800
             ">
 
-        <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
-            Slide Content
-        </h2>
+            <h2
+                class="
+                    text-sm font-semibold
+                    text-gray-900
+                    dark:text-white
+                ">
+                Slide Content
+            </h2>
 
-        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-            Choose what information appears on this slide.
-        </p>
+            <p
+                class="
+                    mt-0.5
+                    text-xs text-gray-500
+                    dark:text-gray-400
+                ">
+                Choose what information appears on the slide.
+            </p>
+
+        </div>
 
 
-        <div class="mt-2 space-y-2">
+        <div class="mt-3 space-y-3">
 
             {{-- Content type --}}
             <div>
 
                 <label
                     for="content_type"
-                    class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    class="
+                        mb-1 block
+                        text-xs font-medium
+                        text-gray-700
+                        dark:text-gray-300
+                    ">
                     Content Type
+                    <span class="text-red-500">*</span>
                 </label>
+
 
                 <select
                     id="content_type"
@@ -121,34 +142,36 @@ $slide?->is_active ?? false
                     data-hero-content-type
                     required
                     class="
-                            w-full rounded-lg
-                            border border-gray-300
-                            bg-white px-3 py-1.5
-                            text-xs text-gray-900
-                            outline-none transition
-                            focus:border-[#008080]
-                            focus:ring-2
-                            focus:ring-[#008080]/20
-                            dark:border-gray-700
-                            dark:bg-gray-800
-                            dark:text-white
-                        ">
+                        w-full
+                        border border-gray-300
+                        bg-white
+                        px-3 py-2
+                        text-sm text-gray-900
+                        outline-none
+                        transition
+                        focus:border-[#008080]
+                        focus:ring-2
+                        focus:ring-[#008080]/15
+                        dark:border-neutral-700
+                        dark:bg-neutral-950
+                        dark:text-white
+                    ">
 
                     <option
                         value="image_only"
-                        @selected($selectedContentType==='image_only' )>
+                        @selected($selectedContentType === 'image_only')>
                         Image Only
                     </option>
 
                     <option
                         value="image_text"
-                        @selected($selectedContentType==='image_text' )>
+                        @selected($selectedContentType === 'image_text')>
                         Image + Title + Description
                     </option>
 
                     <option
                         value="image_text_cta"
-                        @selected($selectedContentType==='image_text_cta' )>
+                        @selected($selectedContentType === 'image_text_cta')>
                         Image + Title + Description + CTA
                     </option>
 
@@ -162,30 +185,40 @@ $slide?->is_active ?? false
 
                 <label
                     for="title"
-                    class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    class="
+                        mb-1 block
+                        text-xs font-medium
+                        text-gray-700
+                        dark:text-gray-300
+                    ">
                     Title
                 </label>
+
 
                 <input
                     id="title"
                     name="title"
                     type="text"
-                    value="{{ old('title', $slide?->title ?? '') }}"
                     maxlength="255"
+                    value="{{ old('title', $slide?->title ?? '') }}"
                     placeholder="Example: Back-to-School Fiber Promo"
                     class="
-                            w-full rounded-lg
-                            border border-gray-300
-                            bg-white px-3 py-1.5
-                            text-xs text-gray-900
-                            outline-none transition
-                            focus:border-[#008080]
-                            focus:ring-2
-                            focus:ring-[#008080]/20
-                            dark:border-gray-700
-                            dark:bg-gray-800
-                            dark:text-white
-                        ">
+                        w-full
+                        border border-gray-300
+                        bg-white
+                        px-3 py-2
+                        text-sm text-gray-900
+                        outline-none
+                        transition
+                        placeholder:text-gray-400
+                        focus:border-[#008080]
+                        focus:ring-2
+                        focus:ring-[#008080]/15
+                        dark:border-neutral-700
+                        dark:bg-neutral-950
+                        dark:text-white
+                        dark:placeholder:text-gray-600
+                    ">
 
             </div>
 
@@ -195,29 +228,49 @@ $slide?->is_active ?? false
 
                 <label
                     for="description"
-                    class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    class="
+                        mb-1 block
+                        text-xs font-medium
+                        text-gray-700
+                        dark:text-gray-300
+                    ">
                     Description
                 </label>
+
 
                 <textarea
                     id="description"
                     name="description"
-                    rows="2"
+                    rows="3"
                     maxlength="1500"
                     placeholder="Write a short message for website visitors."
                     class="
-                            w-full resize-none rounded-lg
-                            border border-gray-300
-                            bg-white px-3 py-1.5
-                            text-xs text-gray-900
-                            outline-none transition
-                            focus:border-[#008080]
-                            focus:ring-2
-                            focus:ring-[#008080]/20
-                            dark:border-gray-700
-                            dark:bg-gray-800
-                            dark:text-white
-                        ">{{ old('description', $slide?->description ?? '') }}</textarea>
+                        w-full resize-none
+                        border border-gray-300
+                        bg-white
+                        px-3 py-2
+                        text-sm text-gray-900
+                        outline-none
+                        transition
+                        placeholder:text-gray-400
+                        focus:border-[#008080]
+                        focus:ring-2
+                        focus:ring-[#008080]/15
+                        dark:border-neutral-700
+                        dark:bg-neutral-950
+                        dark:text-white
+                        dark:placeholder:text-gray-600
+                    ">{{ old('description', $slide?->description ?? '') }}</textarea>
+
+                <p
+                    class="
+                        mt-1
+                        text-[10px]
+                        text-gray-500
+                        dark:text-gray-400
+                    ">
+                    Maximum 1,500 characters.
+                </p>
 
             </div>
 
@@ -225,36 +278,48 @@ $slide?->is_active ?? false
             {{-- CTA --}}
             <div
                 data-hero-cta-fields
-                class="grid gap-2 sm:grid-cols-2">
+                class="
+                    grid gap-3
+                    sm:grid-cols-2
+                ">
 
                 <div>
 
                     <label
                         for="cta_text"
-                        class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                        class="
+                            mb-1 block
+                            text-xs font-medium
+                            text-gray-700
+                            dark:text-gray-300
+                        ">
                         Button Text
                     </label>
+
 
                     <input
                         id="cta_text"
                         name="cta_text"
                         type="text"
-                        value="{{ old('cta_text', $slide?->cta_text ?? '') }}"
                         maxlength="100"
+                        value="{{ old('cta_text', $slide?->cta_text ?? '') }}"
                         placeholder="Example: View Plans"
                         class="
-                                w-full rounded-lg
-                                border border-gray-300
-                                bg-white px-3 py-1.5
-                                text-xs text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">
+                            w-full
+                            border border-gray-300
+                            bg-white
+                            px-3 py-2
+                            text-sm text-gray-900
+                            outline-none
+                            transition
+                            placeholder:text-gray-400
+                            focus:border-[#008080]
+                            focus:ring-2
+                            focus:ring-[#008080]/15
+                            dark:border-neutral-700
+                            dark:bg-neutral-950
+                            dark:text-white
+                        ">
 
                 </div>
 
@@ -263,30 +328,39 @@ $slide?->is_active ?? false
 
                     <label
                         for="cta_url"
-                        class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                        class="
+                            mb-1 block
+                            text-xs font-medium
+                            text-gray-700
+                            dark:text-gray-300
+                        ">
                         Button Link
                     </label>
+
 
                     <input
                         id="cta_url"
                         name="cta_url"
                         type="text"
-                        value="{{ old('cta_url', $slide?->cta_url ?? '') }}"
                         maxlength="2048"
+                        value="{{ old('cta_url', $slide?->cta_url ?? '') }}"
                         placeholder="#plans or https://..."
                         class="
-                                w-full rounded-lg
-                                border border-gray-300
-                                bg-white px-3 py-1.5
-                                text-xs text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">
+                            w-full
+                            border border-gray-300
+                            bg-white
+                            px-3 py-2
+                            text-sm text-gray-900
+                            outline-none
+                            transition
+                            placeholder:text-gray-400
+                            focus:border-[#008080]
+                            focus:ring-2
+                            focus:ring-[#008080]/15
+                            dark:border-neutral-700
+                            dark:bg-neutral-950
+                            dark:text-white
+                        ">
 
                 </div>
 
@@ -297,43 +371,72 @@ $slide?->is_active ?? false
     </section>
 
 
-    {{-- Slide image --}}
+    {{-- ====================================================
+         SLIDE IMAGE
+    ===================================================== --}}
     <section
         class="
-                rounded-2xl border border-gray-200
-                bg-white p-3 shadow-sm
-                dark:border-gray-800
-                dark:bg-gray-900
+            border border-gray-200
+            bg-white p-4
+            dark:border-neutral-800
+            dark:bg-neutral-900
+            xl:col-span-4
+        ">
 
-                xl:col-span-4
+        <div
+            class="
+                border-b border-gray-100
+                pb-3
+                dark:border-neutral-800
             ">
 
-        <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
-            Slide Image
-        </h2>
+            <h2
+                class="
+                    text-sm font-semibold
+                    text-gray-900
+                    dark:text-white
+                ">
+                Slide Image
+            </h2>
 
-        <p class="mt-0.5 text-xs text-gray-500 dark:text-gray-400">
-            Upload or replace the carousel image.
-        </p>
+            <p
+                class="
+                    mt-0.5
+                    text-xs text-gray-500
+                    dark:text-gray-400
+                ">
+                Upload the image used by the carousel.
+            </p>
+
+        </div>
 
 
-        <div class="mt-2 space-y-2">
+        <div class="mt-3 space-y-3">
 
             @if ($slide && $slide->image_path)
 
             <div>
 
-                <p class="mb-1 text-xs font-medium text-gray-700 dark:text-gray-300">
+                <p
+                    class="
+                        mb-1
+                        text-xs font-medium
+                        text-gray-700
+                        dark:text-gray-300
+                    ">
                     Current Image
                 </p>
+
 
                 <img
                     src="{{ asset('storage/' . $slide->image_path) }}"
                     alt="{{ $slide->alt_text ?: 'Current hero image' }}"
                     class="
-                                h-24 w-full rounded-lg object-cover
-                                2xl:h-28
-                            ">
+                        h-28 w-full
+                        border border-gray-200
+                        object-cover
+                        dark:border-neutral-700
+                    ">
 
             </div>
 
@@ -344,9 +447,21 @@ $slide?->is_active ?? false
 
                 <label
                     for="image"
-                    class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
+                    class="
+                        mb-1 block
+                        text-xs font-medium
+                        text-gray-700
+                        dark:text-gray-300
+                    ">
+
                     {{ $slide ? 'Replace Image' : 'Upload Image' }}
+
+                    @unless ($slide)
+                    <span class="text-red-500">*</span>
+                    @endunless
+
                 </label>
+
 
                 <input
                     id="image"
@@ -355,28 +470,34 @@ $slide?->is_active ?? false
                     accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
                     @required(!$slide)
                     class="
-                            block w-full rounded-lg
-                            border border-gray-300
-                            bg-white
-                            text-xs text-gray-700
+                        block w-full
+                        border border-gray-300
+                        bg-white
+                        text-xs text-gray-700
 
-                            file:mr-2
-                            file:border-0
-                            file:bg-gray-100
-                            file:px-3
-                            file:py-2
-                            file:text-xs
-                            file:font-medium
-                            file:text-gray-700
+                        file:mr-3
+                        file:border-0
+                        file:bg-gray-100
+                        file:px-3
+                        file:py-2
+                        file:text-xs
+                        file:font-medium
+                        file:text-gray-700
 
-                            dark:border-gray-700
-                            dark:bg-gray-800
-                            dark:text-gray-300
-                            dark:file:bg-gray-700
-                            dark:file:text-gray-200
-                        ">
+                        dark:border-neutral-700
+                        dark:bg-neutral-950
+                        dark:text-gray-300
+                        dark:file:bg-neutral-800
+                        dark:file:text-gray-200
+                    ">
 
-                <p class="mt-1 text-[10px] text-gray-500 dark:text-gray-400">
+                <p
+                    class="
+                        mt-1
+                        text-[10px]
+                        text-gray-500
+                        dark:text-gray-400
+                    ">
                     JPG, PNG, or WebP. Maximum file size: 5 MB.
                 </p>
 
@@ -385,32 +506,58 @@ $slide?->is_active ?? false
 
             <div>
 
-                <label
-                    for="alt_text"
-                    class="mb-1 block text-xs font-medium text-gray-700 dark:text-gray-300">
-                    Alternative Text
-                </label>
+                <div
+                    class="
+                        mb-1 flex
+                        items-center justify-between
+                        gap-2
+                    ">
+
+                    <label
+                        for="alt_text"
+                        class="
+                            text-xs font-medium
+                            text-gray-700
+                            dark:text-gray-300
+                        ">
+                        Alternative Text
+                    </label>
+
+                    <span
+                        class="
+                            text-[10px]
+                            text-gray-400
+                            dark:text-gray-500
+                        ">
+                        Accessibility
+                    </span>
+
+                </div>
+
 
                 <input
                     id="alt_text"
                     name="alt_text"
                     type="text"
-                    value="{{ old('alt_text', $slide?->alt_text ?? '') }}"
                     maxlength="255"
+                    value="{{ old('alt_text', $slide?->alt_text ?? '') }}"
                     placeholder="Describe the image for accessibility"
                     class="
-                            w-full rounded-lg
-                            border border-gray-300
-                            bg-white px-3 py-1.5
-                            text-xs text-gray-900
-                            outline-none transition
-                            focus:border-[#008080]
-                            focus:ring-2
-                            focus:ring-[#008080]/20
-                            dark:border-gray-700
-                            dark:bg-gray-800
-                            dark:text-white
-                        ">
+                        w-full
+                        border border-gray-300
+                        bg-white
+                        px-3 py-2
+                        text-sm text-gray-900
+                        outline-none
+                        transition
+                        placeholder:text-gray-400
+                        focus:border-[#008080]
+                        focus:ring-2
+                        focus:ring-[#008080]/15
+                        dark:border-neutral-700
+                        dark:bg-neutral-950
+                        dark:text-white
+                    ">
 
             </div>
 
@@ -419,40 +566,80 @@ $slide?->is_active ?? false
     </section>
 
 
-    {{-- Publishing and schedule --}}
+    {{-- ====================================================
+         PUBLISHING / SCHEDULE
+    ===================================================== --}}
     <section
         class="
-                rounded-2xl border border-gray-200
-                bg-white p-3 shadow-sm
-                dark:border-gray-800
-                dark:bg-gray-900
+            border border-gray-200
+            bg-white p-4
+            dark:border-neutral-800
+            dark:bg-neutral-900
 
-                md:col-span-2
-                xl:col-span-3
+            lg:col-span-2
+            xl:col-span-3
+        ">
+
+        <div
+            class="
+                border-b border-gray-100
+                pb-3
+                dark:border-neutral-800
             ">
 
-        {{-- Publishing --}}
-        <div>
+            <div
+                class="
+                    flex items-center
+                    justify-between gap-3
+                ">
 
-            <div class="flex items-center justify-between gap-2">
+                <div>
 
-                <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
-                    Publishing
-                </h2>
+                    <h2
+                        class="
+                            text-sm font-semibold
+                            text-gray-900
+                            dark:text-white
+                        ">
+                        Publishing
+                    </h2>
+
+                    <p
+                        class="
+                            mt-0.5
+                            text-xs text-gray-500
+                            dark:text-gray-400
+                        ">
+                        Control visibility and ordering.
+                    </p>
+
+                </div>
 
 
-                <div class="flex shrink-0 items-center gap-2">
-
-                    <span class="text-[11px] font-medium text-gray-700 dark:text-gray-300">
-                        Active
-                    </span>
+                <div class="shrink-0">
 
                     <input
                         type="hidden"
                         name="is_active"
                         value="0">
 
-                    <label class="relative inline-flex cursor-pointer items-center">
+
+                    <label
+                        class="
+                            relative inline-flex
+                            cursor-pointer items-center
+                            gap-2
+                        "
+                        title="Toggle slide visibility">
+
+                        <span
+                            class="
+                                text-xs font-medium
+                                text-gray-700
+                                dark:text-gray-300
+                            ">
+                            Active
+                        </span>
 
                         <input
                             type="checkbox"
@@ -463,21 +650,23 @@ $slide?->is_active ?? false
 
                         <span
                             class="
-                                    h-5 w-9 rounded-full
-                                    bg-gray-300 transition
-                                    after:absolute
-                                    after:left-[2px]
-                                    after:top-[2px]
-                                    after:h-4
-                                    after:w-4
-                                    after:rounded-full
-                                    after:bg-white
-                                    after:transition-all
-                                    after:content-['']
-                                    peer-checked:bg-[#008080]
-                                    peer-checked:after:translate-x-full
-                                    dark:bg-gray-700
-                                ">
+                                relative h-5 w-9
+                                rounded-full
+                                bg-gray-300
+                                transition
+                                after:absolute
+                                after:left-[2px]
+                                after:top-[2px]
+                                after:h-4
+                                after:w-4
+                                after:rounded-full
+                                after:bg-white
+                                after:transition-all
+                                after:content-['']
+                                peer-checked:bg-[#008080]
+                                peer-checked:after:translate-x-full
+                                dark:bg-neutral-700
+                            ">
                         </span>
 
                     </label>
@@ -486,180 +675,254 @@ $slide?->is_active ?? false
 
             </div>
 
-
-            <div class="mt-2 grid grid-cols-2 gap-2">
-
-                <div class="min-w-0">
-
-                    <label
-                        for="category"
-                        class="mb-1 block text-[11px] font-medium text-gray-700 dark:text-gray-300">
-                        Category
-                    </label>
-
-                    <select
-                        id="category"
-                        name="category"
-                        required
-                        class="
-                                w-full min-w-0 rounded-lg
-                                border border-gray-300
-                                bg-white px-2 py-1.5
-                                text-[11px] text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">
-
-                        <option value="promotion" @selected($selectedCategory==='promotion' )>
-                            Promotion
-                        </option>
-
-                        <option value="event" @selected($selectedCategory==='event' )>
-                            Event
-                        </option>
-
-                        <option value="announcement" @selected($selectedCategory==='announcement' )>
-                            Announcement
-                        </option>
-
-                        <option value="coverage_update" @selected($selectedCategory==='coverage_update' )>
-                            Coverage Update
-                        </option>
-
-                        <option value="maintenance_advisory" @selected($selectedCategory==='maintenance_advisory' )>
-                            Maintenance Advisory
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div class="min-w-0">
-
-                    <label
-                        for="display_order"
-                        class="mb-1 block text-[11px] font-medium text-gray-700 dark:text-gray-300">
-                        Display Order
-                    </label>
-
-                    <input
-                        id="display_order"
-                        name="display_order"
-                        type="number"
-                        min="0"
-                        max="999"
-                        value="{{ old('display_order', $slide?->display_order ?? 0) }}"
-                        class="
-                                w-full min-w-0 rounded-lg
-                                border border-gray-300
-                                bg-white px-2 py-1.5
-                                text-[11px] text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">
-
-                </div>
-
-            </div>
-
         </div>
 
 
-        {{-- Schedule --}}
-        <div class="mt-2 border-t border-gray-200 pt-2 dark:border-gray-800">
+        <div class="mt-3 space-y-3">
 
-            <div class="flex items-center justify-between">
+            {{-- Category --}}
+            <div>
 
-                <h2 class="text-sm font-semibold text-gray-900 dark:text-white">
-                    Schedule
-                </h2>
+                <label
+                    for="category"
+                    class="
+                        mb-1 block
+                        text-xs font-medium
+                        text-gray-700
+                        dark:text-gray-300
+                    ">
+                    Category
+                    <span class="text-red-500">*</span>
+                </label>
 
-                <span class="text-[10px] text-gray-500 dark:text-gray-400">
-                    Optional
-                </span>
+
+                <select
+                    id="category"
+                    name="category"
+                    required
+                    class="
+                        w-full
+                        border border-gray-300
+                        bg-white
+                        px-3 py-2
+                        text-sm text-gray-900
+                        outline-none
+                        transition
+                        focus:border-[#008080]
+                        focus:ring-2
+                        focus:ring-[#008080]/15
+                        dark:border-neutral-700
+                        dark:bg-neutral-950
+                        dark:text-white
+                    ">
+
+                    <option
+                        value="promotion"
+                        @selected($selectedCategory === 'promotion')>
+                        Promotion
+                    </option>
+
+                    <option
+                        value="event"
+                        @selected($selectedCategory === 'event')>
+                        Event
+                    </option>
+
+                    <option
+                        value="announcement"
+                        @selected($selectedCategory === 'announcement')>
+                        Announcement
+                    </option>
+
+                    <option
+                        value="coverage_update"
+                        @selected($selectedCategory === 'coverage_update')>
+                        Coverage Update
+                    </option>
+
+                    <option
+                        value="maintenance_advisory"
+                        @selected($selectedCategory === 'maintenance_advisory')>
+                        Maintenance Advisory
+                    </option>
+
+                </select>
 
             </div>
 
 
-            <div class="mt-2 space-y-2">
+            {{-- Display order --}}
+            <div>
 
-                <div>
+                <label
+                    for="display_order"
+                    class="
+                        mb-1 block
+                        text-xs font-medium
+                        text-gray-700
+                        dark:text-gray-300
+                    ">
+                    Display Order
+                </label>
 
-                    <label
-                        for="starts_at"
-                        class="mb-1 block text-[11px] font-medium text-gray-700 dark:text-gray-300">
-                        Start Date & Time
-                    </label>
 
-                    <input
-                        id="starts_at"
-                        name="starts_at"
-                        type="datetime-local"
-                        value="{{ old(
+                <input
+                    id="display_order"
+                    name="display_order"
+                    type="number"
+                    min="0"
+                    max="999"
+                    value="{{ old('display_order', $slide?->display_order ?? 0) }}"
+                    class="
+                        w-full
+                        border border-gray-300
+                        bg-white
+                        px-3 py-2
+                        text-sm text-gray-900
+                        outline-none
+                        transition
+                        focus:border-[#008080]
+                        focus:ring-2
+                        focus:ring-[#008080]/15
+                        dark:border-neutral-700
+                        dark:bg-neutral-950
+                        dark:text-white
+                    ">
+
+                <p
+                    class="
+                        mt-1
+                        text-[10px]
+                        text-gray-500
+                        dark:text-gray-400
+                    ">
+                    Lower numbers appear first.
+                </p>
+
+            </div>
+
+
+            {{-- Schedule --}}
+            <div
+                class="
+                    border-t border-gray-100
+                    pt-3
+                    dark:border-neutral-800
+                ">
+
+                <div
+                    class="
+                        flex items-center
+                        justify-between gap-2
+                    ">
+
+                    <h3
+                        class="
+                            text-xs font-semibold
+                            text-gray-900
+                            dark:text-white
+                        ">
+                        Schedule
+                    </h3>
+
+                    <span
+                        class="
+                            text-[10px]
+                            text-gray-400
+                            dark:text-gray-500
+                        ">
+                        Optional
+                    </span>
+
+                </div>
+
+
+                <div class="mt-2 space-y-2">
+
+                    <div>
+
+                        <label
+                            for="starts_at"
+                            class="
+                                mb-1 block
+                                text-[11px] font-medium
+                                text-gray-700
+                                dark:text-gray-300
+                            ">
+                            Start Date & Time
+                        </label>
+
+
+                        <input
+                            id="starts_at"
+                            name="starts_at"
+                            type="datetime-local"
+                            value="{{ old(
                                 'starts_at',
                                 $slide?->starts_at
                                     ? $slide->starts_at->format('Y-m-d\TH:i')
                                     : ''
                             ) }}"
-                        class="
-                                w-full min-w-0 rounded-lg
+                            class="
+                                w-full min-w-0
                                 border border-gray-300
-                                bg-white px-2 py-1.5
-                                text-[11px] text-gray-900
-                                outline-none transition
+                                bg-white
+                                px-2.5 py-2
+                                text-xs text-gray-900
+                                outline-none
+                                transition
                                 focus:border-[#008080]
                                 focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
+                                focus:ring-[#008080]/15
+                                dark:border-neutral-700
+                                dark:bg-neutral-950
                                 dark:text-white
                             ">
 
-                </div>
+                    </div>
 
 
-                <div>
+                    <div>
 
-                    <label
-                        for="ends_at"
-                        class="mb-1 block text-[11px] font-medium text-gray-700 dark:text-gray-300">
-                        End Date & Time
-                    </label>
+                        <label
+                            for="ends_at"
+                            class="
+                                mb-1 block
+                                text-[11px] font-medium
+                                text-gray-700
+                                dark:text-gray-300
+                            ">
+                            End Date & Time
+                        </label>
 
-                    <input
-                        id="ends_at"
-                        name="ends_at"
-                        type="datetime-local"
-                        value="{{ old(
+
+                        <input
+                            id="ends_at"
+                            name="ends_at"
+                            type="datetime-local"
+                            value="{{ old(
                                 'ends_at',
                                 $slide?->ends_at
                                     ? $slide->ends_at->format('Y-m-d\TH:i')
                                     : ''
                             ) }}"
-                        class="
-                                w-full min-w-0 rounded-lg
+                            class="
+                                w-full min-w-0
                                 border border-gray-300
-                                bg-white px-2 py-1.5
-                                text-[11px] text-gray-900
-                                outline-none transition
+                                bg-white
+                                px-2.5 py-2
+                                text-xs text-gray-900
+                                outline-none
+                                transition
                                 focus:border-[#008080]
                                 focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
+                                focus:ring-[#008080]/15
+                                dark:border-neutral-700
+                                dark:bg-neutral-950
                                 dark:text-white
                             ">
+
+                    </div>
 
                 </div>
 
@@ -670,591 +933,3 @@ $slide?->is_active ?? false
     </section>
 
 </div>
-
-@else
-
-{{-- Standard create layout --}}
-<div class="grid gap-6 lg:grid-cols-3">
-
-    {{-- Main fields --}}
-    <div class="space-y-6 lg:col-span-2">
-
-        {{-- Slide content --}}
-        <section
-            class="
-                    rounded-2xl border border-gray-200
-                    bg-white p-5 shadow-sm
-                    dark:border-gray-800
-                    dark:bg-gray-900
-                ">
-
-            <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                Slide Content
-            </h2>
-
-            <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-                Choose what information will appear on this carousel slide.
-            </p>
-
-
-            <div class="mt-5 space-y-5">
-
-                <div>
-
-                    <label
-                        for="content_type"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Content Type
-                    </label>
-
-                    <select
-                        id="content_type"
-                        name="content_type"
-                        data-hero-content-type
-                        required
-                        class="
-                                w-full rounded-xl
-                                border border-gray-300
-                                bg-white px-3.5 py-2.5
-                                text-sm text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">
-
-                        <option value="image_only" @selected($selectedContentType==='image_only' )>
-                            Image Only
-                        </option>
-
-                        <option value="image_text" @selected($selectedContentType==='image_text' )>
-                            Image + Title + Description
-                        </option>
-
-                        <option value="image_text_cta" @selected($selectedContentType==='image_text_cta' )>
-                            Image + Title + Description + CTA
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div data-hero-text-field>
-
-                    <label
-                        for="title"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Title
-                    </label>
-
-                    <input
-                        id="title"
-                        name="title"
-                        type="text"
-                        value="{{ old('title', $slide?->title ?? '') }}"
-                        maxlength="255"
-                        placeholder="Example: Back-to-School Fiber Promo"
-                        class="
-                                w-full rounded-xl
-                                border border-gray-300
-                                bg-white px-3.5 py-2.5
-                                text-sm text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">
-
-                </div>
-
-
-                <div data-hero-text-field>
-
-                    <label
-                        for="description"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Description
-                    </label>
-
-                    <textarea
-                        id="description"
-                        name="description"
-                        rows="4"
-                        maxlength="1500"
-                        placeholder="Write a short message for website visitors."
-                        class="
-                                w-full resize-y rounded-xl
-                                border border-gray-300
-                                bg-white px-3.5 py-2.5
-                                text-sm text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">{{ old('description', $slide?->description ?? '') }}</textarea>
-
-                </div>
-
-
-                <div
-                    data-hero-cta-fields
-                    class="grid gap-5 sm:grid-cols-2">
-
-                    <div>
-
-                        <label
-                            for="cta_text"
-                            class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Button Text
-                        </label>
-
-                        <input
-                            id="cta_text"
-                            name="cta_text"
-                            type="text"
-                            value="{{ old('cta_text', $slide?->cta_text ?? '') }}"
-                            maxlength="100"
-                            placeholder="Example: View Plans"
-                            class="
-                                    w-full rounded-xl
-                                    border border-gray-300
-                                    bg-white px-3.5 py-2.5
-                                    text-sm text-gray-900
-                                    outline-none transition
-                                    focus:border-[#008080]
-                                    focus:ring-2
-                                    focus:ring-[#008080]/20
-                                    dark:border-gray-700
-                                    dark:bg-gray-800
-                                    dark:text-white
-                                ">
-
-                    </div>
-
-
-                    <div>
-
-                        <label
-                            for="cta_url"
-                            class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Button Link
-                        </label>
-
-                        <input
-                            id="cta_url"
-                            name="cta_url"
-                            type="text"
-                            value="{{ old('cta_url', $slide?->cta_url ?? '') }}"
-                            maxlength="2048"
-                            placeholder="#plans or https://..."
-                            class="
-                                    w-full rounded-xl
-                                    border border-gray-300
-                                    bg-white px-3.5 py-2.5
-                                    text-sm text-gray-900
-                                    outline-none transition
-                                    focus:border-[#008080]
-                                    focus:ring-2
-                                    focus:ring-[#008080]/20
-                                    dark:border-gray-700
-                                    dark:bg-gray-800
-                                    dark:text-white
-                                ">
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        {{-- Slide image --}}
-        <section
-            class="
-                    rounded-2xl border border-gray-200
-                    bg-white p-5 shadow-sm
-                    dark:border-gray-800
-                    dark:bg-gray-900
-                ">
-
-            <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                Slide Image
-            </h2>
-
-
-            <div class="mt-5 space-y-5">
-
-                @if ($slide && $slide->image_path)
-
-                <div>
-
-                    <p class="mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Current Image
-                    </p>
-
-                    <img
-                        src="{{ asset('storage/' . $slide->image_path) }}"
-                        alt="{{ $slide->alt_text ?: 'Current hero image' }}"
-                        class="max-h-64 w-full rounded-xl object-cover">
-
-                </div>
-
-                @endif
-
-
-                <div>
-
-                    <label
-                        for="image"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        {{ $slide ? 'Replace Image' : 'Upload Image' }}
-                    </label>
-
-                    <input
-                        id="image"
-                        name="image"
-                        type="file"
-                        accept=".jpg,.jpeg,.png,.webp,image/jpeg,image/png,image/webp"
-                        @required(!$slide)
-                        class="
-                                block w-full rounded-xl
-                                border border-gray-300
-                                bg-white
-                                text-sm text-gray-700
-                                file:mr-4
-                                file:border-0
-                                file:bg-gray-100
-                                file:px-4
-                                file:py-3
-                                file:text-sm
-                                file:font-medium
-                                file:text-gray-700
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-gray-300
-                                dark:file:bg-gray-700
-                                dark:file:text-gray-200
-                            ">
-
-                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        JPG, PNG, or WebP. Maximum file size: 5 MB.
-                    </p>
-
-                </div>
-
-
-                <div>
-
-                    <label
-                        for="alt_text"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Alternative Text
-                    </label>
-
-                    <input
-                        id="alt_text"
-                        name="alt_text"
-                        type="text"
-                        value="{{ old('alt_text', $slide?->alt_text ?? '') }}"
-                        maxlength="255"
-                        placeholder="Describe the image for accessibility"
-                        class="
-                                w-full rounded-xl
-                                border border-gray-300
-                                bg-white px-3.5 py-2.5
-                                text-sm text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </div>
-
-
-    {{-- Settings --}}
-    <div class="space-y-6">
-
-        {{-- Publishing --}}
-        <section
-            class="
-                    rounded-2xl border border-gray-200
-                    bg-white p-5 shadow-sm
-                    dark:border-gray-800
-                    dark:bg-gray-900
-                ">
-
-            <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                Publishing
-            </h2>
-
-
-            <div class="mt-5 space-y-5">
-
-                <div class="flex items-center justify-between gap-4">
-
-                    <div>
-
-                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">
-                            Active
-                        </p>
-
-                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                            Show this slide when its schedule allows.
-                        </p>
-
-                    </div>
-
-
-                    <div>
-
-                        <input
-                            type="hidden"
-                            name="is_active"
-                            value="0">
-
-                        <label class="relative inline-flex cursor-pointer items-center">
-
-                            <input
-                                type="checkbox"
-                                name="is_active"
-                                value="1"
-                                class="peer sr-only"
-                                @checked($isActive)>
-
-                            <span
-                                class="
-                                        h-6 w-11 rounded-full
-                                        bg-gray-300 transition
-                                        after:absolute
-                                        after:left-[2px]
-                                        after:top-[2px]
-                                        after:h-5
-                                        after:w-5
-                                        after:rounded-full
-                                        after:bg-white
-                                        after:transition-all
-                                        after:content-['']
-                                        peer-checked:bg-[#008080]
-                                        peer-checked:after:translate-x-full
-                                        dark:bg-gray-700
-                                    ">
-                            </span>
-
-                        </label>
-
-                    </div>
-
-                </div>
-
-
-                <div>
-
-                    <label
-                        for="category"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Category
-                    </label>
-
-                    <select
-                        id="category"
-                        name="category"
-                        required
-                        class="
-                                w-full rounded-xl
-                                border border-gray-300
-                                bg-white px-3.5 py-2.5
-                                text-sm text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">
-
-                        <option value="promotion" @selected($selectedCategory==='promotion' )>
-                            Promotion
-                        </option>
-
-                        <option value="event" @selected($selectedCategory==='event' )>
-                            Event
-                        </option>
-
-                        <option value="announcement" @selected($selectedCategory==='announcement' )>
-                            Announcement
-                        </option>
-
-                        <option value="coverage_update" @selected($selectedCategory==='coverage_update' )>
-                            Coverage Update
-                        </option>
-
-                        <option value="maintenance_advisory" @selected($selectedCategory==='maintenance_advisory' )>
-                            Maintenance Advisory
-                        </option>
-
-                    </select>
-
-                </div>
-
-
-                <div>
-
-                    <label
-                        for="display_order"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Display Order
-                    </label>
-
-                    <input
-                        id="display_order"
-                        name="display_order"
-                        type="number"
-                        min="0"
-                        max="999"
-                        value="{{ old('display_order', $slide?->display_order ?? 0) }}"
-                        class="
-                                w-full rounded-xl
-                                border border-gray-300
-                                bg-white px-3.5 py-2.5
-                                text-sm text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">
-
-                    <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
-                        Lower numbers appear first.
-                    </p>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        {{-- Schedule --}}
-        <section
-            class="
-                    rounded-2xl border border-gray-200
-                    bg-white p-5 shadow-sm
-                    dark:border-gray-800
-                    dark:bg-gray-900
-                ">
-
-            <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                Schedule
-            </h2>
-
-            <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                Both fields are optional.
-            </p>
-
-
-            <div class="mt-5 space-y-5">
-
-                <div>
-
-                    <label
-                        for="starts_at"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        Start Date & Time
-                    </label>
-
-                    <input
-                        id="starts_at"
-                        name="starts_at"
-                        type="datetime-local"
-                        value="{{ old(
-                                'starts_at',
-                                $slide?->starts_at
-                                    ? $slide->starts_at->format('Y-m-d\TH:i')
-                                    : ''
-                            ) }}"
-                        class="
-                                w-full min-w-0 rounded-xl
-                                border border-gray-300
-                                bg-white px-3.5 py-2.5
-                                text-sm text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">
-
-                </div>
-
-
-                <div>
-
-                    <label
-                        for="ends_at"
-                        class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">
-                        End Date & Time
-                    </label>
-
-                    <input
-                        id="ends_at"
-                        name="ends_at"
-                        type="datetime-local"
-                        value="{{ old(
-                                'ends_at',
-                                $slide?->ends_at
-                                    ? $slide->ends_at->format('Y-m-d\TH:i')
-                                    : ''
-                            ) }}"
-                        class="
-                                w-full min-w-0 rounded-xl
-                                border border-gray-300
-                                bg-white px-3.5 py-2.5
-                                text-sm text-gray-900
-                                outline-none transition
-                                focus:border-[#008080]
-                                focus:ring-2
-                                focus:ring-[#008080]/20
-                                dark:border-gray-700
-                                dark:bg-gray-800
-                                dark:text-white
-                            ">
-
-                </div>
-
-            </div>
-
-        </section>
-
-    </div>
-
-</div>
-
-@endif
