@@ -66,7 +66,6 @@
                 {{-- Login card --}}
                 <div
                     class="
-                        rounded-2xl
                         border border-neutral-200
                         bg-white
                         px-6 py-5
@@ -103,7 +102,7 @@
 
                     <div
                         class="
-                                mt-4 rounded-xl
+                                mt-4
                                 border border-green-200
                                 bg-green-50
                                 px-4 py-2.5

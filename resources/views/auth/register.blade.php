@@ -21,7 +21,10 @@
                     window.matchMedia('(prefers-color-scheme: dark)').matches
                 );
 
-            document.documentElement.classList.toggle('dark', useDarkTheme);
+            document.documentElement.classList.toggle(
+                'dark',
+                useDarkTheme
+            );
         })();
     </script>
 
@@ -117,13 +120,45 @@
                     <p
                         class="
                             mt-1 text-sm
+                            leading-5
                             text-neutral-500
                             dark:text-neutral-400
                         ">
-                        Register to access the Rincomm customer portal.
+                        Register for the Rincomm customer portal, then verify your account by email or SMS.
                     </p>
 
                 </div>
+
+
+                {{-- Delivery / workflow error --}}
+                @if (session('error'))
+
+                <div
+                    role="alert"
+                    class="
+                            mb-4 flex items-start gap-2.5
+                            border border-red-200
+                            bg-red-50
+                            px-3 py-2.5
+                            text-sm text-red-700
+                            dark:border-red-900
+                            dark:bg-red-950/40
+                            dark:text-red-300
+                        ">
+
+                    <i
+                        data-lucide="triangle-alert"
+                        class="mt-0.5 h-4 w-4 shrink-0"
+                        aria-hidden="true">
+                    </i>
+
+                    <span>
+                        {{ session('error') }}
+                    </span>
+
+                </div>
+
+                @endif
 
 
                 {{-- Registration form --}}
@@ -260,54 +295,303 @@
                     </div>
 
 
-                    {{-- Email --}}
-                    <div>
+                    {{-- Contact details --}}
+                    <div
+                        class="
+                            grid grid-cols-1
+                            gap-3
+                            sm:grid-cols-2
+                        ">
 
-                        <label
-                            for="email"
+                        {{-- Email --}}
+                        <div>
+
+                            <label
+                                for="email"
+                                class="
+                                    mb-1 block
+                                    text-sm font-medium
+                                    text-neutral-700
+                                    dark:text-neutral-300
+                                ">
+                                Email Address
+                            </label>
+
+                            <input
+                                id="email"
+                                name="email"
+                                type="email"
+                                value="{{ old('email') }}"
+                                autocomplete="email"
+                                placeholder="you@example.com"
+                                aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}"
+                                aria-describedby="{{ $errors->has('email') ? 'email-error' : '' }}"
+                                class="
+                                    block w-full
+                                    bg-white
+                                    px-4 py-2.5
+                                    text-base
+                                    text-neutral-900
+                                    outline-none
+                                    transition
+                                    placeholder:text-neutral-400
+
+                                    {{ $errors->has('email')
+                                        ? 'border border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 dark:border-red-500'
+                                        : 'border border-neutral-300 focus:border-[#008080] focus:ring-1 focus:ring-[#008080] dark:border-neutral-700'
+                                    }}
+
+                                    dark:bg-neutral-950
+                                    dark:text-neutral-100
+                                    dark:placeholder:text-neutral-500
+                                ">
+
+                            <x-field-error
+                                id="email-error"
+                                :message="$errors->first('email')" />
+
+                        </div>
+
+
+                        {{-- Mobile number --}}
+                        <div>
+
+                            <label
+                                for="phone"
+                                class="
+                                    mb-1 block
+                                    text-sm font-medium
+                                    text-neutral-700
+                                    dark:text-neutral-300
+                                ">
+                                Mobile Number
+                            </label>
+
+                            <input
+                                id="phone"
+                                name="phone"
+                                type="tel"
+                                value="{{ old('phone') }}"
+                                autocomplete="tel"
+                                inputmode="tel"
+                                placeholder="0917 123 4567"
+                                aria-invalid="{{ $errors->has('phone') ? 'true' : 'false' }}"
+                                aria-describedby="phone-help{{ $errors->has('phone') ? ' phone-error' : '' }}"
+                                class="
+                                    block w-full
+                                    bg-white
+                                    px-4 py-2.5
+                                    text-base
+                                    text-neutral-900
+                                    outline-none
+                                    transition
+                                    placeholder:text-neutral-400
+
+                                    {{ $errors->has('phone')
+                                        ? 'border border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 dark:border-red-500'
+                                        : 'border border-neutral-300 focus:border-[#008080] focus:ring-1 focus:ring-[#008080] dark:border-neutral-700'
+                                    }}
+
+                                    dark:bg-neutral-950
+                                    dark:text-neutral-100
+                                    dark:placeholder:text-neutral-500
+                                ">
+
+                            <p
+                                id="phone-help"
+                                class="
+                                    mt-1 text-xs
+                                    leading-5
+                                    text-neutral-500
+                                    dark:text-neutral-400
+                                ">
+                                Philippine mobile number.
+                            </p>
+
+                            <x-field-error
+                                id="phone-error"
+                                :message="$errors->first('phone')" />
+
+                        </div>
+
+                    </div>
+
+
+                    {{-- Verification channel --}}
+                    <fieldset>
+
+                        <legend
                             class="
-                                mb-1 block
                                 text-sm font-medium
                                 text-neutral-700
                                 dark:text-neutral-300
                             ">
-                            Email Address
-                        </label>
+                            Receive verification code by
+                        </legend>
 
-                        <input
-                            id="email"
-                            name="email"
-                            type="email"
-                            value="{{ old('email') }}"
-                            autocomplete="email"
-                            placeholder="you@example.com"
-                            aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}"
-                            aria-describedby="{{ $errors->has('email') ? 'email-error' : '' }}"
+                        <p
+                            id="verification-channel-help"
                             class="
-                                block w-full
-                                bg-white
-                                px-4 py-2.5
-                                text-base
-                                text-neutral-900
-                                outline-none
-                                transition
-                                placeholder:text-neutral-400
+                                mt-0.5 text-xs
+                                leading-5
+                                text-neutral-500
+                                dark:text-neutral-400
+                            ">
+                            Choose where Rincomm should send your six-digit account verification code.
+                        </p>
 
-                                {{ $errors->has('email')
-                                    ? 'border border-red-500 focus:border-red-500 focus:ring-1 focus:ring-red-500 dark:border-red-500'
-                                    : 'border border-neutral-300 focus:border-[#008080] focus:ring-1 focus:ring-[#008080] dark:border-neutral-700'
-                                }}
 
-                                dark:bg-neutral-950
-                                dark:text-neutral-100
-                                dark:placeholder:text-neutral-500
+                        <div
+                            class="
+                                mt-2 grid grid-cols-1
+                                gap-2
+                                sm:grid-cols-2
                             ">
 
-                        <x-field-error
-                            id="email-error"
-                            :message="$errors->first('email')" />
+                            {{-- Email option --}}
+                            <label
+                                class="
+                                    flex cursor-pointer
+                                    items-start gap-3
+                                    border border-neutral-300
+                                    bg-white
+                                    px-3 py-2.5
+                                    transition
+                                    hover:border-[#008080]
+                                    has-[:checked]:border-[#008080]
+                                    has-[:checked]:bg-[#008080]/5
+                                    dark:border-neutral-700
+                                    dark:bg-neutral-950
+                                    dark:hover:border-teal-400
+                                    dark:has-[:checked]:border-teal-500
+                                    dark:has-[:checked]:bg-teal-950/20
+                                ">
 
-                    </div>
+                                <input
+                                    type="radio"
+                                    name="verification_channel"
+                                    value="email"
+                                    @checked(old('verification_channel', 'email' )==='email' )
+                                    aria-describedby="verification-channel-help"
+                                    class="
+                                        mt-0.5 h-4 w-4
+                                        border-neutral-300
+                                        text-[#008080]
+                                        focus:ring-[#008080]
+                                        dark:border-neutral-600
+                                        dark:bg-neutral-900
+                                    ">
+
+                                <span class="min-w-0">
+
+                                    <span
+                                        class="
+                                            flex items-center gap-1.5
+                                            text-sm font-medium
+                                            text-neutral-800
+                                            dark:text-neutral-200
+                                        ">
+
+                                        <i
+                                            data-lucide="mail"
+                                            class="h-4 w-4 text-[#008080] dark:text-teal-400"
+                                            aria-hidden="true">
+                                        </i>
+
+                                        Email
+
+                                    </span>
+
+                                    <span
+                                        class="
+                                            mt-0.5 block
+                                            text-xs leading-5
+                                            text-neutral-500
+                                            dark:text-neutral-400
+                                        ">
+                                        Send the code to your email address.
+                                    </span>
+
+                                </span>
+
+                            </label>
+
+
+                            {{-- SMS option --}}
+                            <label
+                                class="
+                                    flex cursor-pointer
+                                    items-start gap-3
+                                    border border-neutral-300
+                                    bg-white
+                                    px-3 py-2.5
+                                    transition
+                                    hover:border-[#008080]
+                                    has-[:checked]:border-[#008080]
+                                    has-[:checked]:bg-[#008080]/5
+                                    dark:border-neutral-700
+                                    dark:bg-neutral-950
+                                    dark:hover:border-teal-400
+                                    dark:has-[:checked]:border-teal-500
+                                    dark:has-[:checked]:bg-teal-950/20
+                                ">
+
+                                <input
+                                    type="radio"
+                                    name="verification_channel"
+                                    value="sms"
+                                    @checked(old('verification_channel')==='sms' )
+                                    aria-describedby="verification-channel-help"
+                                    class="
+                                        mt-0.5 h-4 w-4
+                                        border-neutral-300
+                                        text-[#008080]
+                                        focus:ring-[#008080]
+                                        dark:border-neutral-600
+                                        dark:bg-neutral-900
+                                    ">
+
+                                <span class="min-w-0">
+
+                                    <span
+                                        class="
+                                            flex items-center gap-1.5
+                                            text-sm font-medium
+                                            text-neutral-800
+                                            dark:text-neutral-200
+                                        ">
+
+                                        <i
+                                            data-lucide="message-square"
+                                            class="h-4 w-4 text-[#008080] dark:text-teal-400"
+                                            aria-hidden="true">
+                                        </i>
+
+                                        SMS
+
+                                    </span>
+
+                                    <span
+                                        class="
+                                            mt-0.5 block
+                                            text-xs leading-5
+                                            text-neutral-500
+                                            dark:text-neutral-400
+                                        ">
+                                        Send the code to your mobile number.
+                                    </span>
+
+                                </span>
+
+                            </label>
+
+                        </div>
+
+                        <x-field-error
+                            id="verification-channel-error"
+                            :message="$errors->first('verification_channel')" />
+
+                    </fieldset>
 
 
                     {{-- Password fields --}}
@@ -340,7 +624,7 @@
                                     type="password"
                                     autocomplete="new-password"
                                     aria-invalid="{{ $errors->has('password') ? 'true' : 'false' }}"
-                                    aria-describedby="{{ $errors->has('password') ? 'password-error' : '' }}"
+                                    aria-describedby="{{ $errors->has('password') ? 'password-error' : 'password-help' }}"
                                     class="
                                         block w-full
                                         bg-white
@@ -384,7 +668,13 @@
 
                             </div>
 
-                            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                            <p
+                                id="password-help"
+                                class="
+                                    mt-1 text-xs
+                                    text-neutral-500
+                                    dark:text-neutral-400
+                                ">
                                 At least 8 characters.
                             </p>
 
@@ -470,13 +760,44 @@
                     </div>
 
 
+                    {{-- Verification notice --}}
+                    <div
+                        class="
+                            flex items-start gap-2.5
+                            border border-neutral-200
+                            bg-neutral-50
+                            px-3 py-2.5
+                            text-xs leading-5
+                            text-neutral-600
+                            dark:border-neutral-800
+                            dark:bg-neutral-950
+                            dark:text-neutral-400
+                        ">
+
+                        <i
+                            data-lucide="shield-check"
+                            class="
+                                mt-0.5 h-4 w-4 shrink-0
+                                text-[#008080]
+                                dark:text-teal-400
+                            "
+                            aria-hidden="true">
+                        </i>
+
+                        <span>
+                            Your portal account remains pending until the verification code is successfully confirmed.
+                        </span>
+
+                    </div>
+
+
                     {{-- Submit --}}
                     <button
                         type="submit"
-                        data-loading-text="Creating account..."
+                        data-loading-text="Sending verification code..."
                         class="
-                            inline-flex w-full
-                            items-center justify-center
+                            inline-flex min-h-11 w-full
+                            items-center justify-center gap-2
                             bg-[#008080]
                             px-5 py-2.5
                             text-base font-semibold
@@ -492,7 +813,15 @@
                             disabled:opacity-70
                             dark:focus:ring-offset-neutral-900
                         ">
-                        Create Account
+
+                        <i
+                            data-lucide="send"
+                            class="h-4 w-4"
+                            aria-hidden="true">
+                        </i>
+
+                        Continue to Verification
+
                     </button>
 
 
@@ -564,31 +893,50 @@
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             const toggleButtons =
-                document.querySelectorAll('[data-password-toggle]');
+                document.querySelectorAll(
+                    '[data-password-toggle]'
+                );
 
             toggleButtons.forEach((toggleButton) => {
-                toggleButton.addEventListener('click', () => {
-                    const targetId = toggleButton.dataset.passwordTarget;
-                    const passwordInput = document.getElementById(targetId);
+                toggleButton.addEventListener(
+                    'click',
+                    () => {
+                        const targetId =
+                            toggleButton.dataset.passwordTarget;
 
-                    if (!passwordInput) {
-                        return;
+                        const passwordInput =
+                            document.getElementById(
+                                targetId
+                            );
+
+                        if (!passwordInput) {
+                            return;
+                        }
+
+                        const isVisible =
+                            passwordInput.type === 'text';
+
+                        passwordInput.type =
+                            isVisible ?
+                            'password' :
+                            'text';
+
+                        const label =
+                            isVisible ?
+                            'Show password' :
+                            'Hide password';
+
+                        toggleButton.setAttribute(
+                            'aria-label',
+                            label
+                        );
+
+                        toggleButton.setAttribute(
+                            'title',
+                            label
+                        );
                     }
-
-                    // Toggle password visibility
-                    const isVisible = passwordInput.type === 'text';
-
-                    passwordInput.type =
-                        isVisible ? 'password' : 'text';
-
-                    const label =
-                        isVisible ?
-                        'Show password' :
-                        'Hide password';
-
-                    toggleButton.setAttribute('aria-label', label);
-                    toggleButton.setAttribute('title', label);
-                });
+                );
             });
         });
     </script>

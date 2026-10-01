@@ -20,9 +20,22 @@ class UserController extends Controller
      */
     public function index(Request $request): View
     {
-        $search = trim((string) $request->query('search', ''));
-        $role = (string) $request->query('role', '');
-        $status = (string) $request->query('status', '');
+        $search = trim(
+            (string) $request->query(
+                'search',
+                ''
+            )
+        );
+
+        $role = (string) $request->query(
+            'role',
+            ''
+        );
+
+        $status = (string) $request->query(
+            'status',
+            ''
+        );
 
         $allowedRoles = [
             'admin',
@@ -34,6 +47,7 @@ class UserController extends Controller
         $allowedStatuses = [
             'active',
             'inactive',
+            'pending_verification',
         ];
 
         $users = User::query()
@@ -48,41 +62,82 @@ class UserController extends Controller
             ->when(
                 $search !== '',
                 function ($query) use ($search) {
-                    $query->where(function ($query) use ($search) {
-                        $query
-                            ->where('name', 'like', "%{$search}%")
-                            ->orWhere('email', 'like', "%{$search}%");
-                    });
+                    $query->where(
+                        function ($query) use ($search) {
+                            $query
+                                ->where(
+                                    'name',
+                                    'like',
+                                    "%{$search}%"
+                                )
+                                ->orWhere(
+                                    'email',
+                                    'like',
+                                    "%{$search}%"
+                                );
+                        }
+                    );
                 }
             )
             ->when(
-                in_array($role, $allowedRoles, true),
-                fn($query) => $query->where('role', $role)
+                in_array(
+                    $role,
+                    $allowedRoles,
+                    true
+                ),
+                fn($query) =>
+                $query->where(
+                    'role',
+                    $role
+                )
             )
             ->when(
-                in_array($status, $allowedStatuses, true),
-                fn($query) => $query->where('account_status', $status)
+                in_array(
+                    $status,
+                    $allowedStatuses,
+                    true
+                ),
+                fn($query) =>
+                $query->where(
+                    'account_status',
+                    $status
+                )
             )
             ->orderBy('name')
             ->paginate(20)
             ->withQueryString();
 
-        $activeAdministratorCount = User::query()
-            ->where('role', 'admin')
-            ->where('account_status', 'active')
+        $activeAdministratorCount =
+            User::query()
+            ->where(
+                'role',
+                'admin'
+            )
+            ->where(
+                'account_status',
+                'active'
+            )
             ->count();
 
-        return view('admin.users.index', [
-            'users' => $users,
-            'activeAdministratorCount' => $activeAdministratorCount,
-            'search' => $search,
-            'role' => $role,
-            'status' => $status,
-        ]);
+        return view(
+            'admin.users.index',
+            [
+                'users' => $users,
+                'activeAdministratorCount' =>
+                $activeAdministratorCount,
+                'search' => $search,
+                'role' => $role,
+                'status' => $status,
+            ]
+        );
     }
 
     /**
      * Activate or deactivate a user account.
+     *
+     * Verification-pending accounts are intentionally excluded from this
+     * administrative status endpoint. Their activation must only occur
+     * through the appropriate verification workflow.
      */
     public function updateStatus(
         Request $request,
@@ -102,18 +157,49 @@ class UserController extends Controller
                 ],
             ],
             [
-                'account_status.required' => 'Please select an account status.',
-                'account_status.in' => 'The selected account status is invalid.',
+                'account_status.required' =>
+                'Please select an account status.',
+                'account_status.in' =>
+                'The selected account status is invalid.',
 
-                'deactivation_reason.required_if' => 'Please provide a reason for deactivating this account.',
-                'deactivation_reason.string' => 'The deactivation reason must be valid text.',
-                'deactivation_reason.max' => 'The deactivation reason must not exceed 500 characters.',
+                'deactivation_reason.required_if' =>
+                'Please provide a reason for deactivating this account.',
+                'deactivation_reason.string' =>
+                'The deactivation reason must be valid text.',
+                'deactivation_reason.max' =>
+                'The deactivation reason must not exceed 500 characters.',
             ]
         );
 
+        /*
+         * Only normal active/inactive accounts may be managed through this
+         * endpoint.
+         *
+         * In particular, pending_verification must never be changed to active
+         * manually because doing so would bypass Email/SMS OTP verification.
+         */
         if (
-            $request->user()->is($user) &&
-            $validated['account_status'] === 'inactive'
+            ! in_array(
+                $user->account_status,
+                [
+                    'active',
+                    'inactive',
+                ],
+                true
+            )
+        ) {
+            return redirect()
+                ->route('admin.users.index')
+                ->with(
+                    'error',
+                    'This account status is controlled by its verification workflow and cannot be changed manually.'
+                );
+        }
+
+        if (
+            $request->user()->is($user)
+            && $validated['account_status']
+            === 'inactive'
         ) {
             return redirect()
                 ->route('admin.users.index')
@@ -124,13 +210,21 @@ class UserController extends Controller
         }
 
         if (
-            $user->role === 'admin' &&
-            $user->account_status === 'active' &&
-            $validated['account_status'] === 'inactive'
+            $user->role === 'admin'
+            && $user->account_status === 'active'
+            && $validated['account_status']
+            === 'inactive'
         ) {
-            $activeAdministratorCount = User::query()
-                ->where('role', 'admin')
-                ->where('account_status', 'active')
+            $activeAdministratorCount =
+                User::query()
+                ->where(
+                    'role',
+                    'admin'
+                )
+                ->where(
+                    'account_status',
+                    'active'
+                )
                 ->count();
 
             if ($activeAdministratorCount <= 1) {
@@ -143,37 +237,59 @@ class UserController extends Controller
             }
         }
 
-        $previousStatus = $user->account_status;
+        $previousStatus =
+            $user->account_status;
 
-        $deactivationReason = $validated['account_status'] === 'inactive'
-            ? trim($validated['deactivation_reason'])
+        $deactivationReason =
+            $validated['account_status']
+            === 'inactive'
+            ? trim(
+                $validated['deactivation_reason']
+            )
             : null;
 
-        $user->account_status = $validated['account_status'];
+        $user->account_status =
+            $validated['account_status'];
+
         $user->save();
 
-        if ($previousStatus !== $user->account_status) {
+        if (
+            $previousStatus
+            !== $user->account_status
+        ) {
             $metadata = [
-                'old_status' => $previousStatus,
-                'new_status' => $user->account_status,
+                'old_status' =>
+                $previousStatus,
+                'new_status' =>
+                $user->account_status,
             ];
 
-            if ($deactivationReason !== null) {
-                $metadata['reason'] = $deactivationReason;
+            if (
+                $deactivationReason !== null
+            ) {
+                $metadata['reason'] =
+                    $deactivationReason;
             }
 
-            if ($user->account_status === 'active') {
-                $action = 'user.activated';
+            if (
+                $user->account_status
+                === 'active'
+            ) {
+                $action =
+                    'user.activated';
 
-                $description = "Activated the account of {$user->name}.";
+                $description =
+                    "Activated the account of {$user->name}.";
             } else {
-                $action = 'user.deactivated';
+                $action =
+                    'user.deactivated';
 
-                $description = sprintf(
-                    'Deactivated the account of %s. Reason: %s',
-                    $user->name,
-                    $deactivationReason
-                );
+                $description =
+                    sprintf(
+                        'Deactivated the account of %s. Reason: %s',
+                        $user->name,
+                        $deactivationReason
+                    );
             }
 
             $this->activityLogger->record(
@@ -186,12 +302,17 @@ class UserController extends Controller
             );
         }
 
-        $message = $user->account_status === 'active'
+        $message =
+            $user->account_status
+            === 'active'
             ? 'User account activated successfully.'
             : 'User account deactivated successfully.';
 
         return redirect()
             ->route('admin.users.index')
-            ->with('success', $message);
+            ->with(
+                'success',
+                $message
+            );
     }
 }

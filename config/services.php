@@ -7,10 +7,8 @@ return [
     | Third Party Services
     |--------------------------------------------------------------------------
     |
-    | This file is for storing the credentials for third party services such
-    | as Mailgun, Postmark, AWS and more. This file provides the de facto
-    | location for this type of information, allowing packages to have
-    | a conventional file to locate the various service credentials.
+    | Credentials and configuration for external services belong here so
+    | application code does not access environment variables directly.
     |
     */
 
@@ -33,6 +31,32 @@ return [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | Semaphore SMS
+    |--------------------------------------------------------------------------
+    |
+    | Semaphore is used for Philippine SMS verification-code delivery.
+    | Secrets remain in the local environment and are never committed.
+    |
+    */
+
+    'semaphore' => [
+        'base_url' => env(
+            'SEMAPHORE_BASE_URL',
+            'https://api.semaphore.co'
+        ),
+
+        'api_key' => env('SEMAPHORE_API_KEY'),
+
+        'sender_name' => env('SEMAPHORE_SENDER_NAME'),
+
+        'timeout' => (int) env(
+            'SEMAPHORE_TIMEOUT',
+            10
+        ),
     ],
 
 ];

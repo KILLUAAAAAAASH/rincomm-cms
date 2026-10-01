@@ -27,7 +27,8 @@
         <i
             data-lucide="circle-check"
             class="mt-0.5 h-5 w-5 shrink-0"
-            aria-hidden="true"></i>
+            aria-hidden="true">
+        </i>
 
         <span>
             {{ session('success') }}
@@ -56,7 +57,8 @@
         <i
             data-lucide="triangle-alert"
             class="mt-0.5 h-5 w-5 shrink-0"
-            aria-hidden="true"></i>
+            aria-hidden="true">
+        </i>
 
         <span>
             {{ session('error') }}
@@ -85,7 +87,8 @@
         <i
             data-lucide="triangle-alert"
             class="mt-0.5 h-5 w-5 shrink-0"
-            aria-hidden="true"></i>
+            aria-hidden="true">
+        </i>
 
         <span>
             {{ $errors->first('deactivation_reason') }}
@@ -117,7 +120,8 @@
             <i
                 data-lucide="shield-check"
                 class="h-4 w-4 text-[#008080]"
-                aria-hidden="true"></i>
+                aria-hidden="true">
+            </i>
 
         </div>
 
@@ -128,8 +132,9 @@
             </p>
 
             <p class="mt-0.5 text-xs leading-5 text-gray-500 dark:text-gray-400">
-                Deactivated accounts cannot access protected areas. A reason is required for deactivation.
-                Role and subscriber service status are managed separately.
+                Deactivated accounts cannot access protected areas. Pending verification accounts remain locked until
+                Email or SMS verification is completed and cannot be activated manually. Role and subscriber service
+                status are managed separately.
             </p>
 
         </div>
@@ -169,7 +174,8 @@
                         text-gray-500
                         dark:text-gray-400
                     "
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
                 <input
                     id="user-search"
@@ -259,7 +265,7 @@
 
 
             {{-- Status filter --}}
-            <div class="lg:w-44">
+            <div class="lg:w-52">
 
                 <label
                     for="user-status"
@@ -286,13 +292,19 @@
                     ">
 
                     <option value="">
-                        All status
+                        All statuses
                     </option>
 
                     <option
                         value="active"
                         @selected($status==='active' )>
                         Active
+                    </option>
+
+                    <option
+                        value="pending_verification"
+                        @selected($status==='pending_verification' )>
+                        Pending Verification
                     </option>
 
                     <option
@@ -332,7 +344,8 @@
                 <i
                     data-lucide="x"
                     class="h-4 w-4"
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
                 Clear
 
@@ -374,7 +387,8 @@
                 <i
                     data-lucide="users"
                     class="h-6 w-6 text-gray-500 dark:text-gray-400"
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
             </div>
 
@@ -383,7 +397,7 @@
             </h2>
 
             <p class="mx-auto mt-2 max-w-md text-sm text-gray-500 dark:text-gray-400">
-                Registered Rincomm accounts will appear here.
+                Registered Rincomm accounts matching the current filters will appear here.
             </p>
 
         </div>
@@ -417,7 +431,8 @@
                             <th
                                 class="
                                         px-3 py-2.5 xl:px-4
-                                        text-xs font-semibold uppercase tracking-wide
+                                        text-left text-xs font-semibold
+                                        uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
                                     ">
@@ -427,7 +442,8 @@
                             <th
                                 class="
                                         px-3 py-2.5 xl:px-4
-                                        text-xs font-semibold uppercase tracking-wide
+                                        text-left text-xs font-semibold
+                                        uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
                                     ">
@@ -437,7 +453,8 @@
                             <th
                                 class="
                                         px-3 py-2.5 xl:px-4
-                                        text-xs font-semibold uppercase tracking-wide
+                                        text-center text-xs font-semibold
+                                        uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
                                     ">
@@ -447,7 +464,8 @@
                             <th
                                 class="
                                         px-3 py-2.5 xl:px-4
-                                        text-xs font-semibold uppercase tracking-wide
+                                        text-left text-xs font-semibold
+                                        uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
                                     ">
@@ -457,7 +475,8 @@
                             <th
                                 class="
                                         px-3 py-2.5 xl:px-4
-                                        text-xs font-semibold uppercase tracking-wide
+                                        text-left text-xs font-semibold
+                                        uppercase tracking-wide
                                         text-gray-500
                                         dark:text-gray-400
                                     ">
@@ -474,17 +493,20 @@
                         @foreach ($users as $user)
 
                         @php
-                        $isCurrentUser = auth()->id() === $user->id;
+                        $isCurrentUser =
+                        auth()->id() === $user->id;
 
                         $isLastActiveAdministrator =
-                        $user->role === 'admin' &&
-                        $user->account_status === 'active' &&
-                        $activeAdministratorCount <= 1;
+                        $user->role === 'admin'
+                        && $user->account_status === 'active'
+                        && $activeAdministratorCount <= 1;
 
-                            $isProtected=$isCurrentUser ||
-                            $isLastActiveAdministrator;
+                            $isProtected=$isCurrentUser
+                            || $isLastActiveAdministrator;
 
-                            $roleIcon=match ($user->role) {
+                            $isPendingVerification=$user->account_status === 'pending_verification';
+
+                            $roleIcon = match ($user->role) {
                             'admin' => 'shield',
                             'staff' => 'briefcase-business',
                             'technician' => 'wrench',
@@ -574,7 +596,8 @@
                                         <i
                                             data-lucide="{{ $roleIcon }}"
                                             class="h-3.5 w-3.5"
-                                            aria-hidden="true"></i>
+                                            aria-hidden="true">
+                                        </i>
 
                                         {{ ucfirst($user->role) }}
 
@@ -601,9 +624,32 @@
                                         <i
                                             data-lucide="circle-check"
                                             class="h-3.5 w-3.5"
-                                            aria-hidden="true"></i>
+                                            aria-hidden="true">
+                                        </i>
 
                                         Active
+
+                                    </span>
+
+                                    @elseif ($isPendingVerification)
+
+                                    <span
+                                        class="
+                                                    inline-flex items-center gap-1.5
+                                                    bg-amber-50 px-2.5 py-1
+                                                    text-xs font-medium
+                                                    text-amber-700
+                                                    dark:bg-amber-950/40
+                                                    dark:text-amber-300
+                                                ">
+
+                                        <i
+                                            data-lucide="clock-3"
+                                            class="h-3.5 w-3.5"
+                                            aria-hidden="true">
+                                        </i>
+
+                                        Pending Verification
 
                                     </span>
 
@@ -622,7 +668,8 @@
                                         <i
                                             data-lucide="circle-minus"
                                             class="h-3.5 w-3.5"
-                                            aria-hidden="true"></i>
+                                            aria-hidden="true">
+                                        </i>
 
                                         Inactive
 
@@ -637,10 +684,10 @@
                                 <td
                                     class="
                                             whitespace-nowrap
-                                            px-2 py-3
+                                            px-3 py-3
                                             text-xs text-gray-600
                                             dark:text-gray-300
-                                            xl:px-5 xl:py-4 xl:text-sm
+                                            xl:px-4
                                         ">
                                     {{ $user->created_at->format('M d, Y') }}
                                 </td>
@@ -649,9 +696,35 @@
                                 {{-- Action --}}
                                 <td class="px-3 py-3 xl:px-4">
 
-                                    <div class="ml-auto w-32">
+                                    <div class="ml-auto w-40">
 
-                                        @if ($user->account_status === 'inactive')
+                                        @if ($isPendingVerification)
+
+                                        <span
+                                            class="
+                                                        inline-flex min-h-9 w-full
+                                                        items-center justify-center gap-1.5
+                                                        border border-amber-200
+                                                        bg-amber-50 px-3 py-2
+                                                        text-center text-xs font-medium
+                                                        text-amber-700
+                                                        dark:border-amber-900
+                                                        dark:bg-amber-950/30
+                                                        dark:text-amber-300
+                                                    "
+                                            title="Activation is completed only through the account verification workflow.">
+
+                                            <i
+                                                data-lucide="shield-clock"
+                                                class="h-4 w-4 shrink-0"
+                                                aria-hidden="true">
+                                            </i>
+
+                                            Awaiting Verification
+
+                                        </span>
+
+                                        @elseif ($user->account_status === 'inactive')
 
                                         <form
                                             method="POST"
@@ -682,19 +755,21 @@
                                                             text-green-700
                                                             transition
                                                             hover:bg-green-50
+                                                            focus:outline-none
+                                                            focus:ring-2
+                                                            focus:ring-green-500
+                                                            focus:ring-offset-2
                                                             dark:border-green-800
                                                             dark:text-green-300
                                                             dark:hover:bg-green-950/30
-                                                            xl:min-h-11
-                                                            xl:gap-2
-                                                            xl:px-4
-                                                            xl:text-sm
+                                                            dark:focus:ring-offset-neutral-900
                                                         ">
 
                                                 <i
                                                     data-lucide="user-check"
                                                     class="h-4 w-4"
-                                                    aria-hidden="true"></i>
+                                                    aria-hidden="true">
+                                                </i>
 
                                                 Activate
 
@@ -725,7 +800,8 @@
                                             <i
                                                 data-lucide="shield"
                                                 class="h-4 w-4"
-                                                aria-hidden="true"></i>
+                                                aria-hidden="true">
+                                            </i>
 
                                             Protected
 
@@ -761,7 +837,8 @@
                                             <i
                                                 data-lucide="user-x"
                                                 class="h-4 w-4"
-                                                aria-hidden="true"></i>
+                                                aria-hidden="true">
+                                            </i>
 
                                             Deactivate
 
@@ -792,17 +869,20 @@
             @foreach ($users as $user)
 
             @php
-            $isCurrentUser = auth()->id() === $user->id;
+            $isCurrentUser =
+            auth()->id() === $user->id;
 
             $isLastActiveAdministrator =
-            $user->role === 'admin' &&
-            $user->account_status === 'active' &&
-            $activeAdministratorCount <= 1;
+            $user->role === 'admin'
+            && $user->account_status === 'active'
+            && $activeAdministratorCount <= 1;
 
-                $isProtected=$isCurrentUser ||
-                $isLastActiveAdministrator;
+                $isProtected=$isCurrentUser
+                || $isLastActiveAdministrator;
 
-                $roleIcon=match ($user->role) {
+                $isPendingVerification=$user->account_status === 'pending_verification';
+
+                $roleIcon = match ($user->role) {
                 'admin' => 'shield',
                 'staff' => 'briefcase-business',
                 'technician' => 'wrench',
@@ -890,7 +970,8 @@
                                     <i
                                         data-lucide="{{ $roleIcon }}"
                                         class="h-3.5 w-3.5"
-                                        aria-hidden="true"></i>
+                                        aria-hidden="true">
+                                    </i>
 
                                     {{ ucfirst($user->role) }}
 
@@ -915,7 +996,8 @@
                                     class="
                                                 inline-flex items-center gap-1.5
                                                 bg-green-50 px-2.5 py-1
-                                                text-xs font-medium text-green-700
+                                                text-xs font-medium
+                                                text-green-700
                                                 dark:bg-green-950/40
                                                 dark:text-green-300
                                             ">
@@ -923,9 +1005,32 @@
                                     <i
                                         data-lucide="circle-check"
                                         class="h-3.5 w-3.5"
-                                        aria-hidden="true"></i>
+                                        aria-hidden="true">
+                                    </i>
 
                                     Active
+
+                                </span>
+
+                                @elseif ($isPendingVerification)
+
+                                <span
+                                    class="
+                                                inline-flex items-center gap-1.5
+                                                bg-amber-50 px-2.5 py-1
+                                                text-xs font-medium
+                                                text-amber-700
+                                                dark:bg-amber-950/40
+                                                dark:text-amber-300
+                                            ">
+
+                                    <i
+                                        data-lucide="clock-3"
+                                        class="h-3.5 w-3.5"
+                                        aria-hidden="true">
+                                    </i>
+
+                                    Pending Verification
 
                                 </span>
 
@@ -944,7 +1049,8 @@
                                     <i
                                         data-lucide="circle-minus"
                                         class="h-3.5 w-3.5"
-                                        aria-hidden="true"></i>
+                                        aria-hidden="true">
+                                    </i>
 
                                     Inactive
 
@@ -974,7 +1080,37 @@
 
                     <div class="mt-5 border-t border-gray-100 pt-4 dark:border-neutral-800">
 
-                        @if ($user->account_status === 'inactive')
+                        @if ($isPendingVerification)
+
+                        <div
+                            class="
+                                        inline-flex min-h-11 w-full
+                                        items-center justify-center gap-2
+                                        border border-amber-200
+                                        bg-amber-50 px-4 py-2
+                                        text-center text-sm font-medium
+                                        text-amber-700
+                                        dark:border-amber-900
+                                        dark:bg-amber-950/30
+                                        dark:text-amber-300
+                                    ">
+
+                            <i
+                                data-lucide="shield-clock"
+                                class="h-4 w-4"
+                                aria-hidden="true">
+                            </i>
+
+                            Awaiting Account Verification
+
+                        </div>
+
+                        <p class="mt-2 text-xs leading-5 text-gray-500 dark:text-gray-400">
+                            This account will become active only after the required Email or SMS verification
+                            is completed.
+                        </p>
+
+                        @elseif ($user->account_status === 'inactive')
 
                         <form
                             method="POST"
@@ -995,11 +1131,11 @@
                                 data-user-url="{{ route('admin.users.status', $user) }}"
                                 data-user-name="{{ $user->name }}"
                                 class="
-                                            inline-flex min-h-9
+                                            inline-flex min-h-11 w-full
                                             items-center justify-center gap-2
                                             border border-green-300
-                                            px-3 py-2
-                                            text-xs font-semibold
+                                            px-4 py-2
+                                            text-sm font-semibold
                                             text-green-700
                                             transition
                                             hover:bg-green-50
@@ -1016,9 +1152,10 @@
                                 <i
                                     data-lucide="user-check"
                                     class="h-4 w-4"
-                                    aria-hidden="true"></i>
+                                    aria-hidden="true">
+                                </i>
 
-                                Activate
+                                Activate Account
 
                             </button>
 
@@ -1042,7 +1179,8 @@
                             <i
                                 data-lucide="shield"
                                 class="h-4 w-4"
-                                aria-hidden="true"></i>
+                                aria-hidden="true">
+                            </i>
 
                             Protected Account
 
@@ -1064,15 +1202,21 @@
                                         text-red-600
                                         transition
                                         hover:bg-red-50
+                                        focus:outline-none
+                                        focus:ring-2
+                                        focus:ring-red-500
+                                        focus:ring-offset-2
                                         dark:border-red-900
                                         dark:text-red-400
                                         dark:hover:bg-red-950/30
+                                        dark:focus:ring-offset-neutral-900
                                     ">
 
                             <i
                                 data-lucide="user-x"
                                 class="h-4 w-4"
-                                aria-hidden="true"></i>
+                                aria-hidden="true">
+                            </i>
 
                             Deactivate Account
 
@@ -1114,7 +1258,8 @@
 
         <div
             id="user-activate-overlay"
-            class="absolute inset-0 bg-black/50"></div>
+            class="absolute inset-0 bg-black/50">
+        </div>
 
 
         <div
@@ -1135,7 +1280,8 @@
                 <i
                     data-lucide="user-check"
                     class="h-5 w-5 text-green-600 dark:text-green-400"
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
             </div>
 
@@ -1151,7 +1297,8 @@
                 You are about to activate
                 <span
                     id="user-activate-name"
-                    class="font-medium text-gray-700 dark:text-gray-200"></span>.
+                    class="font-medium text-gray-700 dark:text-gray-200">
+                </span>.
                 This user will regain access to protected Rincomm system areas according to their assigned role.
             </p>
 
@@ -1202,12 +1349,18 @@
                         text-sm font-medium text-white
                         transition
                         hover:bg-green-700
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-green-500
+                        focus:ring-offset-2
+                        dark:focus:ring-offset-neutral-900
                     ">
 
                     <i
                         data-lucide="user-check"
                         class="h-4 w-4"
-                        aria-hidden="true"></i>
+                        aria-hidden="true">
+                    </i>
 
                     Activate Account
 
@@ -1231,7 +1384,8 @@
 
         <div
             id="user-deactivate-overlay"
-            class="absolute inset-0 bg-black/50"></div>
+            class="absolute inset-0 bg-black/50">
+        </div>
 
 
         <div
@@ -1252,7 +1406,8 @@
                 <i
                     data-lucide="user-x"
                     class="h-5 w-5 text-red-600 dark:text-red-400"
-                    aria-hidden="true"></i>
+                    aria-hidden="true">
+                </i>
 
             </div>
 
@@ -1268,8 +1423,10 @@
                 You are about to deactivate
                 <span
                     id="user-deactivate-name"
-                    class="font-medium text-gray-700 dark:text-gray-200"></span>.
-                This user will no longer be able to access protected Rincomm system areas until the account is activated again.
+                    class="font-medium text-gray-700 dark:text-gray-200">
+                </span>.
+                This user will no longer be able to access protected Rincomm system areas until the account is
+                activated again.
             </p>
 
 
@@ -1319,14 +1476,14 @@
                             dark:bg-neutral-950
                             dark:text-gray-100
                             dark:placeholder:text-gray-500
-                        "></textarea>
+                        ">
+                    </textarea>
 
                     <div class="mt-1.5 flex items-start justify-between gap-3">
 
                         <p class="text-xs leading-5 text-gray-500 dark:text-gray-400">
                             This reason will be stored in the Activity Log for audit purposes.
                         </p>
-
 
                     </div>
 
@@ -1377,7 +1534,8 @@
                         <i
                             data-lucide="user-x"
                             class="h-4 w-4"
-                            aria-hidden="true"></i>
+                            aria-hidden="true">
+                        </i>
 
                         Deactivate Account
 
@@ -1396,15 +1554,25 @@
 
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const reasonInput = document.getElementById('deactivation-reason');
+        const reasonInput =
+            document.getElementById(
+                'deactivation-reason'
+            );
 
-        document.querySelectorAll('[data-user-deactivate]').forEach(function(button) {
-            button.addEventListener('click', function() {
-                if (reasonInput) {
-                    reasonInput.value = '';
-                }
+        document
+            .querySelectorAll(
+                '[data-user-deactivate]'
+            )
+            .forEach(function(button) {
+                button.addEventListener(
+                    'click',
+                    function() {
+                        if (reasonInput) {
+                            reasonInput.value = '';
+                        }
+                    }
+                );
             });
-        });
     });
 </script>
 
