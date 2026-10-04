@@ -17,7 +17,7 @@
                 text-neutral-900
                 dark:text-neutral-100
             ">
-            Admin Dashboard
+            Operations Dashboard
         </h1>
 
         <p
@@ -26,7 +26,7 @@
                 text-neutral-600
                 dark:text-neutral-400
             ">
-            Monitor current Rincomm operations and pending administrative work.
+            Monitor current Rincomm operations and pending work.
         </p>
 
     </div>

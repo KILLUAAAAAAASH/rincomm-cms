@@ -12,8 +12,10 @@ use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Auth\EmployeeActivationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\RegisteredUserController;
+use App\Http\Controllers\Auth\RegistrationVerificationController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 use App\Http\Controllers\DashboardController;
@@ -22,6 +24,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ServiceApplicationController;
 use App\Http\Controllers\ServiceCoverageController;
 use App\Http\Controllers\Technician\DashboardController as TechnicianDashboardController;
+use App\Http\Controllers\Technician\JobOrderController;
+use App\Http\Controllers\Technician\JobOrderProofController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -74,6 +78,61 @@ Route::middleware('guest')->group(function () {
     Route::post('/register', [RegisteredUserController::class, 'store'])
         ->middleware('throttle:3,1')
         ->name('register.store');
+
+    Route::get(
+        '/register/verify/{challenge}',
+        [RegistrationVerificationController::class, 'create']
+    )->name('register.verify');
+
+    Route::post(
+        '/register/verify/{challenge}',
+        [RegistrationVerificationController::class, 'store']
+    )
+        ->middleware('throttle:5,1')
+        ->name('register.verify.store');
+
+    Route::post(
+        '/register/verify/{challenge}/resend',
+        [RegistrationVerificationController::class, 'resend']
+    )
+        ->middleware('throttle:3,1')
+        ->name('register.verify.resend');
+
+    Route::post(
+        '/register/verify/{challenge}/cancel',
+        [RegistrationVerificationController::class, 'cancel']
+    )
+        ->middleware('throttle:3,1')
+        ->name('register.verify.cancel');
+    Route::get(
+        '/employee/activate/channel',
+        [EmployeeActivationController::class, 'channel']
+    )->name('employee.activation.channel');
+
+    Route::post(
+        '/employee/activate/channel',
+        [EmployeeActivationController::class, 'send']
+    )
+        ->middleware('throttle:3,1')
+        ->name('employee.activation.channel.store');
+    Route::get(
+        '/employee/activate/{challenge}',
+        [EmployeeActivationController::class, 'create']
+    )->name('employee.activation');
+
+    Route::post(
+        '/employee/activate/{challenge}',
+        [EmployeeActivationController::class, 'store']
+    )
+        ->middleware('throttle:5,1')
+        ->name('employee.activation.store');
+
+    Route::post(
+        '/employee/activate/{challenge}/resend',
+        [EmployeeActivationController::class, 'resend']
+    )
+        ->middleware('throttle:3,1')
+        ->name('employee.activation.resend');
 });
 
 Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
@@ -123,11 +182,19 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     Route::get('/admin/users', [UserController::class, 'index'])
         ->name('admin.users.index');
 
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/users/create', [UserController::class, 'create'])
+            ->name('admin.users.create');
+
+        Route::post('/admin/users', [UserController::class, 'store'])
+            ->name('admin.users.store');
+
+        Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])
+            ->name('admin.activity-logs.index');
+    });
+
     Route::patch('/admin/users/{user}/status', [UserController::class, 'updateStatus'])
         ->name('admin.users.status');
-
-    Route::get('/admin/activity-logs', [ActivityLogController::class, 'index'])
-        ->name('admin.activity-logs.index');
 
 
     /*
@@ -240,7 +307,7 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-       | Service Applications
+    | Service Applications
     |--------------------------------------------------------------------------
     */
 
@@ -294,6 +361,7 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     Route::get('/admin/invoices/{invoice}', [InvoiceController::class, 'show'])
         ->name('admin.invoices.show');
 
+
     /*
     |--------------------------------------------------------------------------
     | Hero Slides
@@ -316,6 +384,60 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
 Route::middleware(['auth', 'active', 'role:technician'])->group(function () {
     Route::get('/technician/dashboard', [TechnicianDashboardController::class, 'index'])
         ->name('technician.dashboard');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Job Orders
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get(
+        '/technician/job-orders',
+        [JobOrderController::class, 'index']
+    )->name('technician.job-orders.index');
+
+    Route::get(
+        '/technician/job-orders/{jobOrder}',
+        [JobOrderController::class, 'show']
+    )->name('technician.job-orders.show');
+
+    Route::patch(
+        '/technician/job-orders/{jobOrder}/start',
+        [JobOrderController::class, 'start']
+    )->name('technician.job-orders.start');
+
+    Route::patch(
+        '/technician/job-orders/{jobOrder}/complete',
+        [JobOrderController::class, 'complete']
+    )->name('technician.job-orders.complete');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Job Order Proofs
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        '/technician/job-orders/{jobOrder}/proofs',
+        [JobOrderProofController::class, 'store']
+    )->name('technician.job-orders.proofs.store');
+
+    Route::get(
+        '/technician/job-orders/{jobOrder}/proofs/{proof}',
+        [JobOrderProofController::class, 'show']
+    )->name('technician.job-orders.proofs.show');
+
+    Route::get(
+        '/technician/job-orders/{jobOrder}/proofs/{proof}/download',
+        [JobOrderProofController::class, 'download']
+    )->name('technician.job-orders.proofs.download');
+
+    Route::delete(
+        '/technician/job-orders/{jobOrder}/proofs/{proof}',
+        [JobOrderProofController::class, 'destroy']
+    )->name('technician.job-orders.proofs.destroy');
 });
 
 
@@ -335,6 +457,4 @@ Route::middleware(['auth', 'active', 'role:customer'])->group(function () {
     Route::post('/customer/application', [ServiceApplicationController::class, 'store'])
         ->name('customer.application.store');
 });
-
-
 

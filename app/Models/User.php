@@ -15,6 +15,7 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'phone',
         'password',
     ];
 
@@ -27,6 +28,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'phone_verified_at' => 'datetime',
+            'activation_completed_at' => 'datetime',
             'password' => 'hashed',
         ];
     }
@@ -71,6 +74,11 @@ class User extends Authenticatable
         return $this->hasOne(Technician::class);
     }
 
+    public function verificationChallenges(): HasMany
+    {
+        return $this->hasMany(VerificationChallenge::class);
+    }
+
     public function ticketMessages(): HasMany
     {
         return $this->hasMany(TicketMessage::class);
@@ -84,6 +92,11 @@ class User extends Authenticatable
     public function jobOrderNotes(): HasMany
     {
         return $this->hasMany(JobOrderNote::class);
+    }
+
+    public function jobOrderProofs(): HasMany
+    {
+        return $this->hasMany(JobOrderProof::class, 'uploaded_by');
     }
 
     public function serviceApplications(): HasMany

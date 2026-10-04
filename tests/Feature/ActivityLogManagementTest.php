@@ -115,14 +115,14 @@ class ActivityLogManagementTest extends TestCase
         );
     }
 
-    public function test_staff_can_view_activity_log_management_page(): void
+    public function test_staff_cannot_view_activity_log_management_page(): void
     {
         $staff = $this->createUser('staff');
 
         $this
             ->actingAs($staff)
             ->get(route('admin.activity-logs.index'))
-            ->assertOk();
+            ->assertForbidden();
     }
 
     public function test_customer_cannot_view_activity_logs(): void

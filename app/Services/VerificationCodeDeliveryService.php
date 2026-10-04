@@ -12,7 +12,7 @@ use Throwable;
 class VerificationCodeDeliveryService
 {
     public function __construct(
-        private readonly SemaphoreSmsService $semaphoreSmsService,
+        private readonly IprogSmsService $iprogSmsService,
         private readonly VerificationChallengeService $challengeService
     ) {}
 
@@ -124,7 +124,7 @@ class VerificationCodeDeliveryService
         string $code,
         int $expiresInMinutes
     ): void {
-        $this->semaphoreSmsService->sendVerificationCode(
+        $this->iprogSmsService->sendVerificationCode(
             phoneNumber: $challenge->destination,
             code: $code,
             purpose: $challenge->purpose,

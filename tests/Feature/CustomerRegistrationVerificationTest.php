@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Mail\VerificationCodeMail;
 use App\Models\User;
 use App\Models\VerificationChallenge;
-use App\Services\SemaphoreSmsService;
+use App\Services\IprogSmsService;
 use App\Services\VerificationCodeDeliveryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Hash;
@@ -106,7 +106,7 @@ class CustomerRegistrationVerificationTest extends TestCase
     public function test_sms_registration_normalizes_phone_and_delegates_otp_delivery(): void
     {
         $this->mock(
-            SemaphoreSmsService::class,
+            IprogSmsService::class,
             function (
                 MockInterface $mock
             ): void {
@@ -275,7 +275,7 @@ class CustomerRegistrationVerificationTest extends TestCase
         $capturedCode = null;
 
         $this->mock(
-            SemaphoreSmsService::class,
+            IprogSmsService::class,
             function (
                 MockInterface $mock
             ) use (&$capturedCode): void {

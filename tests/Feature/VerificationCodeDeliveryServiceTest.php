@@ -5,7 +5,7 @@ namespace Tests\Feature;
 use App\Mail\VerificationCodeMail;
 use App\Models\User;
 use App\Models\VerificationChallenge;
-use App\Services\SemaphoreSmsService;
+use App\Services\IprogSmsService;
 use App\Services\VerificationChallengeService;
 use App\Services\VerificationCodeDeliveryService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -67,7 +67,7 @@ class VerificationCodeDeliveryServiceTest extends TestCase
         $this->assertNull($challenge->consumed_at);
     }
 
-    public function test_sms_challenge_is_delegated_to_semaphore_service(): void
+    public function test_sms_challenge_is_delegated_to_iprog_service(): void
     {
         $user = User::factory()->create();
 
@@ -84,11 +84,11 @@ class VerificationCodeDeliveryServiceTest extends TestCase
             destination: $phoneNumber
         );
 
-        $semaphore = Mockery::mock(
-            SemaphoreSmsService::class
+        $iprog = Mockery::mock(
+            IprogSmsService::class
         );
 
-        $semaphore
+        $iprog
             ->shouldReceive('sendVerificationCode')
             ->once()
             ->with(
@@ -110,8 +110,8 @@ class VerificationCodeDeliveryServiceTest extends TestCase
             ]);
 
         $this->app->instance(
-            SemaphoreSmsService::class,
-            $semaphore
+            IprogSmsService::class,
+            $iprog
         );
 
         $deliveryService = app(
@@ -239,22 +239,22 @@ class VerificationCodeDeliveryServiceTest extends TestCase
             destination: $phoneNumber
         );
 
-        $semaphore = Mockery::mock(
-            SemaphoreSmsService::class
+        $iprog = Mockery::mock(
+            IprogSmsService::class
         );
 
-        $semaphore
+        $iprog
             ->shouldReceive('sendVerificationCode')
             ->once()
             ->andThrow(
                 new RuntimeException(
-                    'Semaphore verification SMS delivery failed.'
+                    'IPROG SMS verification delivery failed.'
                 )
             );
 
         $this->app->instance(
-            SemaphoreSmsService::class,
-            $semaphore
+            IprogSmsService::class,
+            $iprog
         );
 
         $deliveryService = app(
@@ -272,7 +272,7 @@ class VerificationCodeDeliveryServiceTest extends TestCase
             );
         } catch (RuntimeException $exception) {
             $this->assertSame(
-                'Semaphore verification SMS delivery failed.',
+                'IPROG SMS verification delivery failed.',
                 $exception->getMessage()
             );
         }

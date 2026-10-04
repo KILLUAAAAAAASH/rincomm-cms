@@ -79,6 +79,41 @@ class RoleBasedAccessControlTest extends TestCase
             ->assertForbidden();
     }
 
+    public function test_staff_can_access_operations_dashboard(): void
+    {
+        $user = $this->createUser('staff');
+
+        $this
+            ->actingAs($user)
+            ->get(route('dashboard'))
+            ->assertOk()
+            ->assertSee('Operations Dashboard');
+    }
+
+    public function test_staff_can_manage_users_without_admin_only_controls(): void
+    {
+        $user = $this->createUser('staff');
+
+        $this
+            ->actingAs($user)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('User Management')
+            ->assertDontSee('Create Employee')
+            ->assertDontSee('Activity Logs');
+    }
+
+    public function test_admin_can_see_employee_creation_and_activity_logs_controls(): void
+    {
+        $user = $this->createUser('admin');
+
+        $this
+            ->actingAs($user)
+            ->get(route('admin.users.index'))
+            ->assertOk()
+            ->assertSee('Create Employee')
+            ->assertSee('Activity Logs');
+    }
     public function test_admin_cannot_access_customer_dashboard(): void
     {
         $user = $this->createUser('admin');

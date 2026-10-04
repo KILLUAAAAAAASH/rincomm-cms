@@ -31,10 +31,15 @@ class DemoDataSeeder extends Seeder
             role: 'admin'
         );
 
-        $this->createDemoUser(
+        $staffUser = $this->createDemoUser(
             name: 'Rincomm Staff',
             email: 'staff@rincomm.test',
             role: 'staff'
+        );
+
+        $this->prepareDemoEmployee(
+            user: $staffUser,
+            phone: '639171111111'
         );
 
         // Service area used for coverage testing
@@ -119,6 +124,11 @@ class DemoDataSeeder extends Seeder
             role: 'technician'
         );
 
+        $this->prepareDemoEmployee(
+            user: $technicianUser,
+            phone: '639181111111'
+        );
+
         $technician = Technician::firstOrCreate(
             [
                 'technician_code' => 'TECH-0001',
@@ -145,7 +155,16 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        // Sample job order assigned to the demo technician
+        /*
+         * Sample Job Order already assigned to the demo technician.
+         *
+         * Job Order lifecycle:
+         * pending     = not yet assigned to a technician
+         * assigned    = technician assigned, work not yet started
+         * in_progress = technician has started the work
+         * completed   = field work completed
+         * cancelled   = Job Order cancelled
+         */
         JobOrder::firstOrCreate(
             [
                 'job_order_number' => 'JO-0001',
@@ -157,7 +176,7 @@ class DemoDataSeeder extends Seeder
                 'description' => 'Inspect customer fiber connection.',
                 'scheduled_date' => now()->addDay()->toDateString(),
                 'scheduled_time' => '09:00:00',
-                'status' => 'pending',
+                'status' => 'assigned',
                 'labor_cost' => 0,
                 'materials_cost' => 0,
                 'total_cost' => 0,
@@ -190,5 +209,24 @@ class DemoDataSeeder extends Seeder
         }
 
         return $user;
+    }
+
+    private function prepareDemoEmployee(
+        User $user,
+        string $phone
+    ): User {
+        $user->forceFill([
+            'employee_number' => sprintf(
+                'EMP-%04d',
+                $user->id
+            ),
+            'phone' => $phone,
+            'password' => Hash::make('password'),
+            'account_status' => 'active',
+            'phone_verified_at' => now(),
+            'activation_completed_at' => now(),
+        ])->save();
+
+        return $user->refresh();
     }
 }

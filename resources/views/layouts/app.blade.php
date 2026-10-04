@@ -254,7 +254,7 @@
     'view logs',
     'review logs',
     ]),
-    'visible' => Route::has('admin.activity-logs.index'),
+    'visible' => $authenticatedUser->role === 'admin' && Route::has('admin.activity-logs.index'),
     ],
     [
     'label' => 'Hero Slides',
@@ -278,6 +278,17 @@
     ],
     ]
     );
+    }
+
+    if ($isTechnician && Route::has('technician.job-orders.index')) {
+    $featureSearchItems[] = [
+    'label' => 'Job Orders',
+    'description' => 'View and process field work assigned to you.',
+    'module' => 'Field Operations',
+    'route' => 'technician.job-orders.index',
+    'keywords' => 'job order job orders assigned work field work installation site survey repair line maintenance physical disconnection proof of work completion report',
+    'visible' => true,
+    ];
     }
 
     if ($isCustomer && Route::has('customer.application.create')) {
@@ -321,6 +332,11 @@
     'admin.hero-slides.*'
     ) => 'System Administration',
 
+    $isTechnician &&
+    request()->routeIs(
+    'technician.job-orders.*'
+    ) => 'Field Operations',
+
     request()->routeIs(
     'dashboard',
     'technician.dashboard',
@@ -354,16 +370,20 @@
     'route' => 'admin.users.index',
     'active' => request()->routeIs('admin.users.*'),
     ],
-    [
+    ];
+
+    if ($authenticatedUser->role === 'admin') {
+    $contextualNavigation[] = [
     'label' => 'Activity Logs',
     'route' => 'admin.activity-logs.index',
     'active' => request()->routeIs('admin.activity-logs.*'),
-    ],
-    [
+    ];
+    }
+
+    $contextualNavigation[] = [
     'label' => 'Hero Slides',
     'route' => 'admin.hero-slides.index',
     'active' => request()->routeIs('admin.hero-slides.*'),
-    ],
     ];
     }
     @endphp
@@ -445,7 +465,7 @@
                     aria-controls="sidebar"
                     aria-label="Close navigation"
                     class="
-                        rounded-xl p-2
+                         p-2
                         text-neutral-700
                         hover:bg-[#008080]/10
                         hover:text-[#008080]
@@ -475,7 +495,7 @@
                     href="{{ route($dashboardRouteName) }}"
                     class="
                         flex items-center gap-3
-                        rounded-xl px-4 py-2.5
+                         px-4 py-2.5
                         text-sm transition
 
                         {{ $currentModule === 'Dashboard'
@@ -499,6 +519,39 @@
                 </a>
 
 
+                @if ($isTechnician && Route::has('technician.job-orders.index'))
+
+                {{-- Technician Job Orders --}}
+                <a
+                    href="{{ route('technician.job-orders.index') }}"
+                    class="
+                        flex items-center gap-3
+                         px-4 py-2.5
+                        text-sm transition
+
+                        {{ $currentModule === 'Field Operations'
+                            ? 'bg-[#008080] font-medium text-white shadow-sm'
+                            : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                               dark:text-neutral-300 dark:hover:bg-[#008080]/15
+                               dark:hover:text-[#5EEAD4]'
+                        }}
+                    ">
+
+                    <i
+                        data-lucide="clipboard-list"
+                        class="h-5 w-5 shrink-0"
+                        aria-hidden="true">
+                    </i>
+
+                    <span>
+                        Job Orders
+                    </span>
+
+                </a>
+
+                @endif
+
+
                 @if ($isAdminOrStaff)
 
                 {{-- Subscribers --}}
@@ -506,7 +559,7 @@
                     href="{{ route('admin.subscribers.index') }}"
                     class="
                             flex items-center gap-3
-                            rounded-xl px-4 py-2.5
+                             px-4 py-2.5
                             text-sm transition
 
                             {{ $currentModule === 'Customer Management'
@@ -537,7 +590,7 @@
                     href="{{ route('admin.service-plans.index') }}"
                     class="
                         flex items-center gap-3
-                        rounded-xl px-4 py-2.5
+                         px-4 py-2.5
                         text-sm transition
 
                         {{ $currentModule === 'Internet Packages'
@@ -569,7 +622,7 @@
                     href="{{ route('admin.invoices.index') }}"
                     class="
                         flex items-center gap-3
-                        rounded-xl px-4 py-2.5
+                         px-4 py-2.5
                         text-sm transition
 
                         {{ $currentModule === 'Billing & Invoicing'
@@ -599,7 +652,7 @@
                     href="{{ route('admin.users.index') }}"
                     class="
                             flex items-center gap-3
-                            rounded-xl px-4 py-2.5
+                             px-4 py-2.5
                             text-sm transition
 
                             {{ $currentModule === 'System Administration'
@@ -631,7 +684,7 @@
                     href="{{ route('customer.application.create') }}"
                     class="
                             flex items-center gap-3
-                            rounded-xl px-4 py-2.5
+                             px-4 py-2.5
                             text-sm transition
                             text-neutral-700
                             hover:bg-[#008080]/10
@@ -680,7 +733,7 @@
                         class="
                             inline-flex min-h-10 w-full
                             items-center justify-start gap-3
-                            rounded-xl
+
                             border border-red-200
                             px-4 py-2.5
                             text-sm font-semibold
@@ -752,7 +805,7 @@
                         class="
                             inline-flex h-8 w-8 shrink-0
                             items-center justify-center
-                            rounded-lg
+
                             border border-neutral-200
                             text-neutral-600
                             transition
@@ -800,7 +853,7 @@
                             rincomm-feature-search-desktop
                             ml-1 h-9 min-w-0
                             items-center gap-2.5
-                            rounded-lg
+
                             border border-neutral-200
                             bg-neutral-50
                             px-3
@@ -840,7 +893,7 @@
                         <span
                             class="
                                 hidden shrink-0
-                                rounded-md
+
                                 border border-neutral-200
                                 bg-white
                                 px-1.5 py-0.5
@@ -871,7 +924,7 @@
                         class="
                             inline-flex h-8 w-8
                             items-center justify-center
-                            rounded-lg
+
                             border border-neutral-200
                             text-neutral-600
                             transition
@@ -911,7 +964,7 @@
                         class="
                             inline-flex h-8 w-8
                             items-center justify-center
-                            rounded-lg
+
                             border border-neutral-200
                             text-neutral-600
                             transition
@@ -1034,7 +1087,7 @@
                                         inline-flex min-h-8
                                         items-center justify-center
                                         whitespace-nowrap
-                                        rounded-lg
+
                                         px-3 py-1.5
                                         text-xs font-medium
                                         transition
@@ -1100,7 +1153,7 @@
                 relative z-10
                 flex max-h-[80vh] w-full max-w-2xl
                 flex-col overflow-hidden
-                rounded-2xl
+
                 border border-neutral-200
                 bg-white
                 shadow-2xl
@@ -1172,7 +1225,7 @@
                     class="
                         inline-flex h-8 w-8 shrink-0
                         items-center justify-center
-                        rounded-lg
+
                         text-neutral-500
                         transition
                         hover:bg-neutral-100
@@ -1242,7 +1295,7 @@
                         ) }}"
                     class="
                             group flex items-center gap-3
-                            rounded-xl
+
                             px-3 py-3
                             transition
                             hover:bg-[#008080]/10
@@ -1256,7 +1309,7 @@
                         class="
                                 flex h-9 w-9 shrink-0
                                 items-center justify-center
-                                rounded-xl
+
                                 bg-[#008080]/10
                                 text-[#008080]
                                 dark:bg-[#008080]/20
@@ -1658,7 +1711,3 @@
 </body>
 
 </html>
-
-
-
-

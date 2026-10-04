@@ -16,10 +16,14 @@ class JobOrder extends Model
         'customer_id',
         'technician_id',
         'job_order_number',
+        'job_type',
         'description',
         'scheduled_date',
         'scheduled_time',
         'status',
+        'started_at',
+        'completed_at',
+        'completion_report',
         'labor_cost',
         'materials_cost',
         'total_cost',
@@ -28,6 +32,8 @@ class JobOrder extends Model
 
     protected $casts = [
         'scheduled_date' => 'date',
+        'started_at' => 'datetime',
+        'completed_at' => 'datetime',
         'labor_cost' => 'decimal:2',
         'materials_cost' => 'decimal:2',
         'total_cost' => 'decimal:2',
@@ -51,5 +57,10 @@ class JobOrder extends Model
     public function notes(): HasMany
     {
         return $this->hasMany(JobOrderNote::class);
+    }
+
+    public function proofs(): HasMany
+    {
+        return $this->hasMany(JobOrderProof::class);
     }
 }

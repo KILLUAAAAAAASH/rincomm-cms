@@ -141,6 +141,43 @@
 
     </div>
 
+    {{-- Employee account action --}}
+    @if (auth()->user()->isAdmin())
+
+    <div class="flex justify-end">
+
+        <a
+            href="{{ route('admin.users.create') }}"
+            class="
+                inline-flex min-h-10
+                items-center justify-center gap-2
+                rounded-xl
+                bg-[#008080]
+                px-4 py-2
+                text-sm font-semibold
+                text-white
+                transition
+                hover:bg-[#006666]
+                focus:outline-none
+                focus:ring-2
+                focus:ring-[#008080]
+                focus:ring-offset-2
+                dark:focus:ring-offset-neutral-950
+            ">
+
+            <i
+                data-lucide="user-plus"
+                class="h-4 w-4"
+                aria-hidden="true">
+            </i>
+
+            Create Employee
+
+        </a>
+
+    </div>
+
+    @endif
 
     {{-- User search and filters --}}
     <form
@@ -182,7 +219,7 @@
                     type="search"
                     name="search"
                     value="{{ $search }}"
-                    placeholder="Search by name or email"
+                    placeholder="Search by name, email, or employee number"
                     autocomplete="off"
                     data-user-search
                     class="
