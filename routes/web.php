@@ -4,12 +4,12 @@ use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\CustomerDocumentController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\InvoiceController;
+use App\Http\Controllers\Admin\JobOrderController as AdminJobOrderController;
 use App\Http\Controllers\Admin\PlanChangeRequestController;
 use App\Http\Controllers\Admin\RelocationRequestController;
 use App\Http\Controllers\Admin\ServiceApplicationController as AdminServiceApplicationController;
 use App\Http\Controllers\Admin\ServicePlanController;
 use App\Http\Controllers\Admin\SubscriberController;
-use App\Http\Controllers\Admin\JobOrderController as AdminJobOrderController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -43,7 +43,6 @@ Route::get('/apply/coverage', [ServiceCoverageController::class, 'create'])
 
 Route::post('/apply/coverage', [ServiceCoverageController::class, 'check'])
     ->name('apply.coverage.check');
-
 
 /*
 |--------------------------------------------------------------------------
@@ -105,6 +104,7 @@ Route::middleware('guest')->group(function () {
     )
         ->middleware('throttle:3,1')
         ->name('register.verify.cancel');
+
     Route::get(
         '/employee/activate/channel',
         [EmployeeActivationController::class, 'channel']
@@ -116,6 +116,7 @@ Route::middleware('guest')->group(function () {
     )
         ->middleware('throttle:3,1')
         ->name('employee.activation.channel.store');
+
     Route::get(
         '/employee/activate/{challenge}',
         [EmployeeActivationController::class, 'create']
@@ -140,7 +141,6 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-
 /*
 |--------------------------------------------------------------------------
 | Profile Routes
@@ -154,7 +154,6 @@ Route::middleware(['auth', 'active'])->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])
         ->name('profile.update');
 });
-
 
 /*
 |--------------------------------------------------------------------------
@@ -172,6 +171,7 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
+
     /*
     |--------------------------------------------------------------------------
     | Job Orders
@@ -187,9 +187,13 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     Route::post('/admin/job-orders', [AdminJobOrderController::class, 'store'])
         ->name('admin.job-orders.store');
 
+    Route::patch(
+        '/admin/job-orders/{jobOrder}/assignment',
+        [AdminJobOrderController::class, 'updateAssignment']
+    )->name('admin.job-orders.assignment.update');
+
     Route::get('/admin/job-orders/{jobOrder}', [AdminJobOrderController::class, 'show'])
         ->name('admin.job-orders.show');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -213,7 +217,6 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
 
     Route::patch('/admin/users/{user}/status', [UserController::class, 'updateStatus'])
         ->name('admin.users.status');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -246,7 +249,6 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
         [SubscriptionController::class, 'updateDiscount']
     )->name('admin.subscribers.subscriptions.discount');
 
-
     /*
     |--------------------------------------------------------------------------
     | Customer Documents
@@ -273,7 +275,6 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
         [CustomerDocumentController::class, 'destroy']
     )->name('admin.subscribers.documents.destroy');
 
-
     /*
     |--------------------------------------------------------------------------
     | Plan Change Requests
@@ -294,7 +295,6 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
         '/admin/subscribers/{subscriber}/plan-change-requests/{planChangeRequest}/reject',
         [PlanChangeRequestController::class, 'reject']
     )->name('admin.subscribers.plan-change-requests.reject');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -322,7 +322,6 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
         [RelocationRequestController::class, 'complete']
     )->name('admin.subscribers.relocation-requests.complete');
 
-
     /*
     |--------------------------------------------------------------------------
     | Service Applications
@@ -340,7 +339,6 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
 
     Route::post('/admin/applications/{application}/reject', [AdminServiceApplicationController::class, 'reject'])
         ->name('admin.applications.reject');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -366,7 +364,6 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     Route::patch('/admin/service-plans/{servicePlan}/status', [ServicePlanController::class, 'updateStatus'])
         ->name('admin.service-plans.status');
 
-
     /*
     |--------------------------------------------------------------------------
     | Billing & Invoicing
@@ -378,7 +375,6 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
 
     Route::get('/admin/invoices/{invoice}', [InvoiceController::class, 'show'])
         ->name('admin.invoices.show');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -392,7 +388,6 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     });
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | Technician Routes
@@ -402,7 +397,6 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
 Route::middleware(['auth', 'active', 'role:technician'])->group(function () {
     Route::get('/technician/dashboard', [TechnicianDashboardController::class, 'index'])
         ->name('technician.dashboard');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -429,7 +423,6 @@ Route::middleware(['auth', 'active', 'role:technician'])->group(function () {
         '/technician/job-orders/{jobOrder}/complete',
         [JobOrderController::class, 'complete']
     )->name('technician.job-orders.complete');
-
 
     /*
     |--------------------------------------------------------------------------
@@ -458,7 +451,6 @@ Route::middleware(['auth', 'active', 'role:technician'])->group(function () {
     )->name('technician.job-orders.proofs.destroy');
 });
 
-
 /*
 |--------------------------------------------------------------------------
 | Customer Routes
@@ -475,4 +467,3 @@ Route::middleware(['auth', 'active', 'role:customer'])->group(function () {
     Route::post('/customer/application', [ServiceApplicationController::class, 'store'])
         ->name('customer.application.store');
 });
-

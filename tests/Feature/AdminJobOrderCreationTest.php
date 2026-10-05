@@ -81,25 +81,44 @@ class AdminJobOrderCreationTest extends TestCase
             ->latest('id')
             ->firstOrFail();
 
-        $response->assertRedirect(
-            route('admin.job-orders.show', $jobOrder)
-        );
-
-        $response->assertSessionHas(
-            'success',
-            'Job Order created successfully.'
-        );
+        $response
+            ->assertRedirect(
+                route('admin.job-orders.index')
+            )
+            ->assertSessionHas(
+                'success',
+                'Job Order created successfully.'
+            )
+            ->assertSessionHas(
+                'created_job_order_id',
+                $jobOrder->id
+            );
 
         $this->assertSame(
             sprintf('JO-%06d', $jobOrder->id),
             $jobOrder->job_order_number
         );
 
-        $this->assertSame('pending', $jobOrder->status);
-        $this->assertNull($jobOrder->service_request_id);
-        $this->assertNull($jobOrder->technician_id);
-        $this->assertNull($jobOrder->scheduled_date);
-        $this->assertNull($jobOrder->scheduled_time);
+        $this->assertSame(
+            'pending',
+            $jobOrder->status
+        );
+
+        $this->assertNull(
+            $jobOrder->service_request_id
+        );
+
+        $this->assertNull(
+            $jobOrder->technician_id
+        );
+
+        $this->assertNull(
+            $jobOrder->scheduled_date
+        );
+
+        $this->assertNull(
+            $jobOrder->scheduled_time
+        );
     }
 
     public function test_matching_service_request_can_be_linked_to_job_order(): void
@@ -121,21 +140,39 @@ class AdminJobOrderCreationTest extends TestCase
             ]);
 
         $jobOrder = JobOrder::query()
-            ->where('service_request_id', $serviceRequest->id)
-            ->where('job_type', 'site_survey')
+            ->where(
+                'service_request_id',
+                $serviceRequest->id
+            )
+            ->where(
+                'job_type',
+                'site_survey'
+            )
             ->latest('id')
             ->firstOrFail();
 
-        $response->assertRedirect(
-            route('admin.job-orders.show', $jobOrder)
-        );
+        $response
+            ->assertRedirect(
+                route('admin.job-orders.index')
+            )
+            ->assertSessionHas(
+                'success',
+                'Job Order created successfully.'
+            )
+            ->assertSessionHas(
+                'created_job_order_id',
+                $jobOrder->id
+            );
 
         $this->assertSame(
             $serviceRequest->customer_id,
             $jobOrder->customer_id
         );
 
-        $this->assertSame('pending', $jobOrder->status);
+        $this->assertSame(
+            'pending',
+            $jobOrder->status
+        );
     }
 
     public function test_service_request_must_belong_to_selected_subscriber(): void
@@ -147,7 +184,8 @@ class AdminJobOrderCreationTest extends TestCase
         $serviceRequest = ServiceRequest::query()
             ->firstOrFail();
 
-        $otherCustomerUser = $this->createActiveUser('customer');
+        $otherCustomerUser =
+            $this->createActiveUser('customer');
 
         $otherCustomer = Customer::query()->create([
             'user_id' => $otherCustomerUser->id,
@@ -166,21 +204,31 @@ class AdminJobOrderCreationTest extends TestCase
             'status' => 'active',
         ]);
 
-        $beforeCount = JobOrder::query()->count();
+        $beforeCount =
+            JobOrder::query()->count();
 
         $response = $this
             ->actingAs($admin)
-            ->from(route('admin.job-orders.create'))
-            ->post(route('admin.job-orders.store'), [
-                'customer_id' => $otherCustomer->id,
-                'service_request_id' => $serviceRequest->id,
-                'job_type' => 'line_maintenance',
-                'description' => 'Inspect and maintain affected line.',
-            ]);
+            ->from(
+                route('admin.job-orders.create')
+            )
+            ->post(
+                route('admin.job-orders.store'),
+                [
+                    'customer_id' => $otherCustomer->id,
+                    'service_request_id' => $serviceRequest->id,
+                    'job_type' => 'line_maintenance',
+                    'description' => 'Inspect and maintain affected line.',
+                ]
+            );
 
         $response
-            ->assertRedirect(route('admin.job-orders.create'))
-            ->assertSessionHasErrors('service_request_id');
+            ->assertRedirect(
+                route('admin.job-orders.create')
+            )
+            ->assertSessionHasErrors(
+                'service_request_id'
+            );
 
         $this->assertSame(
             $beforeCount,
@@ -193,7 +241,9 @@ class AdminJobOrderCreationTest extends TestCase
         $this->seed(DemoDataSeeder::class);
 
         $admin = $this->createActiveUser('admin');
-        $customer = Customer::query()->firstOrFail();
+
+        $customer = Customer::query()
+            ->firstOrFail();
 
         $jobTypes = [
             'new_installation',
@@ -206,45 +256,87 @@ class AdminJobOrderCreationTest extends TestCase
         foreach ($jobTypes as $jobType) {
             $description = sprintf(
                 'FRS verification for %s Job Order.',
-                str_replace('_', ' ', $jobType)
+                str_replace(
+                    '_',
+                    ' ',
+                    $jobType
+                )
             );
 
             $response = $this
                 ->actingAs($admin)
-                ->post(route('admin.job-orders.store'), [
-                    'customer_id' => $customer->id,
-                    'service_request_id' => null,
-                    'job_type' => $jobType,
-                    'description' => $description,
-                ]);
+                ->post(
+                    route('admin.job-orders.store'),
+                    [
+                        'customer_id' => $customer->id,
+                        'service_request_id' => null,
+                        'job_type' => $jobType,
+                        'description' => $description,
+                    ]
+                );
 
             $jobOrder = JobOrder::query()
-                ->where('customer_id', $customer->id)
-                ->where('job_type', $jobType)
-                ->where('description', $description)
+                ->where(
+                    'customer_id',
+                    $customer->id
+                )
+                ->where(
+                    'job_type',
+                    $jobType
+                )
+                ->where(
+                    'description',
+                    $description
+                )
                 ->latest('id')
                 ->firstOrFail();
 
             $response
                 ->assertRedirect(
-                    route('admin.job-orders.show', $jobOrder)
+                    route('admin.job-orders.index')
                 )
                 ->assertSessionHas(
                     'success',
                     'Job Order created successfully.'
+                )
+                ->assertSessionHas(
+                    'created_job_order_id',
+                    $jobOrder->id
                 );
 
             $this->assertSame(
-                sprintf('JO-%06d', $jobOrder->id),
+                sprintf(
+                    'JO-%06d',
+                    $jobOrder->id
+                ),
                 $jobOrder->job_order_number
             );
 
-            $this->assertSame($jobType, $jobOrder->job_type);
-            $this->assertSame('pending', $jobOrder->status);
-            $this->assertNull($jobOrder->service_request_id);
-            $this->assertNull($jobOrder->technician_id);
-            $this->assertNull($jobOrder->scheduled_date);
-            $this->assertNull($jobOrder->scheduled_time);
+            $this->assertSame(
+                $jobType,
+                $jobOrder->job_type
+            );
+
+            $this->assertSame(
+                'pending',
+                $jobOrder->status
+            );
+
+            $this->assertNull(
+                $jobOrder->service_request_id
+            );
+
+            $this->assertNull(
+                $jobOrder->technician_id
+            );
+
+            $this->assertNull(
+                $jobOrder->scheduled_date
+            );
+
+            $this->assertNull(
+                $jobOrder->scheduled_time
+            );
         }
     }
 
@@ -254,27 +346,38 @@ class AdminJobOrderCreationTest extends TestCase
 
         $response = $this
             ->actingAs($admin)
-            ->from(route('admin.job-orders.create'))
-            ->post(route('admin.job-orders.store'), [
-                'customer_id' => '',
-                'service_request_id' => '',
-                'job_type' => 'invalid_type',
-                'description' => '',
-            ]);
+            ->from(
+                route('admin.job-orders.create')
+            )
+            ->post(
+                route('admin.job-orders.store'),
+                [
+                    'customer_id' => '',
+                    'service_request_id' => '',
+                    'job_type' => 'invalid_type',
+                    'description' => '',
+                ]
+            );
 
         $response
-            ->assertRedirect(route('admin.job-orders.create'))
+            ->assertRedirect(
+                route('admin.job-orders.create')
+            )
             ->assertSessionHasErrors([
                 'customer_id',
                 'job_type',
                 'description',
             ]);
 
-        $this->assertDatabaseCount('job_orders', 0);
+        $this->assertDatabaseCount(
+            'job_orders',
+            0
+        );
     }
 
-    private function createActiveUser(string $role): User
-    {
+    private function createActiveUser(
+        string $role
+    ): User {
         $user = User::factory()->create();
 
         $user->forceFill([
