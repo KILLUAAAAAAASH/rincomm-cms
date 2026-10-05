@@ -48,6 +48,7 @@
         }
 
         @media print {
+
             #sidebar,
             #sidebar-overlay,
             #app-header,
@@ -187,6 +188,26 @@
     'visible' => Route::has('admin.applications.index'),
     ],
     [
+    'label' => 'Job Orders',
+    'description' => 'Create and monitor field Job Orders.',
+    'module' => 'Field Operations',
+    'route' => 'admin.job-orders.index',
+    'keywords' => implode(' ', [
+    'job order',
+    'job orders',
+    'field operations',
+    'field work',
+    'new installation',
+    'site survey',
+    'repair',
+    'line maintenance',
+    'physical disconnection',
+    'create job order',
+    'work order',
+    ]),
+    'visible' => Route::has('admin.job-orders.index'),
+    ],
+    [
     'label' => 'Internet Packages',
     'description' => 'Manage internet packages, speed, fees, duration, and availability.',
     'module' => 'Internet Packages',
@@ -318,6 +339,11 @@
 
     $isAdminOrStaff &&
     request()->routeIs(
+    'admin.job-orders.*'
+    ) => 'Field Operations',
+
+    $isAdminOrStaff &&
+    request()->routeIs(
     'admin.service-plans.*'
     ) => 'Internet Packages',
 
@@ -325,6 +351,7 @@
     request()->routeIs(
     'admin.invoices.*'
     ) => 'Billing & Invoicing',
+
     $isAdminOrStaff &&
     request()->routeIs(
     'admin.users.*',
@@ -359,6 +386,32 @@
     'label' => 'Applications',
     'route' => 'admin.applications.index',
     'active' => request()->routeIs('admin.applications.*'),
+    ],
+    ];
+    }
+
+    if (
+    $currentModule === 'Field Operations' &&
+    $isAdminOrStaff
+    ) {
+    $contextualNavigation = [
+    [
+    'label' => 'Job Orders',
+    'route' => 'admin.job-orders.index',
+    'active' => request()->routeIs('admin.job-orders.*'),
+    ],
+    ];
+    }
+
+    if (
+    $currentModule === 'Field Operations' &&
+    $isTechnician
+    ) {
+    $contextualNavigation = [
+    [
+    'label' => 'Job Orders',
+    'route' => 'technician.job-orders.index',
+    'active' => request()->routeIs('technician.job-orders.*'),
     ],
     ];
     }
@@ -488,8 +541,6 @@
             {{-- Main module navigation --}}
             <nav class="min-h-0 flex-1 space-y-1 overflow-y-auto p-4">
 
-
-
                 {{-- Dashboard --}}
                 <a
                     href="{{ route($dashboardRouteName) }}"
@@ -583,6 +634,39 @@
                 </a>
 
 
+                {{-- Admin / Staff Job Orders --}}
+                @if (Route::has('admin.job-orders.index'))
+
+                <a
+                    href="{{ route('admin.job-orders.index') }}"
+                    class="
+                        flex items-center gap-3
+                         px-4 py-2.5
+                        text-sm transition
+
+                        {{ $currentModule === 'Field Operations'
+                            ? 'bg-[#008080] font-medium text-white shadow-sm'
+                            : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                               dark:text-neutral-300 dark:hover:bg-[#008080]/15
+                               dark:hover:text-[#5EEAD4]'
+                        }}
+                    ">
+
+                    <i
+                        data-lucide="clipboard-list"
+                        class="h-5 w-5 shrink-0"
+                        aria-hidden="true">
+                    </i>
+
+                    <span>
+                        Field Operations
+                    </span>
+
+                </a>
+
+                @endif
+
+
                 {{-- Internet Packages --}}
                 @if (Route::has('admin.service-plans.index'))
 
@@ -615,6 +699,7 @@
 
                 @endif
 
+
                 {{-- Billing & Invoicing --}}
                 @if (Route::has('admin.invoices.index'))
 
@@ -646,6 +731,7 @@
                 </a>
 
                 @endif
+
 
                 {{-- System --}}
                 <a
@@ -1438,7 +1524,7 @@
                 ">
 
                 <span>
-&uarr; &darr; Navigate &middot; Enter Open
+                    &uarr; &darr; Navigate &middot; Enter Open
                 </span>
 
                 <span>

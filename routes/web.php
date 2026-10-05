@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\RelocationRequestController;
 use App\Http\Controllers\Admin\ServiceApplicationController as AdminServiceApplicationController;
 use App\Http\Controllers\Admin\ServicePlanController;
 use App\Http\Controllers\Admin\SubscriberController;
+use App\Http\Controllers\Admin\JobOrderController as AdminJobOrderController;
 use App\Http\Controllers\Admin\SubscriptionController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
@@ -171,6 +172,23 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('dashboard');
+    /*
+    |--------------------------------------------------------------------------
+    | Job Orders
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/admin/job-orders', [AdminJobOrderController::class, 'index'])
+        ->name('admin.job-orders.index');
+
+    Route::get('/admin/job-orders/create', [AdminJobOrderController::class, 'create'])
+        ->name('admin.job-orders.create');
+
+    Route::post('/admin/job-orders', [AdminJobOrderController::class, 'store'])
+        ->name('admin.job-orders.store');
+
+    Route::get('/admin/job-orders/{jobOrder}', [AdminJobOrderController::class, 'show'])
+        ->name('admin.job-orders.show');
 
 
     /*
