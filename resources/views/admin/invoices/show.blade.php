@@ -89,6 +89,17 @@ $customer?->postal_code,
 ])
 ->filter()
 ->implode(', ');
+
+$cashPaymentHasErrors =
+$errors->has('payment')
+|| $errors->has('payment_token')
+|| $errors->has('amount')
+|| $errors->has('remarks');
+
+$activePaymentToken = old(
+'payment_token',
+$paymentToken
+);
 @endphp
 
 <div class="space-y-1.5">
@@ -158,42 +169,89 @@ $customer?->postal_code,
         </div>
 
 
-        <button
-            type="button"
-            onclick="window.print()"
+        <div
             class="
-                inline-flex min-h-9
-                shrink-0
-                items-center justify-center
-                gap-2
-                border border-gray-300
-                bg-white
-                px-3 py-1.5
-                text-xs font-semibold
-                text-gray-700
-                transition
-                hover:border-[#008080]/40
-                hover:bg-gray-50
-                hover:text-[#008080]
-                focus:outline-none
-                focus:ring-2
-                focus:ring-[#008080]/20
-                dark:border-neutral-700
-                dark:bg-neutral-900
-                dark:text-gray-200
-                dark:hover:bg-neutral-800
-                dark:hover:text-[#5EEAD4]
+                flex flex-col gap-2
+                sm:flex-row
+                sm:items-center
             ">
 
-            <i
-                data-lucide="printer"
-                class="h-3.5 w-3.5"
-                aria-hidden="true">
-            </i>
+            @if ($canRecordCashPayment)
 
-            Print SOA
+            <button
+                type="button"
+                data-cash-payment-open
+                class="
+                    inline-flex min-h-9
+                    shrink-0
+                    items-center justify-center
+                    gap-2
+                    border border-[#008080]
+                    bg-[#008080]
+                    px-3 py-1.5
+                    text-xs font-semibold
+                    text-white
+                    transition
+                    hover:bg-[#006f6f]
+                    focus:outline-none
+                    focus:ring-2
+                    focus:ring-[#008080]/25
+                    dark:border-[#14B8A6]
+                    dark:bg-[#008080]
+                    dark:hover:bg-[#0f766e]
+                ">
 
-        </button>
+                <i
+                    data-lucide="banknote"
+                    class="h-3.5 w-3.5"
+                    aria-hidden="true">
+                </i>
+
+                Record Cash Payment
+
+            </button>
+
+            @endif
+
+
+            <button
+                type="button"
+                onclick="window.print()"
+                class="
+                    inline-flex min-h-9
+                    shrink-0
+                    items-center justify-center
+                    gap-2
+                    border border-gray-300
+                    bg-white
+                    px-3 py-1.5
+                    text-xs font-semibold
+                    text-gray-700
+                    transition
+                    hover:border-[#008080]/40
+                    hover:bg-gray-50
+                    hover:text-[#008080]
+                    focus:outline-none
+                    focus:ring-2
+                    focus:ring-[#008080]/20
+                    dark:border-neutral-700
+                    dark:bg-neutral-900
+                    dark:text-gray-200
+                    dark:hover:bg-neutral-800
+                    dark:hover:text-[#5EEAD4]
+                ">
+
+                <i
+                    data-lucide="printer"
+                    class="h-3.5 w-3.5"
+                    aria-hidden="true">
+                </i>
+
+                Print SOA
+
+            </button>
+
+        </div>
 
     </div>
 
@@ -960,13 +1018,81 @@ $customer?->postal_code,
 
                         <dd
                             class="
-                                text-base font-bold
-                                text-[#008080]
-                                dark:text-[#5EEAD4]
+                                font-semibold
+                                text-gray-900
+                                dark:text-white
                                 print:text-black
                             ">
                             &#8369;{{ number_format(
                                 (float) $invoice->total_amount,
+                                2
+                            ) }}
+                        </dd>
+
+                    </div>
+
+
+                    <div
+                        class="
+                            flex items-center
+                            justify-between gap-4
+                        ">
+
+                        <dt
+                            class="
+                                text-gray-500
+                                dark:text-gray-400
+                                print:text-gray-600
+                            ">
+                            Amount Paid
+                        </dt>
+
+                        <dd
+                            class="
+                                font-medium
+                                text-gray-900
+                                dark:text-white
+                                print:text-black
+                            ">
+                            &#8369;{{ number_format(
+                                (float) $amountPaid,
+                                2
+                            ) }}
+                        </dd>
+
+                    </div>
+
+
+                    <div
+                        class="
+                            flex items-center
+                            justify-between gap-4
+                            border-t border-gray-200
+                            pt-2
+                            dark:border-neutral-700
+                            print:border-gray-300
+                        ">
+
+                        <dt
+                            class="
+                                font-semibold
+                                text-gray-900
+                                dark:text-white
+                                print:text-black
+                            ">
+                            Outstanding Balance
+                        </dt>
+
+                        <dd
+                            class="
+                                text-base font-bold
+                                {{ (float) $outstandingBalance > 0
+                                    ? 'text-[#008080] dark:text-[#5EEAD4]'
+                                    : 'text-green-700 dark:text-green-300' }}
+                                print:text-black
+                            ">
+                            &#8369;{{ number_format(
+                                (float) $outstandingBalance,
                                 2
                             ) }}
                         </dd>
@@ -1222,5 +1348,630 @@ $customer?->postal_code,
     </section>
 
 </div>
+
+
+@if ($canRecordCashPayment || $cashPaymentHasErrors)
+
+<div
+    id="cash-payment-modal"
+    class="
+        fixed inset-0 z-[95]
+        hidden
+        items-center justify-center
+        p-3
+        sm:p-4
+        print:hidden
+    "
+    aria-hidden="true"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="cash-payment-modal-title">
+
+    <div
+        data-cash-payment-overlay
+        class="
+            absolute inset-0
+            bg-slate-950/60
+            backdrop-blur-[1px]
+        ">
+    </div>
+
+
+    <div
+        class="
+            relative z-10
+            w-full max-w-lg
+            overflow-hidden
+            border border-gray-200
+            bg-white
+            shadow-2xl
+            dark:border-neutral-700
+            dark:bg-neutral-900
+        ">
+
+        <div
+            class="
+                flex items-start justify-between gap-4
+                border-b border-gray-200
+                px-4 py-3
+                dark:border-neutral-800
+            ">
+
+            <div class="min-w-0">
+
+                <p
+                    class="
+                        text-[10px] font-semibold
+                        uppercase tracking-[0.1em]
+                        text-[#008080]
+                        dark:text-[#5EEAD4]
+                    ">
+                    Cashier Transaction
+                </p>
+
+                <h2
+                    id="cash-payment-modal-title"
+                    class="
+                        mt-0.5
+                        text-base font-semibold
+                        text-gray-900
+                        dark:text-white
+                    ">
+                    Record Cash Payment
+                </h2>
+
+                <p
+                    class="
+                        mt-1
+                        text-xs leading-4
+                        text-gray-500
+                        dark:text-gray-400
+                    ">
+                    Confirm the invoice and amount before recording received
+                    cash. This action creates a completed payment record.
+                </p>
+
+            </div>
+
+
+            <button
+                type="button"
+                data-cash-payment-close
+                aria-label="Close cash payment form"
+                class="
+                    inline-flex h-8 w-8 shrink-0
+                    items-center justify-center
+                    text-gray-500
+                    transition
+                    hover:bg-gray-100
+                    hover:text-gray-900
+                    dark:text-gray-400
+                    dark:hover:bg-neutral-800
+                    dark:hover:text-white
+                ">
+
+                <i
+                    data-lucide="x"
+                    class="h-4 w-4"
+                    aria-hidden="true">
+                </i>
+
+            </button>
+
+        </div>
+
+
+        <form
+            method="POST"
+            action="{{ route(
+                'admin.invoices.cash-payments.store',
+                $invoice
+            ) }}"
+            data-lock-submit>
+
+            @csrf
+
+            <input
+                type="hidden"
+                name="payment_token"
+                value="{{ $activePaymentToken }}">
+
+
+            <div class="space-y-4 px-4 py-4">
+
+                @if ($errors->has('payment'))
+
+                <div
+                    class="
+                        border border-red-200
+                        bg-red-50
+                        px-3 py-2
+                        text-xs text-red-700
+                        dark:border-red-900
+                        dark:bg-red-950/30
+                        dark:text-red-300
+                    ">
+                    {{ $errors->first('payment') }}
+                </div>
+
+                @endif
+
+
+                @if ($errors->has('payment_token'))
+
+                <div
+                    class="
+                        border border-red-200
+                        bg-red-50
+                        px-3 py-2
+                        text-xs text-red-700
+                        dark:border-red-900
+                        dark:bg-red-950/30
+                        dark:text-red-300
+                    ">
+                    {{ $errors->first('payment_token') }}
+                </div>
+
+                @endif
+
+
+                <dl
+                    class="
+                        grid grid-cols-2 gap-3
+                        border border-gray-200
+                        bg-gray-50
+                        p-3
+                        text-xs
+                        dark:border-neutral-700
+                        dark:bg-neutral-950
+                    ">
+
+                    <div>
+
+                        <dt
+                            class="
+                                text-gray-500
+                                dark:text-gray-400
+                            ">
+                            Subscriber
+                        </dt>
+
+                        <dd
+                            class="
+                                mt-0.5 font-semibold
+                                text-gray-900
+                                dark:text-white
+                            ">
+                            {{ $subscriberName !== ''
+                                ? $subscriberName
+                                : 'Subscriber' }}
+                        </dd>
+
+                    </div>
+
+
+                    <div>
+
+                        <dt
+                            class="
+                                text-gray-500
+                                dark:text-gray-400
+                            ">
+                            Invoice
+                        </dt>
+
+                        <dd
+                            class="
+                                mt-0.5 font-semibold
+                                text-gray-900
+                                dark:text-white
+                            ">
+                            {{ $invoice->invoice_number }}
+                        </dd>
+
+                    </div>
+
+
+                    <div>
+
+                        <dt
+                            class="
+                                text-gray-500
+                                dark:text-gray-400
+                            ">
+                            Payment Method
+                        </dt>
+
+                        <dd
+                            class="
+                                mt-0.5 font-semibold
+                                text-gray-900
+                                dark:text-white
+                            ">
+                            Cash
+                        </dd>
+
+                    </div>
+
+
+                    <div>
+
+                        <dt
+                            class="
+                                text-gray-500
+                                dark:text-gray-400
+                            ">
+                            Outstanding Balance
+                        </dt>
+
+                        <dd
+                            class="
+                                mt-0.5 font-semibold
+                                text-[#008080]
+                                dark:text-[#5EEAD4]
+                            ">
+                            &#8369;{{ number_format(
+                                (float) $outstandingBalance,
+                                2
+                            ) }}
+                        </dd>
+
+                    </div>
+
+                </dl>
+
+
+                <div>
+
+                    <label
+                        for="cash-payment-amount"
+                        class="
+                            block text-xs font-semibold
+                            text-gray-700
+                            dark:text-gray-200
+                        ">
+                        Payment Amount
+                    </label>
+
+                    <div class="relative mt-1">
+
+                        <span
+                            class="
+                                pointer-events-none
+                                absolute inset-y-0 left-0
+                                flex items-center
+                                pl-3
+                                text-sm text-gray-500
+                                dark:text-gray-400
+                            ">
+                            &#8369;
+                        </span>
+
+                        <input
+                            id="cash-payment-amount"
+                            name="amount"
+                            type="text"
+                            inputmode="decimal"
+                            autocomplete="off"
+                            value="{{ old('amount') }}"
+                            placeholder="0.00"
+                            class="
+                                block w-full
+                                border
+                                {{ $errors->has('amount')
+                                    ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                                    : 'border-gray-300 focus:border-[#008080] focus:ring-[#008080]/20' }}
+                                bg-white
+                                py-2 pl-8 pr-3
+                                text-sm
+                                text-gray-900
+                                outline-none
+                                transition
+                                focus:ring-2
+                                dark:border-neutral-700
+                                dark:bg-neutral-950
+                                dark:text-white
+                            ">
+
+                    </div>
+
+                    <p
+                        class="
+                            mt-1
+                            text-[11px]
+                            text-gray-500
+                            dark:text-gray-400
+                        ">
+                        Partial payments are allowed. The amount cannot exceed
+                        the current outstanding balance.
+                    </p>
+
+                    @error('amount')
+
+                    <p
+                        class="
+                            mt-1
+                            text-xs font-medium
+                            text-red-600
+                            dark:text-red-400
+                        ">
+                        {{ $message }}
+                    </p>
+
+                    @enderror
+
+                </div>
+
+
+                <div>
+
+                    <label
+                        for="cash-payment-remarks"
+                        class="
+                            block text-xs font-semibold
+                            text-gray-700
+                            dark:text-gray-200
+                        ">
+                        Remarks
+                        <span
+                            class="
+                                font-normal
+                                text-gray-400
+                                dark:text-gray-500
+                            ">
+                            (optional)
+                        </span>
+                    </label>
+
+                    <textarea
+                        id="cash-payment-remarks"
+                        name="remarks"
+                        rows="3"
+                        maxlength="1000"
+                        class="
+                            mt-1 block w-full
+                            border
+                            {{ $errors->has('remarks')
+                                ? 'border-red-400 focus:border-red-500 focus:ring-red-500/20'
+                                : 'border-gray-300 focus:border-[#008080] focus:ring-[#008080]/20' }}
+                            bg-white
+                            px-3 py-2
+                            text-sm
+                            text-gray-900
+                            outline-none
+                            transition
+                            focus:ring-2
+                            dark:border-neutral-700
+                            dark:bg-neutral-950
+                            dark:text-white
+                        "
+                        placeholder="Optional cashier note">{{ old('remarks') }}</textarea>
+
+                    @error('remarks')
+
+                    <p
+                        class="
+                            mt-1
+                            text-xs font-medium
+                            text-red-600
+                            dark:text-red-400
+                        ">
+                        {{ $message }}
+                    </p>
+
+                    @enderror
+
+                </div>
+
+
+                <div
+                    class="
+                        border border-amber-200
+                        bg-amber-50
+                        px-3 py-2
+                        text-[11px] leading-4
+                        text-amber-800
+                        dark:border-amber-900
+                        dark:bg-amber-950/30
+                        dark:text-amber-200
+                    ">
+
+                    <span class="font-semibold">
+                        Confirmation:
+                    </span>
+
+                    Verify that physical cash has been received before
+                    submitting. The invoice balance and status will be
+                    recalculated immediately.
+
+                </div>
+
+            </div>
+
+
+            <div
+                class="
+                    flex flex-col-reverse gap-2
+                    border-t border-gray-200
+                    bg-gray-50
+                    px-4 py-3
+                    dark:border-neutral-800
+                    dark:bg-neutral-950
+                    sm:flex-row
+                    sm:justify-end
+                ">
+
+                <button
+                    type="button"
+                    data-cash-payment-close
+                    class="
+                        inline-flex min-h-9
+                        items-center justify-center
+                        border border-gray-300
+                        bg-white
+                        px-3 py-1.5
+                        text-xs font-semibold
+                        text-gray-700
+                        transition
+                        hover:bg-gray-100
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-gray-400/20
+                        dark:border-neutral-700
+                        dark:bg-neutral-900
+                        dark:text-gray-200
+                        dark:hover:bg-neutral-800
+                    ">
+                    Cancel
+                </button>
+
+
+                <button
+                    type="submit"
+                    class="
+                        inline-flex min-h-9
+                        items-center justify-center
+                        gap-2
+                        border border-[#008080]
+                        bg-[#008080]
+                        px-3 py-1.5
+                        text-xs font-semibold
+                        text-white
+                        transition
+                        hover:bg-[#006f6f]
+                        focus:outline-none
+                        focus:ring-2
+                        focus:ring-[#008080]/25
+                        disabled:cursor-not-allowed
+                        disabled:opacity-60
+                    ">
+
+                    <i
+                        data-lucide="circle-check"
+                        class="h-3.5 w-3.5"
+                        aria-hidden="true">
+                    </i>
+
+                    Record Cash Payment
+
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+@endif
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const modal = document.getElementById(
+            'cash-payment-modal'
+        );
+
+        if (!modal) {
+            return;
+        }
+
+        const openButtons = [
+            ...document.querySelectorAll(
+                '[data-cash-payment-open]'
+            ),
+        ];
+
+        const closeButtons = [
+            ...document.querySelectorAll(
+                '[data-cash-payment-close]'
+            ),
+        ];
+
+        const overlay = document.querySelector(
+            '[data-cash-payment-overlay]'
+        );
+
+        const amountInput = document.getElementById(
+            'cash-payment-amount'
+        );
+
+
+        const openModal = () => {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.setAttribute(
+                'aria-hidden',
+                'false'
+            );
+
+            document.body.classList.add(
+                'overflow-hidden'
+            );
+
+            window.setTimeout(() => {
+                amountInput?.focus();
+            }, 0);
+        };
+
+
+        const closeModal = () => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.setAttribute(
+                'aria-hidden',
+                'true'
+            );
+
+            document.body.classList.remove(
+                'overflow-hidden'
+            );
+        };
+
+
+        openButtons.forEach((button) => {
+            button.addEventListener(
+                'click',
+                openModal
+            );
+        });
+
+
+        closeButtons.forEach((button) => {
+            button.addEventListener(
+                'click',
+                closeModal
+            );
+        });
+
+
+        overlay?.addEventListener(
+            'click',
+            closeModal
+        );
+
+
+        document.addEventListener(
+            'keydown',
+            (event) => {
+                if (
+                    event.key === 'Escape'
+                    && modal.getAttribute(
+                        'aria-hidden'
+                    ) === 'false'
+                ) {
+                    event.preventDefault();
+                    closeModal();
+                }
+            }
+        );
+
+
+        @if ($cashPaymentHasErrors)
+        openModal();
+        @endif
+    });
+</script>
 
 @endsection

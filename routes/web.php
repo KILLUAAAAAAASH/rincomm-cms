@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\ActivityLogController;
+use App\Http\Controllers\Admin\CashPaymentController;
 use App\Http\Controllers\Admin\CustomerDocumentController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\InvoiceController;
@@ -397,6 +398,11 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
 
     Route::get('/admin/invoices', [InvoiceController::class, 'index'])
         ->name('admin.invoices.index');
+
+    Route::post(
+        '/admin/invoices/{invoice}/cash-payments',
+        [CashPaymentController::class, 'store']
+    )->name('admin.invoices.cash-payments.store');
 
     Route::get('/admin/invoices/{invoice}', [InvoiceController::class, 'show'])
         ->name('admin.invoices.show');
