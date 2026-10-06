@@ -24,22 +24,11 @@ class DemoDataSeeder extends Seeder
             );
         }
 
-        // Demo administrator and staff accounts
+        // Demo administrator account
         $this->createDemoUser(
             name: 'Rincomm Administrator',
             email: 'admin@rincomm.test',
             role: 'admin'
-        );
-
-        $staffUser = $this->createDemoUser(
-            name: 'Rincomm Staff',
-            email: 'staff@rincomm.test',
-            role: 'staff'
-        );
-
-        $this->prepareDemoEmployee(
-            user: $staffUser,
-            phone: '639171111111'
         );
 
         // Service area used for coverage testing
@@ -117,7 +106,7 @@ class DemoDataSeeder extends Seeder
             ]
         );
 
-        // Demo technician
+        // Demo technician retained as the Module 7 test fixture
         $technicianUser = $this->createDemoUser(
             name: 'Pedro Santos',
             email: 'technician@rincomm.test',
