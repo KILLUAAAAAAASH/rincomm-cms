@@ -64,6 +64,511 @@ class TechnicianJobOrderWorkflowTest extends TestCase
         );
     }
 
+    public function test_in_progress_technician_can_submit_completion_report_and_complete_owned_job_order(): void
+    {
+        Storage::fake('local');
+
+        $this->seed(DemoDataSeeder::class);
+
+        $technicianUser = $this->demoTechnicianUser();
+
+        $jobOrder = $this->prepareDemoJobOrder(
+            'in_progress'
+        );
+
+        $startedAt = $jobOrder->started_at?->copy();
+
+        $proof = $this->createStoredProof(
+            $jobOrder,
+            $technicianUser
+        );
+
+        $response = $this
+            ->actingAs($technicianUser)
+            ->patch(
+                route(
+                    'technician.job-orders.complete',
+                    $jobOrder
+                ),
+                [
+                    'modal_context' => 'completion',
+                    'completion_job_order_id' => $jobOrder->id,
+                    'completion_report' => '   Replaced the damaged drop cable, restored the connection, and verified stable service.   ',
+                ]
+            );
+
+        $response->assertRedirect(
+            route('technician.job-orders.index')
+        );
+
+        $response->assertSessionHasNoErrors();
+
+        $response->assertSessionHas(
+            'success',
+            'Job Order completed successfully.'
+        );
+
+        $jobOrder->refresh();
+
+        $this->assertSame(
+            'completed',
+            $jobOrder->status
+        );
+
+        $this->assertSame(
+            'Replaced the damaged drop cable, restored the connection, and verified stable service.',
+            $jobOrder->completion_report
+        );
+
+        $this->assertNotNull(
+            $jobOrder->completed_at
+        );
+
+        $this->assertNotNull(
+            $startedAt
+        );
+
+        $this->assertTrue(
+            $startedAt->equalTo(
+                $jobOrder->started_at
+            )
+        );
+
+        $this->assertDatabaseHas(
+            'job_order_proofs',
+            [
+                'id' => $proof->id,
+                'job_order_id' => $jobOrder->id,
+            ]
+        );
+
+        Storage::disk('local')->assertExists(
+            $proof->file_path
+        );
+    }
+
+    public function test_blank_completion_report_is_rejected_without_completing_job_order(): void
+    {
+        Storage::fake('local');
+
+        $this->seed(DemoDataSeeder::class);
+
+        $technicianUser = $this->demoTechnicianUser();
+
+        $jobOrder = $this->prepareDemoJobOrder(
+            'in_progress'
+        );
+
+        $this->createStoredProof(
+            $jobOrder,
+            $technicianUser
+        );
+
+        $response = $this
+            ->actingAs($technicianUser)
+            ->from(
+                route('technician.job-orders.index')
+            )
+            ->patch(
+                route(
+                    'technician.job-orders.complete',
+                    $jobOrder
+                ),
+                [
+                    'modal_context' => 'completion',
+                    'completion_job_order_id' => $jobOrder->id,
+                    'completion_report' => '   ',
+                ]
+            );
+
+        $response->assertRedirect(
+            route('technician.job-orders.index')
+        );
+
+        $response->assertSessionHasErrors([
+            'completion_report',
+        ]);
+
+        $jobOrder->refresh();
+
+        $this->assertSame(
+            'in_progress',
+            $jobOrder->status
+        );
+
+        $this->assertNull(
+            $jobOrder->completed_at
+        );
+
+        $this->assertNull(
+            $jobOrder->completion_report
+        );
+    }
+
+    public function test_completion_report_larger_than_five_thousand_characters_is_rejected(): void
+    {
+        Storage::fake('local');
+
+        $this->seed(DemoDataSeeder::class);
+
+        $technicianUser = $this->demoTechnicianUser();
+
+        $jobOrder = $this->prepareDemoJobOrder(
+            'in_progress'
+        );
+
+        $this->createStoredProof(
+            $jobOrder,
+            $technicianUser
+        );
+
+        $response = $this
+            ->actingAs($technicianUser)
+            ->from(
+                route('technician.job-orders.index')
+            )
+            ->patch(
+                route(
+                    'technician.job-orders.complete',
+                    $jobOrder
+                ),
+                [
+                    'modal_context' => 'completion',
+                    'completion_job_order_id' => $jobOrder->id,
+                    'completion_report' => str_repeat(
+                        'A',
+                        5001
+                    ),
+                ]
+            );
+
+        $response->assertRedirect(
+            route('technician.job-orders.index')
+        );
+
+        $response->assertSessionHasErrors([
+            'completion_report',
+        ]);
+
+        $jobOrder->refresh();
+
+        $this->assertSame(
+            'in_progress',
+            $jobOrder->status
+        );
+
+        $this->assertNull(
+            $jobOrder->completed_at
+        );
+
+        $this->assertNull(
+            $jobOrder->completion_report
+        );
+    }
+
+    public function test_job_order_cannot_be_completed_without_proof_of_work(): void
+    {
+        Storage::fake('local');
+
+        $this->seed(DemoDataSeeder::class);
+
+        $technicianUser = $this->demoTechnicianUser();
+
+        $jobOrder = $this->prepareDemoJobOrder(
+            'in_progress'
+        );
+
+        $response = $this
+            ->actingAs($technicianUser)
+            ->from(
+                route('technician.job-orders.index')
+            )
+            ->patch(
+                route(
+                    'technician.job-orders.complete',
+                    $jobOrder
+                ),
+                [
+                    'modal_context' => 'completion',
+                    'completion_job_order_id' => $jobOrder->id,
+                    'completion_report' => 'Repair completed and connection verified.',
+                ]
+            );
+
+        $response->assertRedirect(
+            route('technician.job-orders.index')
+        );
+
+        $response->assertSessionHasErrors([
+            'completion_report',
+        ]);
+
+        $jobOrder->refresh();
+
+        $this->assertSame(
+            'in_progress',
+            $jobOrder->status
+        );
+
+        $this->assertNull(
+            $jobOrder->completed_at
+        );
+
+        $this->assertNull(
+            $jobOrder->completion_report
+        );
+    }
+
+    public function test_job_order_without_job_type_cannot_be_completed(): void
+    {
+        Storage::fake('local');
+
+        $this->seed(DemoDataSeeder::class);
+
+        $technicianUser = $this->demoTechnicianUser();
+
+        $jobOrder = $this->prepareDemoJobOrder(
+            'in_progress'
+        );
+
+        $jobOrder->forceFill([
+            'job_type' => null,
+        ])->save();
+
+        $this->createStoredProof(
+            $jobOrder,
+            $technicianUser
+        );
+
+        $response = $this
+            ->actingAs($technicianUser)
+            ->from(
+                route('technician.job-orders.index')
+            )
+            ->patch(
+                route(
+                    'technician.job-orders.complete',
+                    $jobOrder
+                ),
+                [
+                    'modal_context' => 'completion',
+                    'completion_job_order_id' => $jobOrder->id,
+                    'completion_report' => 'Field work completed.',
+                ]
+            );
+
+        $response->assertRedirect(
+            route('technician.job-orders.index')
+        );
+
+        $response->assertSessionHasErrors([
+            'completion_report',
+        ]);
+
+        $jobOrder->refresh();
+
+        $this->assertSame(
+            'in_progress',
+            $jobOrder->status
+        );
+
+        $this->assertNull(
+            $jobOrder->completed_at
+        );
+
+        $this->assertNull(
+            $jobOrder->completion_report
+        );
+    }
+
+    public function test_technician_cannot_complete_job_order_assigned_to_another_technician(): void
+    {
+        Storage::fake('local');
+
+        $this->seed(DemoDataSeeder::class);
+
+        $technicianUser = $this->demoTechnicianUser();
+
+        $jobOrder = $this->prepareDemoJobOrder(
+            'in_progress'
+        );
+
+        $otherUser = User::factory()->create();
+
+        $otherUser->forceFill([
+            'role' => 'technician',
+            'account_status' => 'active',
+        ])->save();
+
+        $otherTechnician = Technician::query()->create([
+            'user_id' => $otherUser->id,
+            'technician_code' => 'TECH-0100',
+            'specialization' => 'Fiber Installation',
+            'status' => 'available',
+        ]);
+
+        $jobOrder->forceFill([
+            'technician_id' => $otherTechnician->id,
+        ])->save();
+
+        $response = $this
+            ->actingAs($technicianUser)
+            ->patch(
+                route(
+                    'technician.job-orders.complete',
+                    $jobOrder
+                ),
+                [
+                    'modal_context' => 'completion',
+                    'completion_job_order_id' => $jobOrder->id,
+                    'completion_report' => '',
+                ]
+            );
+
+        $response->assertNotFound();
+
+        $jobOrder->refresh();
+
+        $this->assertSame(
+            'in_progress',
+            $jobOrder->status
+        );
+
+        $this->assertNull(
+            $jobOrder->completed_at
+        );
+
+        $this->assertNull(
+            $jobOrder->completion_report
+        );
+    }
+
+    public function test_assigned_job_order_cannot_be_completed_before_it_is_started(): void
+    {
+        Storage::fake('local');
+
+        $this->seed(DemoDataSeeder::class);
+
+        $technicianUser = $this->demoTechnicianUser();
+
+        $jobOrder = $this->prepareDemoJobOrder(
+            'assigned'
+        );
+
+        $this->createStoredProof(
+            $jobOrder,
+            $technicianUser
+        );
+
+        $response = $this
+            ->actingAs($technicianUser)
+            ->from(
+                route('technician.job-orders.index')
+            )
+            ->patch(
+                route(
+                    'technician.job-orders.complete',
+                    $jobOrder
+                ),
+                [
+                    'modal_context' => 'completion',
+                    'completion_job_order_id' => $jobOrder->id,
+                    'completion_report' => 'Attempted completion before start.',
+                ]
+            );
+
+        $response->assertRedirect(
+            route('technician.job-orders.index')
+        );
+
+        $response->assertSessionHasErrors([
+            'completion_report',
+        ]);
+
+        $jobOrder->refresh();
+
+        $this->assertSame(
+            'assigned',
+            $jobOrder->status
+        );
+
+        $this->assertNull(
+            $jobOrder->completed_at
+        );
+
+        $this->assertNull(
+            $jobOrder->completion_report
+        );
+    }
+
+    public function test_completed_job_order_cannot_be_completed_again_or_overwrite_report(): void
+    {
+        Storage::fake('local');
+
+        $this->seed(DemoDataSeeder::class);
+
+        $technicianUser = $this->demoTechnicianUser();
+
+        $jobOrder = $this->prepareDemoJobOrder(
+            'completed'
+        );
+
+        $originalCompletedAt = now()->subMinutes(10)->startOfSecond();
+
+        $jobOrder->forceFill([
+            'completed_at' => $originalCompletedAt,
+            'completion_report' => 'Original final completion report.',
+        ])->save();
+
+        $this->createStoredProof(
+            $jobOrder,
+            $technicianUser
+        );
+
+        $response = $this
+            ->actingAs($technicianUser)
+            ->from(
+                route('technician.job-orders.index')
+            )
+            ->patch(
+                route(
+                    'technician.job-orders.complete',
+                    $jobOrder
+                ),
+                [
+                    'modal_context' => 'completion',
+                    'completion_job_order_id' => $jobOrder->id,
+                    'completion_report' => 'Attempt to overwrite the report.',
+                ]
+            );
+
+        $response->assertRedirect(
+            route('technician.job-orders.index')
+        );
+
+        $response->assertSessionHasErrors([
+            'completion_report',
+        ]);
+
+        $jobOrder->refresh();
+
+        $this->assertSame(
+            'completed',
+            $jobOrder->status
+        );
+
+        $this->assertSame(
+            'Original final completion report.',
+            $jobOrder->completion_report
+        );
+
+        $this->assertTrue(
+            $originalCompletedAt->equalTo(
+                $jobOrder->completed_at
+            )
+        );
+    }
+
     public function test_in_progress_technician_can_upload_proof_without_changing_job_status(): void
     {
         Storage::fake('local');
@@ -691,9 +1196,13 @@ class TechnicianJobOrderWorkflowTest extends TestCase
             false
         );
 
+        $completionReport =
+            'Repair completed, connection tested, and service restored.';
+
         $jobOrder->forceFill([
             'status' => 'completed',
             'completed_at' => now(),
+            'completion_report' => $completionReport,
         ])->save();
 
         $completedResponse = $this
@@ -709,6 +1218,14 @@ class TechnicianJobOrderWorkflowTest extends TestCase
         $completedResponse->assertSee(
             'data-job-modal="'.$jobOrder->id.'"',
             false
+        );
+
+        $completedResponse->assertSee(
+            'Completion Report'
+        );
+
+        $completedResponse->assertSee(
+            $completionReport
         );
 
         $completedResponse->assertSee(
@@ -742,6 +1259,10 @@ class TechnicianJobOrderWorkflowTest extends TestCase
         $completedResponse->assertDontSee(
             'data-proof-delete-action="',
             false
+        );
+
+        $completedResponse->assertDontSee(
+            'Submit Completion Report'
         );
     }
 
@@ -786,6 +1307,7 @@ class TechnicianJobOrderWorkflowTest extends TestCase
             'completed_at' => $status === 'completed'
                 ? now()
                 : null,
+            'completion_report' => null,
         ])->save();
 
         return $jobOrder->fresh();

@@ -154,15 +154,21 @@ class JobOrderController extends Controller
     }
 
     /**
-     * Complete an in-progress Job Order.
-     *
-     * The completion business rules remain unchanged here.
-     * Module 7 Feature 4 will own the final completion-report refinement.
+     * Submit the completion report for an in-progress Job Order.
      */
     public function complete(
         Request $request,
         JobOrder $jobOrder
     ): RedirectResponse {
+        $technician = $request->user()->technician;
+
+        abort_unless($technician !== null, 404);
+
+        abort_unless(
+            $jobOrder->technician_id === $technician->id,
+            404
+        );
+
         $validated = $request->validate(
             [
                 'completion_report' => [
@@ -176,10 +182,6 @@ class JobOrderController extends Controller
                 'completion_report.max' => 'The completion report cannot exceed 5000 characters.',
             ]
         );
-
-        $technician = $request->user()->technician;
-
-        abort_unless($technician !== null, 404);
 
         DB::transaction(function () use (
             $jobOrder,
