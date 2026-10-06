@@ -15,6 +15,7 @@ use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmployeeActivationController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
+use App\Http\Controllers\Auth\PasswordResetVerificationController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\RegistrationVerificationController;
 use App\Http\Controllers\Auth\ResetPasswordController;
@@ -65,10 +66,34 @@ Route::middleware('guest')->group(function () {
         ->middleware('throttle:3,1')
         ->name('password.email');
 
-    Route::get('/reset-password/{token}', [ResetPasswordController::class, 'create'])
-        ->name('password.reset');
+    Route::get(
+        '/forgot-password/verify/{challenge}',
+        [PasswordResetVerificationController::class, 'create']
+    )->name('password.reset.verify');
 
-    Route::post('/reset-password', [ResetPasswordController::class, 'store'])
+    Route::post(
+        '/forgot-password/verify/{challenge}',
+        [PasswordResetVerificationController::class, 'store']
+    )
+        ->middleware('throttle:5,1')
+        ->name('password.reset.verify.store');
+
+    Route::post(
+        '/forgot-password/verify/{challenge}/resend',
+        [PasswordResetVerificationController::class, 'resend']
+    )
+        ->middleware('throttle:3,1')
+        ->name('password.reset.verify.resend');
+
+    Route::get(
+        '/reset-password/{challenge}',
+        [ResetPasswordController::class, 'create']
+    )->name('password.reset');
+
+    Route::post(
+        '/reset-password/{challenge}',
+        [ResetPasswordController::class, 'store']
+    )
         ->middleware('throttle:5,1')
         ->name('password.update');
 

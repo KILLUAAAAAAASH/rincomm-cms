@@ -12,16 +12,22 @@
 
     <script>
         (() => {
-            const savedTheme = localStorage.getItem('rincomm-theme');
+            const savedTheme =
+                localStorage.getItem('rincomm-theme');
 
             const useDarkTheme =
                 savedTheme === 'dark' ||
                 (
                     !savedTheme &&
-                    window.matchMedia('(prefers-color-scheme: dark)').matches
+                    window.matchMedia(
+                        '(prefers-color-scheme: dark)'
+                    ).matches
                 );
 
-            document.documentElement.classList.toggle('dark', useDarkTheme);
+            document.documentElement.classList.toggle(
+                'dark',
+                useDarkTheme
+            );
         })();
     </script>
 
@@ -103,14 +109,32 @@
                 {{-- Header --}}
                 <div class="mb-5 text-center">
 
+                    <div
+                        class="
+                            mx-auto flex h-11 w-11
+                            items-center justify-center
+                            bg-[#008080]/10
+                            text-[#008080]
+                            dark:bg-[#008080]/20
+                            dark:text-[#5EEAD4]
+                        ">
+
+                        <i
+                            data-lucide="shield-check"
+                            class="h-5 w-5"
+                            aria-hidden="true">
+                        </i>
+
+                    </div>
+
                     <h1
                         class="
-                            text-2xl font-semibold
+                            mt-4 text-2xl font-semibold
                             tracking-tight
                             text-neutral-900
                             dark:text-white
                         ">
-                        Reset Password
+                        Create New Password
                     </h1>
 
                     <p
@@ -121,18 +145,83 @@
                             text-neutral-500
                             dark:text-neutral-400
                         ">
-                        Enter your email address and choose a new password for your Rincomm account.
+                        Your recovery code has been verified. Choose a new password for your Rincomm account.
                     </p>
 
                 </div>
 
 
+                {{-- Verification success --}}
+                @if (session('success'))
+
+                <div
+                    role="status"
+                    aria-live="polite"
+                    class="
+                            mb-4 flex items-start gap-2.5
+                            border border-green-200
+                            bg-green-50
+                            px-4 py-3
+                            text-sm
+                            text-green-700
+                            dark:border-green-900/60
+                            dark:bg-green-950/40
+                            dark:text-green-300
+                        ">
+
+                    <i
+                        data-lucide="circle-check"
+                        class="mt-0.5 h-4 w-4 shrink-0"
+                        aria-hidden="true">
+                    </i>
+
+                    <span>
+                        {{ session('success') }}
+                    </span>
+
+                </div>
+
+                @endif
+
+
+                {{-- General error --}}
+                @if (session('error'))
+
+                <div
+                    role="alert"
+                    class="
+                            mb-4 flex items-start gap-2.5
+                            border border-red-200
+                            bg-red-50
+                            px-4 py-3
+                            text-sm
+                            text-red-700
+                            dark:border-red-900/60
+                            dark:bg-red-950/40
+                            dark:text-red-300
+                        ">
+
+                    <i
+                        data-lucide="triangle-alert"
+                        class="mt-0.5 h-4 w-4 shrink-0"
+                        aria-hidden="true">
+                    </i>
+
+                    <span>
+                        {{ session('error') }}
+                    </span>
+
+                </div>
+
+                @endif
+
+
                 {{-- Validation errors --}}
                 @if ($errors->any())
 
-                    <div
-                        role="alert"
-                        class="
+                <div
+                    role="alert"
+                    class="
                             mb-4
                             border border-red-200
                             bg-red-50
@@ -144,15 +233,15 @@
                             dark:text-red-300
                         ">
 
-                        @foreach ($errors->all() as $error)
+                    @foreach ($errors->all() as $error)
 
-                            <p>
-                                {{ $error }}
-                            </p>
+                    <p>
+                        {{ $error }}
+                    </p>
 
-                        @endforeach
+                    @endforeach
 
-                    </div>
+                </div>
 
                 @endif
 
@@ -160,91 +249,12 @@
                 {{-- Reset password form --}}
                 <form
                     method="POST"
-                    action="{{ route('password.update') }}"
+                    action="{{ route('password.update', $challenge) }}"
                     data-lock-submit
-                    class="space-y-4">
+                    class="space-y-4"
+                    novalidate>
 
                     @csrf
-
-
-                    {{-- Reset token --}}
-                    <input
-                        type="hidden"
-                        name="token"
-                        value="{{ $token }}">
-
-
-                    {{-- Email --}}
-                    <div>
-
-                        <label
-                            for="email"
-                            class="
-                                mb-1.5 block
-                                text-sm font-medium
-                                text-neutral-700
-                                dark:text-neutral-300
-                            ">
-                            Email Address
-                        </label>
-
-
-                        <div class="relative">
-
-                            <div
-                                class="
-                                    pointer-events-none
-                                    absolute inset-y-0 left-0
-                                    flex w-11
-                                    items-center justify-center
-                                    border-r border-neutral-300
-                                    text-neutral-500
-                                    dark:border-neutral-700
-                                    dark:text-neutral-400
-                                ">
-
-                                <i
-                                    data-lucide="mail"
-                                    class="h-4 w-4"
-                                    aria-hidden="true">
-                                </i>
-
-                            </div>
-
-
-                            <input
-                                id="email"
-                                name="email"
-                                type="email"
-                                value="{{ old('email', $email) }}"
-                                required
-                                autofocus
-                                autocomplete="email"
-                                placeholder="you@example.com"
-                                aria-invalid="{{ $errors->has('email') ? 'true' : 'false' }}"
-                                class="
-                                    block w-full
-                                    border border-neutral-300
-                                    bg-white
-                                    py-3 pr-4
-                                    text-sm
-                                    text-neutral-900
-                                    outline-none
-                                    transition
-                                    placeholder:text-neutral-400
-                                    focus:border-[#008080]
-                                    focus:ring-1
-                                    focus:ring-[#008080]
-                                    dark:border-neutral-700
-                                    dark:bg-neutral-950
-                                    dark:text-neutral-100
-                                    dark:placeholder:text-neutral-500
-                                "
-                                style="padding-left: 3.5rem;">
-
-                        </div>
-
-                    </div>
 
 
                     {{-- New password --}}
@@ -290,12 +300,13 @@
                                 name="password"
                                 type="password"
                                 required
+                                autofocus
                                 autocomplete="new-password"
                                 placeholder="Enter new password"
                                 aria-invalid="{{ $errors->has('password') ? 'true' : 'false' }}"
                                 class="
                                     block w-full
-                                    border border-neutral-300
+                                    border
                                     bg-white
                                     py-3 pr-12
                                     text-sm
@@ -306,10 +317,12 @@
                                     focus:border-[#008080]
                                     focus:ring-1
                                     focus:ring-[#008080]
-                                    dark:border-neutral-700
                                     dark:bg-neutral-950
                                     dark:text-neutral-100
                                     dark:placeholder:text-neutral-500
+                                    {{ $errors->has('password')
+                                        ? 'border-red-500 ring-1 ring-red-500/20 dark:border-red-500'
+                                        : 'border-neutral-300 dark:border-neutral-700' }}
                                 "
                                 style="padding-left: 3.5rem;">
 
@@ -325,6 +338,10 @@
                                     text-neutral-500
                                     transition
                                     hover:text-[#008080]
+                                    focus:outline-none
+                                    focus:ring-2
+                                    focus:ring-inset
+                                    focus:ring-[#008080]
                                     dark:text-neutral-400
                                     dark:hover:text-teal-400
                                 "
@@ -339,6 +356,31 @@
                             </button>
 
                         </div>
+
+
+                        @error('password')
+
+                        <p
+                            class="
+                                    mt-1.5 flex items-start gap-1.5
+                                    text-xs
+                                    text-red-600
+                                    dark:text-red-400
+                                ">
+
+                            <i
+                                data-lucide="circle-alert"
+                                class="mt-0.5 h-3.5 w-3.5 shrink-0"
+                                aria-hidden="true">
+                            </i>
+
+                            <span>
+                                {{ $message }}
+                            </span>
+
+                        </p>
+
+                        @enderror
 
                     </div>
 
@@ -420,6 +462,10 @@
                                     text-neutral-500
                                     transition
                                     hover:text-[#008080]
+                                    focus:outline-none
+                                    focus:ring-2
+                                    focus:ring-inset
+                                    focus:ring-[#008080]
                                     dark:text-neutral-400
                                     dark:hover:text-teal-400
                                 "
@@ -434,6 +480,37 @@
                             </button>
 
                         </div>
+
+                    </div>
+
+
+                    {{-- Security notice --}}
+                    <div
+                        class="
+                            flex items-start gap-2.5
+                            border border-neutral-200
+                            bg-neutral-50
+                            px-3 py-2.5
+                            text-xs leading-5
+                            text-neutral-600
+                            dark:border-neutral-800
+                            dark:bg-neutral-950
+                            dark:text-neutral-400
+                        ">
+
+                        <i
+                            data-lucide="shield-check"
+                            class="
+                                mt-0.5 h-4 w-4 shrink-0
+                                text-[#008080]
+                                dark:text-[#5EEAD4]
+                            "
+                            aria-hidden="true">
+                        </i>
+
+                        <span>
+                            Resetting your password changes your login credentials only. It does not change your Rincomm account or service status.
+                        </span>
 
                     </div>
 
@@ -471,7 +548,27 @@
                     </button>
 
 
-                    {{-- Login link --}}
+                    {{-- Restart recovery --}}
+                    <div class="text-center">
+
+                        <a
+                            href="{{ route('password.request') }}"
+                            class="
+                                text-sm font-medium
+                                text-[#008080]
+                                underline underline-offset-4
+                                transition
+                                hover:text-[#006666]
+                                dark:text-teal-400
+                                dark:hover:text-teal-300
+                            ">
+                            Start Password Recovery Again
+                        </a>
+
+                    </div>
+
+
+                    {{-- Login --}}
                     <div class="text-center">
 
                         <a
@@ -512,41 +609,64 @@
 
 
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const toggleButtons = document.querySelectorAll(
-                '[data-reset-password-toggle]'
-            );
+        document.addEventListener(
+            'DOMContentLoaded',
+            function() {
+                const toggleButtons =
+                    document.querySelectorAll(
+                        '[data-reset-password-toggle]'
+                    );
 
-            toggleButtons.forEach(function (button) {
-                button.addEventListener('click', function () {
-                    const targetId = button.getAttribute('data-target');
-                    const input = document.getElementById(targetId);
+                toggleButtons.forEach(
+                    function(button) {
+                        button.addEventListener(
+                            'click',
+                            function() {
+                                const targetId =
+                                    button.getAttribute(
+                                        'data-target'
+                                    );
 
-                    if (!input) {
-                        return;
-                    }
+                                const input =
+                                    document.getElementById(
+                                        targetId
+                                    );
 
-                    const showingPassword = input.type === 'text';
+                                if (!input) {
+                                    return;
+                                }
 
-                    input.type = showingPassword
-                        ? 'password'
-                        : 'text';
+                                const showingPassword =
+                                    input.type === 'text';
 
-                    const icon = button.querySelector('[data-lucide]');
+                                input.type =
+                                    showingPassword ?
+                                    'password' :
+                                    'text';
 
-                    if (icon) {
-                        icon.setAttribute(
-                            'data-lucide',
-                            showingPassword ? 'eye' : 'eye-off'
+                                const icon =
+                                    button.querySelector(
+                                        '[data-lucide]'
+                                    );
+
+                                if (icon) {
+                                    icon.setAttribute(
+                                        'data-lucide',
+                                        showingPassword ?
+                                        'eye' :
+                                        'eye-off'
+                                    );
+
+                                    if (window.lucide) {
+                                        window.lucide.createIcons();
+                                    }
+                                }
+                            }
                         );
-
-                        if (window.lucide) {
-                            window.lucide.createIcons();
-                        }
                     }
-                });
-            });
-        });
+                );
+            }
+        );
     </script>
 
 </body>
