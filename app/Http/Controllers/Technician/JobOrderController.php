@@ -30,7 +30,10 @@ class JobOrderController extends Controller
 
         $status = $request->string('status')->toString();
 
-        if ($status !== '' && ! in_array($status, $allowedStatuses, true)) {
+        if (
+            $status !== ''
+            && ! in_array($status, $allowedStatuses, true)
+        ) {
             abort(404);
         }
 
@@ -38,11 +41,21 @@ class JobOrderController extends Controller
             ->with([
                 'customer',
                 'serviceRequest.servicePlan',
+                'notes.user',
+                'proofs' => fn ($query) => $query
+                    ->latest(),
+                'proofs.uploader',
             ])
-            ->where('technician_id', $technician->id)
+            ->where(
+                'technician_id',
+                $technician->id
+            )
             ->when(
                 $status !== '',
-                fn($query) => $query->where('status', $status)
+                fn ($query) => $query->where(
+                    'status',
+                    $status
+                )
             )
             ->orderByRaw('scheduled_date IS NULL')
             ->orderBy('scheduled_date')
@@ -61,6 +74,9 @@ class JobOrderController extends Controller
 
     /**
      * Display one Job Order assigned to the authenticated technician.
+     *
+     * This route remains available as a secure fallback/direct link.
+     * The normal technician workflow uses the Job Orders workspace modal.
      */
     public function show(
         Request $request,
@@ -75,6 +91,8 @@ class JobOrderController extends Controller
             'customer',
             'serviceRequest.servicePlan',
             'notes.user',
+            'proofs' => fn ($query) => $query
+                ->latest(),
             'proofs.uploader',
         ]);
 
@@ -104,7 +122,8 @@ class JobOrderController extends Controller
                 ->firstOrFail();
 
             abort_unless(
-                $lockedJobOrder->technician_id === $technician->id,
+                $lockedJobOrder->technician_id
+                    === $technician->id,
                 404
             );
 
@@ -127,7 +146,7 @@ class JobOrderController extends Controller
         });
 
         return redirect()
-            ->route('technician.job-orders.show', $jobOrder)
+            ->route('technician.job-orders.index')
             ->with(
                 'success',
                 'Job Order started successfully.'
@@ -136,6 +155,9 @@ class JobOrderController extends Controller
 
     /**
      * Complete an in-progress Job Order.
+     *
+     * The completion business rules remain unchanged here.
+     * Module 7 Feature 4 will own the final completion-report refinement.
      */
     public function complete(
         Request $request,
@@ -150,10 +172,8 @@ class JobOrderController extends Controller
                 ],
             ],
             [
-                'completion_report.required' =>
-                'A completion report is required.',
-                'completion_report.max' =>
-                'The completion report cannot exceed 5000 characters.',
+                'completion_report.required' => 'A completion report is required.',
+                'completion_report.max' => 'The completion report cannot exceed 5000 characters.',
             ]
         );
 
@@ -172,28 +192,26 @@ class JobOrderController extends Controller
                 ->firstOrFail();
 
             abort_unless(
-                $lockedJobOrder->technician_id === $technician->id,
+                $lockedJobOrder->technician_id
+                    === $technician->id,
                 404
             );
 
             if ($lockedJobOrder->status !== 'in_progress') {
                 throw ValidationException::withMessages([
-                    'completion_report' =>
-                    'Only an in-progress Job Order can be completed.',
+                    'completion_report' => 'Only an in-progress Job Order can be completed.',
                 ]);
             }
 
             if ($lockedJobOrder->job_type === null) {
                 throw ValidationException::withMessages([
-                    'completion_report' =>
-                    'This Job Order does not have a job type yet. Please contact the administrator or staff.',
+                    'completion_report' => 'This Job Order does not have a job type yet. Please contact the administrator or staff.',
                 ]);
             }
 
             if (! $lockedJobOrder->proofs()->exists()) {
                 throw ValidationException::withMessages([
-                    'completion_report' =>
-                    'Upload at least one proof-of-work file before completing this Job Order.',
+                    'completion_report' => 'Upload at least one proof-of-work file before completing this Job Order.',
                 ]);
             }
 
@@ -207,7 +225,7 @@ class JobOrderController extends Controller
         });
 
         return redirect()
-            ->route('technician.job-orders.show', $jobOrder)
+            ->route('technician.job-orders.index')
             ->with(
                 'success',
                 'Job Order completed successfully.'
@@ -225,7 +243,8 @@ class JobOrderController extends Controller
 
         abort_unless(
             $technician !== null
-                && $jobOrder->technician_id === $technician->id,
+                && $jobOrder->technician_id
+                    === $technician->id,
             404
         );
     }

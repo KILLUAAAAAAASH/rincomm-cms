@@ -5,16 +5,19 @@ namespace App\Http\Controllers\Technician;
 use App\Http\Controllers\Controller;
 use App\Models\JobOrder;
 use App\Models\JobOrderProof;
+use Illuminate\Filesystem\FilesystemAdapter;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class JobOrderProofController extends Controller
 {
     /**
-     * Store a private proof-of-work file for an assigned Job Order.
+     * Store a private proof-of-work file for an in-progress Job Order.
      */
     public function store(
         Request $request,
@@ -23,12 +26,6 @@ class JobOrderProofController extends Controller
         $this->ensureJobOrderBelongsToTechnician(
             $request,
             $jobOrder
-        );
-
-        abort_unless(
-            $jobOrder->status === 'in_progress',
-            422,
-            'Proof of work can only be uploaded while the job is in progress.'
         );
 
         $validated = $request->validate(
@@ -54,34 +51,89 @@ class JobOrderProofController extends Controller
             ]
         );
 
+        $technician = $request->user()->technician;
+
+        abort_unless($technician !== null, 404);
+
         $file = $validated['proof'];
 
-        $filePath = $file->store(
-            "job-order-proofs/{$jobOrder->id}",
-            'local'
-        );
+        $notes = isset($validated['notes'])
+            && trim($validated['notes']) !== ''
+                ? trim($validated['notes'])
+                : null;
+
+        $filePath = null;
 
         try {
-            $jobOrder->proofs()->create([
-                'uploaded_by' => $request->user()->id,
-                'original_name' => $file->getClientOriginalName(),
-                'file_path' => $filePath,
-                'mime_type' => $file->getMimeType(),
-                'file_size' => $file->getSize(),
-                'notes' => isset($validated['notes'])
-                    ? trim($validated['notes'])
-                    : null,
-            ]);
+            DB::transaction(function () use (
+                $request,
+                $jobOrder,
+                $technician,
+                $file,
+                $notes,
+                &$filePath
+            ): void {
+                $lockedJobOrder = JobOrder::query()
+                    ->whereKey($jobOrder->id)
+                    ->lockForUpdate()
+                    ->firstOrFail();
+
+                abort_unless(
+                    $lockedJobOrder->technician_id === $technician->id,
+                    404
+                );
+
+                if ($lockedJobOrder->status !== 'in_progress') {
+                    throw ValidationException::withMessages([
+                        'proof' => 'Proof of work can only be uploaded while the job is in progress.',
+                    ]);
+                }
+
+                $storedPath = $file->store(
+                    "job-order-proofs/{$lockedJobOrder->id}",
+                    'local'
+                );
+
+                if (
+                    ! is_string($storedPath)
+                    || $storedPath === ''
+                ) {
+                    throw ValidationException::withMessages([
+                        'proof' => 'The proof-of-work file could not be stored. Please try again.',
+                    ]);
+                }
+
+                $filePath = $storedPath;
+
+                $lockedJobOrder->proofs()->create([
+                    'uploaded_by' => $request->user()->id,
+                    'original_name' => $file->getClientOriginalName(),
+                    'file_path' => $storedPath,
+                    'mime_type' => $file->getMimeType(),
+                    'file_size' => $file->getSize(),
+                    'notes' => $notes,
+                ]);
+            });
         } catch (Throwable $exception) {
-            Storage::disk('local')->delete($filePath);
+            if (
+                is_string($filePath)
+                && $filePath !== ''
+            ) {
+                $this->localDisk()->delete($filePath);
+            }
 
             throw $exception;
         }
 
-        return back()->with(
-            'success',
-            'Proof of work uploaded successfully.'
-        );
+        return back()
+            ->with(
+                'success',
+                'Proof of work uploaded successfully.'
+            )
+            ->with(
+                'proof_job_order_id',
+                (string) $jobOrder->id
+            );
     }
 
     /**
@@ -102,21 +154,19 @@ class JobOrderProofController extends Controller
             $proof
         );
 
+        $disk = $this->localDisk();
+
         abort_unless(
-            Storage::disk('local')->exists($proof->file_path),
+            $disk->exists($proof->file_path),
             404
         );
 
-        return Storage::disk('local')->response(
+        return $disk->response(
             $proof->file_path,
             $proof->original_name,
             [
                 'Content-Type' => $proof->mime_type
                     ?: 'application/octet-stream',
-                'Content-Disposition' =>
-                'inline; filename="' .
-                    addslashes($proof->original_name) .
-                    '"',
             ]
         );
     }
@@ -139,51 +189,79 @@ class JobOrderProofController extends Controller
             $proof
         );
 
+        $disk = $this->localDisk();
+
         abort_unless(
-            Storage::disk('local')->exists($proof->file_path),
+            $disk->exists($proof->file_path),
             404
         );
 
-        return Storage::disk('local')->download(
+        return $disk->download(
             $proof->file_path,
             $proof->original_name
         );
     }
 
     /**
-     * Delete a proof-of-work file while the Job Order is still in progress.
+     * Delete a proof-of-work file while the Job Order is in progress.
      */
     public function destroy(
         Request $request,
         JobOrder $jobOrder,
         JobOrderProof $proof
     ): RedirectResponse {
-        $this->ensureJobOrderBelongsToTechnician(
-            $request,
-            $jobOrder
-        );
+        $technician = $request->user()->technician;
 
-        $this->ensureProofBelongsToJobOrder(
+        abort_unless($technician !== null, 404);
+
+        $filePath = DB::transaction(function () use (
             $jobOrder,
-            $proof
-        );
+            $proof,
+            $technician
+        ): string {
+            $lockedJobOrder = JobOrder::query()
+                ->whereKey($jobOrder->id)
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        abort_unless(
-            $jobOrder->status === 'in_progress',
-            422,
-            'Proof of work cannot be deleted after the job is no longer in progress.'
-        );
+            abort_unless(
+                $lockedJobOrder->technician_id === $technician->id,
+                404
+            );
 
-        $filePath = $proof->file_path;
+            if ($lockedJobOrder->status !== 'in_progress') {
+                throw ValidationException::withMessages([
+                    'proof' => 'Proof of work can only be deleted while the job is in progress.',
+                ]);
+            }
 
-        $proof->delete();
+            $lockedProof = JobOrderProof::query()
+                ->whereKey($proof->id)
+                ->where(
+                    'job_order_id',
+                    $lockedJobOrder->id
+                )
+                ->lockForUpdate()
+                ->firstOrFail();
 
-        Storage::disk('local')->delete($filePath);
+            $storedPath = $lockedProof->file_path;
 
-        return back()->with(
-            'success',
-            'Proof of work deleted successfully.'
-        );
+            $lockedProof->delete();
+
+            return $storedPath;
+        });
+
+        $this->localDisk()->delete($filePath);
+
+        return back()
+            ->with(
+                'success',
+                'Proof of work deleted successfully.'
+            )
+            ->with(
+                'proof_job_order_id',
+                (string) $jobOrder->id
+            );
     }
 
     /**
@@ -203,7 +281,7 @@ class JobOrderProofController extends Controller
     }
 
     /**
-     * Prevent access to a proof that belongs to another Job Order.
+     * Prevent access to a proof belonging to another Job Order.
      */
     private function ensureProofBelongsToJobOrder(
         JobOrder $jobOrder,
@@ -213,5 +291,16 @@ class JobOrderProofController extends Controller
             $proof->job_order_id === $jobOrder->id,
             404
         );
+    }
+
+    /**
+     * Return the private local filesystem with its concrete adapter type.
+     */
+    private function localDisk(): FilesystemAdapter
+    {
+        /** @var FilesystemAdapter $disk */
+        $disk = Storage::disk('local');
+
+        return $disk;
     }
 }
