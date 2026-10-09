@@ -62,8 +62,30 @@ dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-300',
 ];
 
 $customer = $invoice->customer;
-$subscription = $invoice->subscription;
-$servicePlan = $subscription?->servicePlan;
+
+// Older invoices may store the billed plan only in a monthly-service item.
+// Do not use the subscriber's current service plan for historical invoices.
+$billedPlanName = trim((string) $invoice->billed_service_plan_name);
+
+if ($billedPlanName === '') {
+    $legacyPlanNames = $invoice->items
+        ->pluck('description')
+        ->filter(fn ($description) => is_string($description)
+            && str_starts_with($description, 'Monthly internet service - '))
+        ->map(fn ($description) => trim(substr(
+            $description,
+            strlen('Monthly internet service - ')
+        )))
+        ->filter(fn ($name) => $name !== '')
+        ->unique()
+        ->values();
+
+    $billedPlanName = $legacyPlanNames->count() === 1
+        ? $legacyPlanNames->first()
+        : 'Not recorded';
+}
+
+$billedSpeedMbps = $invoice->billed_speed_mbps;
 
 $subscriberName = trim(
 collect([
@@ -567,7 +589,7 @@ $paymentToken
                                 dark:text-white
                                 print:text-black
                             ">
-                            {{ $servicePlan?->name ?? 'Unavailable' }}
+                            {{ $billedPlanName }}
                         </dd>
 
                     </div>
@@ -591,14 +613,14 @@ $paymentToken
                                 dark:text-white
                                 print:text-black
                             ">
-                            @if ($servicePlan)
+                            @if ($billedSpeedMbps !== null)
                             {{ number_format(
-                                    (float) $servicePlan->speed_mbps,
+                                    (float) $billedSpeedMbps,
                                     0
                                 ) }}
                             Mbps
                             @else
-                            Unavailable
+                            Not recorded
                             @endif
                         </dd>
 
@@ -1104,6 +1126,404 @@ $paymentToken
             </div>
 
         </div>
+
+
+        {{-- Gateway payments --}}
+        <section
+            class="
+                border-t border-gray-200
+                dark:border-neutral-800
+                print:border-gray-300
+            ">
+
+            <div
+                class="
+                    flex flex-col gap-2
+                    border-b border-gray-200
+                    bg-gray-50
+                    px-4 py-2.5
+                    dark:border-neutral-800
+                    dark:bg-neutral-950
+                    sm:flex-row
+                    sm:items-start
+                    sm:justify-between
+                    sm:px-5
+                    print:border-gray-300
+                    print:bg-white
+                ">
+
+                <div>
+
+                    <h2
+                        class="
+                            text-sm font-semibold
+                            text-gray-900
+                            dark:text-white
+                            print:text-black
+                        ">
+                        Gateway Payments
+                    </h2>
+
+                    <p
+                        class="
+                            mt-0.5
+                            text-[11px] leading-4
+                            text-gray-500
+                            dark:text-gray-400
+                            print:text-gray-600
+                        ">
+                        Read-only GCash transaction activity recorded for this invoice.
+                    </p>
+
+                </div>
+
+
+                <span
+                    class="
+                        inline-flex w-fit
+                        items-center gap-1.5
+                        border border-gray-200
+                        bg-white
+                        px-2 py-0.5
+                        text-[10px] font-semibold
+                        uppercase tracking-[0.08em]
+                        text-gray-500
+                        dark:border-neutral-700
+                        dark:bg-neutral-900
+                        dark:text-gray-400
+                        print:border-gray-400
+                        print:text-black
+                    ">
+
+                    <i
+                        data-lucide="lock-keyhole"
+                        class="h-3 w-3 print:hidden"
+                        aria-hidden="true">
+                    </i>
+
+                    Read only
+
+                </span>
+
+            </div>
+
+
+            @if ($gatewayPayments->isEmpty())
+
+            <div
+                class="
+                    px-4 py-4
+                    text-sm text-gray-500
+                    dark:text-gray-400
+                    sm:px-5
+                    print:text-gray-600
+                ">
+                No GCash payment attempts have been recorded for this invoice.
+            </div>
+
+            @else
+
+            <div class="divide-y divide-gray-200 dark:divide-neutral-800 print:divide-gray-300">
+
+                @foreach ($gatewayPayments as $gatewayPayment)
+
+                @php
+                $gatewayStatusClasses = match ($gatewayPayment->payment_status) {
+                    'completed' =>
+                        'border-green-200 bg-green-50 text-green-700
+                        dark:border-green-900 dark:bg-green-950/30 dark:text-green-300',
+
+                    'failed' =>
+                        'border-red-200 bg-red-50 text-red-700
+                        dark:border-red-900 dark:bg-red-950/30 dark:text-red-300',
+
+                    'cancelled' =>
+                        'border-gray-200 bg-gray-50 text-gray-600
+                        dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-300',
+
+                    default =>
+                        'border-amber-200 bg-amber-50 text-amber-700
+                        dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-300',
+                };
+
+                $gatewayConfirmation = match ($gatewayPayment->payment_status) {
+                    'completed' =>
+                        $gatewayPayment->paid_at?->format('M d, Y h:i A')
+                        ?? 'Confirmed',
+
+                    'failed' =>
+                        'Payment failed',
+
+                    'cancelled' =>
+                        'Payment cancelled',
+
+                    default =>
+                        'Awaiting provider confirmation',
+                };
+                @endphp
+
+                <div class="px-4 py-3 sm:px-5">
+
+                    <div
+                        class="
+                            grid gap-x-5 gap-y-3
+                            sm:grid-cols-2
+                            lg:grid-cols-4
+                        ">
+
+                        <div>
+
+                            <p
+                                class="
+                                    text-[10px] font-semibold
+                                    uppercase tracking-[0.08em]
+                                    text-gray-500
+                                    dark:text-gray-400
+                                    print:text-gray-600
+                                ">
+                                Method
+                            </p>
+
+                            <p
+                                class="
+                                    mt-0.5
+                                    text-sm font-semibold
+                                    text-gray-900
+                                    dark:text-white
+                                    print:text-black
+                                ">
+                                GCash
+                            </p>
+
+                        </div>
+
+
+                        <div>
+
+                            <p
+                                class="
+                                    text-[10px] font-semibold
+                                    uppercase tracking-[0.08em]
+                                    text-gray-500
+                                    dark:text-gray-400
+                                    print:text-gray-600
+                                ">
+                                Status
+                            </p>
+
+                            <span
+                                class="
+                                    mt-1 inline-flex
+                                    border px-2 py-0.5
+                                    text-[11px] font-semibold
+                                    {{ $gatewayStatusClasses }}
+                                    print:border-gray-400
+                                    print:bg-white
+                                    print:text-black
+                                ">
+                                {{ str($gatewayPayment->payment_status)->title() }}
+                            </span>
+
+                        </div>
+
+
+                        <div>
+
+                            <p
+                                class="
+                                    text-[10px] font-semibold
+                                    uppercase tracking-[0.08em]
+                                    text-gray-500
+                                    dark:text-gray-400
+                                    print:text-gray-600
+                                ">
+                                Amount
+                            </p>
+
+                            <p
+                                class="
+                                    mt-0.5
+                                    text-sm font-semibold
+                                    text-gray-900
+                                    dark:text-white
+                                    print:text-black
+                                ">
+                                &#8369;{{ number_format(
+                                    (float) $gatewayPayment->amount,
+                                    2
+                                ) }}
+                            </p>
+
+                        </div>
+
+
+                        <div>
+
+                            <p
+                                class="
+                                    text-[10px] font-semibold
+                                    uppercase tracking-[0.08em]
+                                    text-gray-500
+                                    dark:text-gray-400
+                                    print:text-gray-600
+                                ">
+                                Started
+                            </p>
+
+                            <p
+                                class="
+                                    mt-0.5
+                                    text-sm font-medium
+                                    text-gray-900
+                                    dark:text-white
+                                    print:text-black
+                                ">
+                                {{ $gatewayPayment
+                                    ->created_at
+                                    ?->format('M d, Y h:i A')
+                                    ?? 'Unavailable' }}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+
+                    <div
+                        class="
+                            mt-3
+                            grid gap-x-5 gap-y-3
+                            border-t border-gray-100
+                            pt-3
+                            dark:border-neutral-800
+                            sm:grid-cols-2
+                            lg:grid-cols-4
+                            print:border-gray-300
+                        ">
+
+                        <div class="min-w-0">
+
+                            <p
+                                class="
+                                    text-[10px] font-semibold
+                                    uppercase tracking-[0.08em]
+                                    text-gray-500
+                                    dark:text-gray-400
+                                    print:text-gray-600
+                                ">
+                                Payment Reference
+                            </p>
+
+                            <p
+                                class="
+                                    mt-0.5
+                                    break-all
+                                    text-[11px] font-medium
+                                    text-gray-900
+                                    dark:text-white
+                                    print:text-black
+                                ">
+                                {{ $gatewayPayment->payment_reference }}
+                            </p>
+
+                        </div>
+
+
+                        <div class="min-w-0">
+
+                            <p
+                                class="
+                                    text-[10px] font-semibold
+                                    uppercase tracking-[0.08em]
+                                    text-gray-500
+                                    dark:text-gray-400
+                                    print:text-gray-600
+                                ">
+                                Gateway Intent
+                            </p>
+
+                            <p
+                                class="
+                                    mt-0.5
+                                    break-all
+                                    text-[11px] font-medium
+                                    text-gray-900
+                                    dark:text-white
+                                    print:text-black
+                                ">
+                                {{ $gatewayPayment->gateway_reference
+                                    ?: 'Not assigned' }}
+                            </p>
+
+                        </div>
+
+
+                        <div class="min-w-0">
+
+                            <p
+                                class="
+                                    text-[10px] font-semibold
+                                    uppercase tracking-[0.08em]
+                                    text-gray-500
+                                    dark:text-gray-400
+                                    print:text-gray-600
+                                ">
+                                Provider Payment
+                            </p>
+
+                            <p
+                                class="
+                                    mt-0.5
+                                    break-all
+                                    text-[11px] font-medium
+                                    text-gray-900
+                                    dark:text-white
+                                    print:text-black
+                                ">
+                                {{ $gatewayPayment->gateway_payment_reference
+                                    ?: 'Not available' }}
+                            </p>
+
+                        </div>
+
+
+                        <div class="min-w-0">
+
+                            <p
+                                class="
+                                    text-[10px] font-semibold
+                                    uppercase tracking-[0.08em]
+                                    text-gray-500
+                                    dark:text-gray-400
+                                    print:text-gray-600
+                                ">
+                                Confirmation
+                            </p>
+
+                            <p
+                                class="
+                                    mt-0.5
+                                    text-[11px] font-medium
+                                    text-gray-700
+                                    dark:text-gray-300
+                                    print:text-black
+                                ">
+                                {{ $gatewayConfirmation }}
+                            </p>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+                @endforeach
+
+            </div>
+
+            @endif
+
+        </section>
 
 
         {{-- Formal disconnection notice --}}

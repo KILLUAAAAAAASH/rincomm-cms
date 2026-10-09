@@ -21,7 +21,8 @@ class InvoiceGenerationService
 
     public function __construct(
         private readonly BillingCycleService $billingCycleService,
-        private readonly ActivityLogger $activityLogger
+        private readonly ActivityLogger $activityLogger,
+        private readonly MoneyService $moneyService
     ) {}
 
     /**
@@ -122,13 +123,21 @@ class InvoiceGenerationService
              *
              * The database also protects this with the unique constraint:
              * subscription_id + billing_date.
+             *
+             * Existing invoices must retain their original financial
+             * values and historical snapshot fields.
+             *
+             * whereDate is intentional: Eloquent date casts can store
+             * a midnight time component in SQLite, while the cycle
+             * service returns a date-only string. Compare calendar dates
+             * consistently across supported database connections.
              */
             $existingInvoice = Invoice::query()
                 ->where(
                     'subscription_id',
                     $lockedSubscription->id
                 )
-                ->where('billing_date', $billingDate)
+                ->whereDate('billing_date', $billingDate)
                 ->first();
 
             if ($existingInvoice) {
@@ -138,11 +147,20 @@ class InvoiceGenerationService
                 ];
             }
 
-            $baseMonthlyFeeCents = $this->decimalToCents(
-                $lockedSubscription->servicePlan->monthly_fee
+            /*
+             * Capture the plan used for this invoice before creating it.
+             * This snapshot must not change if the subscription plan
+             * is upgraded, downgraded, renamed, or removed later.
+             *
+             * Existing billing-cycle pricing behavior is preserved.
+             */
+            $billedServicePlan = $lockedSubscription->servicePlan;
+
+            $baseMonthlyFeeCents = $this->moneyService->toCents(
+                $billedServicePlan->monthly_fee
             );
 
-            $discountCents = $this->decimalToCents(
+            $discountCents = $this->moneyService->toCents(
                 $lockedSubscription->discount_amount
             );
 
@@ -165,36 +183,41 @@ class InvoiceGenerationService
             $invoice = Invoice::create([
                 'customer_id' => $lockedSubscriber->id,
                 'subscription_id' => $lockedSubscription->id,
+
+                'billed_service_plan_id' => $billedServicePlan->id,
+                'billed_service_plan_name' => $billedServicePlan->name,
+                'billed_speed_mbps' => $billedServicePlan->speed_mbps,
+
                 'invoice_number' => 'INV-' . Str::ulid(),
                 'billing_date' => $billingDate,
                 'due_date' => $dueDate,
-                'subtotal' => $this->centsToDecimal(
+                'subtotal' => $this->moneyService->toDecimal(
                     $subtotalCents
                 ),
-                'discount_amount' => $this->centsToDecimal(
+                'discount_amount' => $this->moneyService->toDecimal(
                     $discountCents
                 ),
-                'adjustment_amount' => $this->centsToDecimal(
+                'adjustment_amount' => $this->moneyService->toDecimal(
                     $adjustmentCents
                 ),
-                'total_amount' => $this->centsToDecimal(
+                'total_amount' => $this->moneyService->toDecimal(
                     $totalCents
                 ),
                 'status' => 'issued',
                 'disconnection_notice_date' =>
-                $disconnectionNoticeDate,
+                    $disconnectionNoticeDate,
                 'remarks' => null,
             ]);
 
             $invoice->items()->create([
                 'description' =>
-                'Monthly internet service - '
-                    . $lockedSubscription->servicePlan->name,
+                    'Monthly internet service - '
+                    . $billedServicePlan->name,
                 'quantity' => '1.00',
-                'unit_price' => $this->centsToDecimal(
+                'unit_price' => $this->moneyService->toDecimal(
                     $baseMonthlyFeeCents
                 ),
-                'amount' => $this->centsToDecimal(
+                'amount' => $this->moneyService->toDecimal(
                     $baseMonthlyFeeCents
                 ),
             ]);
@@ -210,37 +233,42 @@ class InvoiceGenerationService
                     $billingDate
                 ),
                 metadata: [
-                    'customer_id' => $lockedSubscriber->id,
+                    'customer_id' =>
+                        $lockedSubscriber->id,
                     'customer_code' =>
-                    $lockedSubscriber->customer_code,
+                        $lockedSubscriber->customer_code,
                     'subscription_id' =>
-                    $lockedSubscription->id,
+                        $lockedSubscription->id,
                     'service_plan_id' =>
-                    $lockedSubscription->service_plan_id,
-                    'invoice_id' => $invoice->id,
+                        $lockedSubscription->service_plan_id,
+                    'invoice_id' =>
+                        $invoice->id,
                     'invoice_number' =>
-                    $invoice->invoice_number,
-                    'cycle_number' => $cycleNumber,
-                    'billing_date' => $billingDate,
-                    'due_date' => $dueDate,
+                        $invoice->invoice_number,
+                    'cycle_number' =>
+                        $cycleNumber,
+                    'billing_date' =>
+                        $billingDate,
+                    'due_date' =>
+                        $dueDate,
                     'disconnection_notice_date' =>
-                    $disconnectionNoticeDate,
+                        $disconnectionNoticeDate,
                     'subtotal' =>
-                    $this->centsToDecimal(
-                        $subtotalCents
-                    ),
+                        $this->moneyService->toDecimal(
+                            $subtotalCents
+                        ),
                     'discount_amount' =>
-                    $this->centsToDecimal(
-                        $discountCents
-                    ),
+                        $this->moneyService->toDecimal(
+                            $discountCents
+                        ),
                     'adjustment_amount' =>
-                    $this->centsToDecimal(
-                        $adjustmentCents
-                    ),
+                        $this->moneyService->toDecimal(
+                            $adjustmentCents
+                        ),
                     'total_amount' =>
-                    $this->centsToDecimal(
-                        $totalCents
-                    ),
+                        $this->moneyService->toDecimal(
+                            $totalCents
+                        ),
                 ],
                 request: $request
             );
@@ -250,52 +278,5 @@ class InvoiceGenerationService
                 'created' => true,
             ];
         });
-    }
-
-    private function decimalToCents(
-        string|int|float|null $amount
-    ): int {
-        $value = trim((string) ($amount ?? '0'));
-
-        if (
-            ! preg_match(
-                '/^\d+(?:\.\d{1,2})?$/',
-                $value
-            )
-        ) {
-            throw new InvalidArgumentException(
-                'Invalid monetary amount.'
-            );
-        }
-
-        [$whole, $fraction] = array_pad(
-            explode('.', $value, 2),
-            2,
-            ''
-        );
-
-        $fraction = str_pad(
-            $fraction,
-            2,
-            '0'
-        );
-
-        return ((int) $whole * 100)
-            + (int) substr($fraction, 0, 2);
-    }
-
-    private function centsToDecimal(int $cents): string
-    {
-        if ($cents < 0) {
-            throw new InvalidArgumentException(
-                'Monetary amount cannot be negative.'
-            );
-        }
-
-        return sprintf(
-            '%d.%02d',
-            intdiv($cents, 100),
-            $cents % 100
-        );
     }
 }

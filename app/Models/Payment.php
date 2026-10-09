@@ -20,6 +20,7 @@ class Payment extends Model
         'payment_status',
         'paid_at',
         'gateway_reference',
+        'gateway_payment_reference',
         'remarks',
     ];
 

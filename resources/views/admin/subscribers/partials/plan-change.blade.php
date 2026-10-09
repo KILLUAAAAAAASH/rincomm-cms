@@ -8,45 +8,45 @@ $planChangeReviewAction = old('plan_change_review_action');
 $currentPlan = $activeSubscription?->servicePlan;
 
 $previousPlanChangeRequests = $subscriber->planChangeRequests
-    ->reject(fn ($request) => $request->status === 'pending');
+->reject(fn ($request) => $request->status === 'pending');
 
 $selectablePlans = $currentPlan
-    ? $availablePlans->filter(
-        fn ($plan) =>
-            (float) $plan->speed_mbps !==
-            (float) $currentPlan->speed_mbps
-    )->values()
-    : collect();
+? $availablePlans->filter(
+fn ($plan) =>
+(float) $plan->speed_mbps !==
+(float) $currentPlan->speed_mbps
+)->values()
+: collect();
 
 $canRequestPlanChange =
-    $subscriber->status === 'active' &&
-    $activeSubscription &&
-    $currentPlan &&
-    ! $pendingPlanChangeRequest &&
-    $selectablePlans->isNotEmpty();
+$subscriber->status === 'active' &&
+$activeSubscription &&
+$currentPlan &&
+! $pendingPlanChangeRequest &&
+$selectablePlans->isNotEmpty();
 
 $planChangeUnavailableReason = match (true) {
-    $subscriber->status !== 'active' =>
-        'Requires an active subscriber.',
+$subscriber->status !== 'active' =>
+'Requires an active subscriber.',
 
-    ! $activeSubscription || ! $currentPlan =>
-        'Requires an active subscription.',
+! $activeSubscription || ! $currentPlan =>
+'Requires an active subscription.',
 
-    $pendingPlanChangeRequest !== null =>
-        null,
+$pendingPlanChangeRequest !== null =>
+null,
 
-    $selectablePlans->isEmpty() =>
-        'No alternative upgrade or downgrade plan is available.',
+$selectablePlans->isEmpty() =>
+'No alternative upgrade or downgrade plan is available.',
 
-    default => null,
+default => null,
 };
 
 $openPlanChangeWorkspace =
-    ! $planChangeReviewErrors &&
-    (
-        $planChangeErrors ||
-        request('feature') === 'plan-change'
-    );
+! $planChangeReviewErrors &&
+(
+$planChangeErrors ||
+request('feature') === 'plan-change'
+);
 @endphp
 
 
@@ -136,9 +136,9 @@ $openPlanChangeWorkspace =
 
 
             @if (
-                ! $canRequestPlanChange &&
-                ! $pendingPlanChangeRequest &&
-                $planChangeUnavailableReason
+            ! $canRequestPlanChange &&
+            ! $pendingPlanChangeRequest &&
+            $planChangeUnavailableReason
             )
 
             <p
@@ -283,7 +283,7 @@ $openPlanChangeWorkspace =
                             text-gray-900
                             dark:text-white
                         ">
-                        Plan Change
+                        Change Internet Plan
                     </h2>
 
                     <p
@@ -417,67 +417,43 @@ $openPlanChangeWorkspace =
 
         <div class="p-4 sm:p-5">
 
-            {{-- Current plan --}}
+            {{-- Current plan: read-only context for the request --}}
             @if ($currentPlan && $activeSubscription)
 
-            <div
-                class="
-                    rounded-[2px]
-                    border border-gray-200
-                    bg-gray-50
-                    px-3.5 py-3
-                    dark:border-neutral-800
-                    dark:bg-neutral-950
-                ">
-
-                <p
-                    class="
-                        text-[11px] font-medium
-                        uppercase tracking-wide
-                        text-gray-400
-                    ">
-                    Current Plan
-                </p>
-
-
-                <div
-                    class="
-                        mt-1 flex flex-wrap
-                        items-end
-                        justify-between gap-2
-                    ">
-
-                    <p
-                        class="
-                            text-sm font-semibold
-                            text-gray-900
-                            dark:text-white
-                        ">
-                        {{ $currentPlan->name }}
-                    </p>
-
-
-                    <p
-                        class="
-                            text-xs
-                            text-gray-500
-                            dark:text-gray-400
-                        ">
-                        {{ number_format(
-                            (float) $currentPlan->speed_mbps,
-                            0
-                        ) }}
-                        Mbps
-                        &middot;
-                        &#8369;{{ number_format(
-                            (float) $currentPlan->monthly_fee,
-                            2
-                        ) }}/mo
-                    </p>
-
+            <section class="border border-gray-200 bg-gray-50 px-4 py-3 dark:border-neutral-800 dark:bg-neutral-950">
+                <div class="flex flex-wrap items-start justify-between gap-3">
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+                            Current active plan
+                        </p>
+                        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                            {{ $currentPlan->name }}
+                        </p>
+                    </div>
+                    <span class="text-xs font-medium text-gray-600 dark:text-gray-300">
+                        {{ number_format((float) $currentPlan->speed_mbps, 0) }} Mbps
+                    </span>
                 </div>
-
-            </div>
+                <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 border-t border-gray-200 pt-3 text-xs dark:border-neutral-800">
+                    <div>
+                        <dt class="text-gray-500 dark:text-gray-400">Plan monthly fee</dt>
+                        <dd class="mt-0.5 font-semibold text-gray-900 dark:text-white">
+                            &#8369;{{ number_format((float) $currentPlan->monthly_fee, 2) }}
+                        </dd>
+                    </div>
+                    <div>
+                        <dt class="text-gray-500 dark:text-gray-400">Contract duration</dt>
+                        <dd class="mt-0.5 font-semibold text-gray-900 dark:text-white">
+                            {{ $activeSubscription->lock_in_months }} months
+                        </dd>
+                    </div>
+                </dl>
+                @if ((float) $activeSubscription->discount_amount > 0)
+                <p class="mt-3 border-t border-gray-200 pt-2 text-xs text-gray-600 dark:border-neutral-800 dark:text-gray-300">
+                    Existing subscription discount: <strong>&#8369;{{ number_format((float) $activeSubscription->discount_amount, 2) }}</strong> — this discount will be cleared if the request is approved.
+                </p>
+                @endif
+            </section>
 
             @endif
 
@@ -527,6 +503,14 @@ $openPlanChangeWorkspace =
 
                 @csrf
 
+                <div class="mb-4">
+                    <p class="text-xs font-semibold uppercase tracking-wide text-[#008080] dark:text-[#5EEAD4]">
+                        Step 1 of 2 · Choose a plan
+                    </p>
+                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
+                        Select an alternative package. This creates a pending request; the subscriber's active plan will not change yet.
+                    </p>
+                </div>
 
                 <label
                     for="requested_service_plan_id"
@@ -535,7 +519,7 @@ $openPlanChangeWorkspace =
                         text-gray-800
                         dark:text-gray-200
                     ">
-                    Requested Plan
+                    New internet plan
                 </label>
 
 
@@ -570,7 +554,7 @@ $openPlanChangeWorkspace =
                     ">
 
                     <option value="">
-                        Select plan
+                        Choose a new package
                     </option>
 
 
@@ -578,40 +562,61 @@ $openPlanChangeWorkspace =
 
                     @php
                     $planDirection =
-                        (float) $plan->speed_mbps >
-                        (float) $currentPlan->speed_mbps
-                            ? 'Upgrade'
-                            : 'Downgrade';
+                    (float) $plan->speed_mbps >
+                    (float) $currentPlan->speed_mbps
+                    ? 'Upgrade'
+                    : 'Downgrade';
                     @endphp
 
 
                     <option
-    value="{{ $plan->id }}"
-    @selected(
-        (string) old(
-            'requested_service_plan_id'
-        ) ===
-        (string) $plan->id
-    )>
-    {{ $plan->name }}
-    -
-    {{ number_format(
-        (float) $plan->speed_mbps,
-        0
-    ) }} Mbps
-    -
-    &#8369;{{ number_format(
-        (float) $plan->monthly_fee,
-        2
-    ) }}/month
-    -
-    {{ $planDirection }}
-</option>
+                        value="{{ $plan->id }}"
+                        data-plan-name="{{ $plan->name }}"
+                        data-plan-speed="{{ number_format((float) $plan->speed_mbps, 0) }}"
+                        data-plan-fee="{{ number_format((float) $plan->monthly_fee, 2) }}"
+                        data-plan-duration="{{ (int) $plan->duration_months }}"
+                        data-plan-direction="{{ $planDirection }}"
+                        @selected(
+                        (string) old('requested_service_plan_id')===(string) $plan->id
+                        )>
+                        {{ $plan->name }} · {{ number_format((float) $plan->speed_mbps, 0) }} Mbps
+                        · &#8369;{{ number_format((float) $plan->monthly_fee, 2) }}/month
+                        ({{ $planDirection }})
+                    </option>
 
                     @endforeach
 
                 </select>
 
+                <section
+                    id="plan-change-selected-preview"
+                    class="mt-4 hidden border border-gray-200 p-4 dark:border-neutral-800"
+                    aria-live="polite">
+                    <div class="flex flex-wrap items-center justify-between gap-2">
+                        <h3 class="text-sm font-semibold text-gray-900 dark:text-white">Requested plan details</h3>
+                        <span id="plan-change-preview-direction" class="border border-gray-200 bg-gray-50 px-2 py-1 text-xs font-medium text-gray-700 dark:border-neutral-700 dark:bg-neutral-800 dark:text-gray-200"></span>
+                    </div>
+                    <p id="plan-change-preview-name" class="mt-2 text-sm font-medium text-gray-800 dark:text-gray-200"></p>
+                    <dl class="mt-3 grid grid-cols-2 gap-x-4 gap-y-3 text-xs sm:grid-cols-3">
+                        <div>
+                            <dt class="text-gray-500 dark:text-gray-400">Speed</dt>
+                            <dd id="plan-change-preview-speed" class="mt-1 font-semibold text-gray-900 dark:text-white"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500 dark:text-gray-400">Monthly fee</dt>
+                            <dd id="plan-change-preview-fee" class="mt-1 font-semibold text-gray-900 dark:text-white"></dd>
+                        </div>
+                        <div>
+                            <dt class="text-gray-500 dark:text-gray-400">Plan duration</dt>
+                            <dd id="plan-change-preview-duration" class="mt-1 font-semibold text-gray-900 dark:text-white"></dd>
+                        </div>
+                    </dl>
+                </section>
+
+                <div class="mt-4 border-t border-gray-100 pt-3 text-xs leading-5 text-gray-600 dark:border-neutral-800 dark:text-gray-300">
+                    <p class="font-semibold text-gray-800 dark:text-gray-200">What happens next?</p>
+                    <p class="mt-1">The request will be marked Pending. The existing subscription remains unchanged until an administrator approves it. On approval, the new plan is applied immediately, any existing subscription discount is cleared, and the contract end date is recalculated from the original start date using the new plan duration.</p>
+                </div>
 
                 @error('requested_service_plan_id')
 
@@ -655,7 +660,7 @@ $openPlanChangeWorkspace =
 
                     <button
                         type="submit"
-                        data-loading-text="Recording..."
+                        data-loading-text="Submitting..."
                         class="
                             inline-flex min-h-10
                             items-center justify-center
@@ -674,7 +679,7 @@ $openPlanChangeWorkspace =
                             aria-hidden="true">
                         </i>
 
-                        Submit
+                        Submit Plan Change Request
 
                     </button>
 
@@ -701,7 +706,7 @@ $openPlanChangeWorkspace =
                                 text-xs font-medium
                                 text-gray-400
                             ">
-                            Current Request
+                            Step 2 of 2 · Review pending request
                         </p>
 
                         <p
@@ -760,7 +765,7 @@ $openPlanChangeWorkspace =
                     <div>
 
                         <p class="text-xs text-gray-400">
-                            From
+                            Current plan
                         </p>
 
                         <p
@@ -781,7 +786,7 @@ $openPlanChangeWorkspace =
                     <div>
 
                         <p class="text-xs text-gray-400">
-                            To
+                            Requested plan
                         </p>
 
                         <p
@@ -800,14 +805,14 @@ $openPlanChangeWorkspace =
 
 
                     @if (
-                        $pendingPlanChangeRequest
-                            ->requestedPlan
+                    $pendingPlanChangeRequest
+                    ->requestedPlan
                     )
 
                     <div class="sm:col-span-2">
 
                         <p class="text-xs text-gray-400">
-                            Requested Service
+                            Requested speed and monthly fee
                         </p>
 
                         <p
@@ -836,10 +841,24 @@ $openPlanChangeWorkspace =
 
                     </div>
 
+                    @if ($pendingPlanChangeRequest->requestedPlan)
+                    <div class="sm:col-span-2 border-t border-gray-100 pt-3 dark:border-neutral-800">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Requested contract duration</p>
+                        <p class="mt-1 text-sm font-semibold text-gray-900 dark:text-white">
+                            {{ $pendingPlanChangeRequest->requestedPlan->duration_months }} months
+                        </p>
+                    </div>
+                    @endif
+
                     @endif
 
                 </div>
 
+
+                <div class="mt-4 border border-gray-200 bg-gray-50 px-3 py-3 text-xs leading-5 text-gray-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-gray-300">
+                    <p class="font-semibold text-gray-900 dark:text-white">The current plan is still active.</p>
+                    <p class="mt-1">Approve to apply the requested plan immediately, or reject to keep the current plan unchanged. Approval clears any existing subscription discount and recalculates the contract end date using the original subscription start date.</p>
+                </div>
 
                 <div
                     class="
@@ -871,7 +890,7 @@ $openPlanChangeWorkspace =
                             aria-hidden="true">
                         </i>
 
-                        Reject
+                        Reject Request
 
                     </button>
 
@@ -897,7 +916,7 @@ $openPlanChangeWorkspace =
                             aria-hidden="true">
                         </i>
 
-                        Approve
+                        Review &amp; Approve
 
                     </button>
 
@@ -1023,45 +1042,45 @@ $openPlanChangeWorkspace =
                     ">
 
                     @foreach (
-                        $previousPlanChangeRequests
-                        as $planChangeRequest
+                    $previousPlanChangeRequests
+                    as $planChangeRequest
                     )
 
                     @php
                     $historyStatus = match (
-                        $planChangeRequest->status
+                    $planChangeRequest->status
                     ) {
-                        'approved' => [
-                            'class' =>
-                                'bg-green-50 text-green-700
-                                 dark:bg-green-950/40
-                                 dark:text-green-300',
-                            'icon' => 'circle-check',
-                        ],
+                    'approved' => [
+                    'class' =>
+                    'bg-green-50 text-green-700
+                    dark:bg-green-950/40
+                    dark:text-green-300',
+                    'icon' => 'circle-check',
+                    ],
 
-                        'rejected' => [
-                            'class' =>
-                                'bg-red-50 text-red-700
-                                 dark:bg-red-950/40
-                                 dark:text-red-300',
-                            'icon' => 'circle-x',
-                        ],
+                    'rejected' => [
+                    'class' =>
+                    'bg-red-50 text-red-700
+                    dark:bg-red-950/40
+                    dark:text-red-300',
+                    'icon' => 'circle-x',
+                    ],
 
-                        'cancelled' => [
-                            'class' =>
-                                'bg-gray-100 text-gray-700
-                                 dark:bg-neutral-800
-                                 dark:text-gray-300',
-                            'icon' => 'ban',
-                        ],
+                    'cancelled' => [
+                    'class' =>
+                    'bg-gray-100 text-gray-700
+                    dark:bg-neutral-800
+                    dark:text-gray-300',
+                    'icon' => 'ban',
+                    ],
 
-                        default => [
-                            'class' =>
-                                'bg-gray-100 text-gray-700
-                                 dark:bg-neutral-800
-                                 dark:text-gray-300',
-                            'icon' => 'circle-help',
-                        ],
+                    default => [
+                    'class' =>
+                    'bg-gray-100 text-gray-700
+                    dark:bg-neutral-800
+                    dark:text-gray-300',
+                    'icon' => 'circle-help',
+                    ],
                     };
                     @endphp
 
@@ -1221,7 +1240,7 @@ $openPlanChangeWorkspace =
                 text-gray-900
                 dark:text-white
             ">
-            Approve Plan Change?
+            Approve and Apply Plan Change?
         </h2>
 
 
@@ -1240,6 +1259,27 @@ $openPlanChangeWorkspace =
                 ?? 'Requested plan' }}
         </p>
 
+
+        <div class="mt-4 border border-gray-200 bg-gray-50 p-3 text-xs leading-5 dark:border-neutral-800 dark:bg-neutral-950">
+            <p class="font-semibold text-gray-900 dark:text-white">Changes applied immediately on approval</p>
+            <dl class="mt-2 space-y-1 text-gray-700 dark:text-gray-300">
+                <div class="flex justify-between gap-3">
+                    <dt>New plan speed</dt>
+                    <dd class="font-semibold">@if ($pendingPlanChangeRequest->requestedPlan){{ number_format((float) $pendingPlanChangeRequest->requestedPlan->speed_mbps, 0) }} Mbps @else Unavailable @endif</dd>
+                </div>
+                <div class="flex justify-between gap-3">
+                    <dt>New plan monthly fee</dt>
+                    <dd class="font-semibold">@if ($pendingPlanChangeRequest->requestedPlan)&#8369;{{ number_format((float) $pendingPlanChangeRequest->requestedPlan->monthly_fee, 2) }}@else Unavailable @endif</dd>
+                </div>
+                <div class="flex justify-between gap-3">
+                    <dt>New contract duration</dt>
+                    <dd class="font-semibold">@if ($pendingPlanChangeRequest->requestedPlan){{ $pendingPlanChangeRequest->requestedPlan->duration_months }} months @else Unavailable @endif</dd>
+                </div>
+            </dl>
+            <p class="mt-3 border-t border-gray-200 pt-2 text-gray-600 dark:border-neutral-800 dark:text-gray-400">
+                Any existing subscription discount will be removed. The contract end date will be recalculated from the original subscription start date, not today's date.
+            </p>
+        </div>
 
         <form
             method="POST"
@@ -1295,8 +1335,8 @@ $openPlanChangeWorkspace =
 
 
             @if (
-                $planChangeReviewAction === 'approve' &&
-                $errors->has('review_notes')
+            $planChangeReviewAction === 'approve' &&
+            $errors->has('review_notes')
             )
 
             <p
@@ -1354,7 +1394,7 @@ $openPlanChangeWorkspace =
                         aria-hidden="true">
                     </i>
 
-                    Approve
+                    Approve and Apply
 
                 </button>
 
@@ -1420,7 +1460,7 @@ $openPlanChangeWorkspace =
                 text-sm text-gray-500
                 dark:text-gray-400
             ">
-            The subscriber's current plan will remain unchanged.
+            Rejecting this pending request will leave the subscriber's current plan unchanged. Provide a reason for the decision.
         </p>
 
 
@@ -1490,8 +1530,8 @@ $openPlanChangeWorkspace =
 
 
             @if (
-                $planChangeReviewAction === 'reject' &&
-                $errors->has('review_notes')
+            $planChangeReviewAction === 'reject' &&
+            $errors->has('review_notes')
             )
 
             <p
@@ -1549,7 +1589,7 @@ $openPlanChangeWorkspace =
                         aria-hidden="true">
                     </i>
 
-                    Reject
+                    Reject Request
 
                 </button>
 
@@ -1608,9 +1648,9 @@ $openPlanChangeWorkspace =
         const anyModalOpen = () => {
             return allModals.some(
                 (modal) =>
-                    modal.getAttribute(
-                        'aria-hidden'
-                    ) === 'false'
+                modal.getAttribute(
+                    'aria-hidden'
+                ) === 'false'
             );
         };
 
@@ -1709,6 +1749,38 @@ $openPlanChangeWorkspace =
                 );
             }
         );
+
+
+        // Update the request preview using the existing plan options.
+        // No server-side values, route behavior, or posted fields change.
+        const planSelect = document.getElementById('requested_service_plan_id');
+        const planPreview = document.getElementById('plan-change-selected-preview');
+        const planPreviewFields = {
+            name: document.getElementById('plan-change-preview-name'),
+            speed: document.getElementById('plan-change-preview-speed'),
+            fee: document.getElementById('plan-change-preview-fee'),
+            duration: document.getElementById('plan-change-preview-duration'),
+            direction: document.getElementById('plan-change-preview-direction'),
+        };
+
+        const updatePlanPreview = () => {
+            const option = planSelect?.selectedOptions?.[0];
+            const hasSelection = Boolean(option?.value);
+            planPreview?.classList.toggle('hidden', !hasSelection);
+
+            if (!hasSelection) {
+                return;
+            }
+
+            if (planPreviewFields.name) planPreviewFields.name.textContent = option.dataset.planName ?? '';
+            if (planPreviewFields.speed) planPreviewFields.speed.textContent = `${option.dataset.planSpeed ?? ''} Mbps`;
+            if (planPreviewFields.fee) planPreviewFields.fee.textContent = `₱${option.dataset.planFee ?? ''} / month`;
+            if (planPreviewFields.duration) planPreviewFields.duration.textContent = `${option.dataset.planDuration ?? ''} months`;
+            if (planPreviewFields.direction) planPreviewFields.direction.textContent = option.dataset.planDirection ?? '';
+        };
+
+        planSelect?.addEventListener('change', updatePlanPreview);
+        updatePlanPreview();
 
 
         const historyToggle =
@@ -1859,7 +1931,7 @@ $openPlanChangeWorkspace =
 
         const reviewErrorModal = allModals.find(
             (modal) =>
-                modal.dataset.openOnError === 'true'
+            modal.dataset.openOnError === 'true'
         );
 
 

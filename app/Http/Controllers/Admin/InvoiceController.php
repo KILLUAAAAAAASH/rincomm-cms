@@ -4,13 +4,17 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Services\InvoiceBalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
-use InvalidArgumentException;
 
 class InvoiceController extends Controller
 {
+    public function __construct(
+        private readonly InvoiceBalanceService $invoiceBalanceService
+    ) {}
+
     /**
      * Display the billing and invoice register.
      */
@@ -113,33 +117,44 @@ class InvoiceController extends Controller
             },
         ]);
 
-        $totalCents = $this->decimalToCents(
-            $invoice->total_amount
+        $balance = $this->invoiceBalanceService->calculate(
+            $invoice->total_amount,
+            $invoice->payments->pluck('amount')
         );
 
-        $paidCents = 0;
+        $amountPaid = $balance['paid_amount'];
+        $outstandingBalance = $balance['balance_amount'];
 
-        foreach ($invoice->payments as $payment) {
-            $paidCents += $this->decimalToCents(
-                $payment->amount
-            );
-        }
-
-        $outstandingCents = max(
-            0,
-            $totalCents - $paidCents
-        );
-
-        $amountPaid = $this->centsToDecimal(
-            $paidCents
-        );
-
-        $outstandingBalance = $this->centsToDecimal(
-            $outstandingCents
-        );
+        /*
+         * Gateway attempts are intentionally loaded separately from the
+         * completed-payment relationship above.
+         *
+         * Pending, failed, or cancelled gateway attempts remain visible
+         * without affecting the invoice balance. Only provider-verified
+         * completed payments may reduce the outstanding balance.
+         */
+        $gatewayPayments = $invoice
+            ->payments()
+            ->where(
+                'payment_method',
+                'gcash'
+            )
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get([
+                'id',
+                'payment_reference',
+                'amount',
+                'payment_method',
+                'payment_status',
+                'paid_at',
+                'gateway_reference',
+                'gateway_payment_reference',
+                'created_at',
+            ]);
 
         $canRecordCashPayment =
-            $outstandingCents > 0
+            $balance['balance_cents'] > 0
             && in_array(
                 $invoice->status,
                 [
@@ -158,70 +173,10 @@ class InvoiceController extends Controller
                 'invoice',
                 'amountPaid',
                 'outstandingBalance',
+                'gatewayPayments',
                 'canRecordCashPayment',
                 'paymentToken'
             )
-        );
-    }
-
-    private function decimalToCents(
-        string|int|float|null $amount
-    ): int {
-        $value = trim(
-            (string) ($amount ?? '0')
-        );
-
-        if (
-            ! preg_match(
-                '/^\d+(?:\.\d{1,2})?$/',
-                $value
-            )
-        ) {
-            throw new InvalidArgumentException(
-                'Invalid monetary amount.'
-            );
-        }
-
-        [$whole, $fraction] = array_pad(
-            explode(
-                '.',
-                $value,
-                2
-            ),
-            2,
-            ''
-        );
-
-        $fraction = str_pad(
-            $fraction,
-            2,
-            '0'
-        );
-
-        return ((int) $whole * 100)
-            + (int) substr(
-                $fraction,
-                0,
-                2
-            );
-    }
-
-    private function centsToDecimal(
-        int $cents
-    ): string {
-        if ($cents < 0) {
-            throw new InvalidArgumentException(
-                'Monetary amount cannot be negative.'
-            );
-        }
-
-        return sprintf(
-            '%d.%02d',
-            intdiv(
-                $cents,
-                100
-            ),
-            $cents % 100
         );
     }
 }

@@ -8,12 +8,13 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 
 class InvoiceLifecycleService
 {
     public function __construct(
-        private readonly ActivityLogger $activityLogger
+        private readonly ActivityLogger $activityLogger,
+        private readonly InvoiceBalanceService $invoiceBalanceService,
+        private readonly MoneyService $moneyService
     ) {}
 
     /**
@@ -36,7 +37,10 @@ class InvoiceLifecycleService
         ?Request $request = null
     ): array {
         $evaluationDate = $asOf
-            ? CarbonImmutable::parse($asOf->toDateString(), config('app.timezone'))->startOfDay()
+            ? CarbonImmutable::parse(
+                $asOf->toDateString(),
+                config('app.timezone')
+            )->startOfDay()
             : now()->toImmutable()->startOfDay();
 
         return DB::transaction(function () use (
@@ -58,7 +62,7 @@ class InvoiceLifecycleService
              * The automatic lifecycle must not change them.
              */
             if (in_array($oldStatus, ['draft', 'cancelled'], true)) {
-                $totalCents = $this->decimalToCents(
+                $totalCents = $this->moneyService->toCents(
                     $lockedInvoice->total_amount
                 );
 
@@ -68,9 +72,10 @@ class InvoiceLifecycleService
                     'old_status' => $oldStatus,
                     'new_status' => $oldStatus,
                     'paid_amount' => '0.00',
-                    'balance_amount' => $this->centsToDecimal(
-                        $totalCents
-                    ),
+                    'balance_amount' =>
+                        $this->moneyService->toDecimal(
+                            $totalCents
+                        ),
                 ];
             }
 
@@ -83,32 +88,31 @@ class InvoiceLifecycleService
              */
             $completedPayments = $lockedInvoice
                 ->payments()
-                ->where('payment_status', 'completed')
+                ->where(
+                    'payment_status',
+                    'completed'
+                )
                 ->lockForUpdate()
-                ->get(['id', 'amount']);
+                ->get([
+                    'id',
+                    'amount',
+                ]);
 
-            $paidCents = 0;
-
-            foreach ($completedPayments as $payment) {
-                $paidCents += $this->decimalToCents(
-                    $payment->amount
-                );
-            }
-
-            $totalCents = $this->decimalToCents(
-                $lockedInvoice->total_amount
+            $balance = $this->invoiceBalanceService->calculate(
+                $lockedInvoice->total_amount,
+                $completedPayments->pluck('amount')
             );
 
-            $balanceCents = max(
-                0,
-                $totalCents - $paidCents
-            );
+            $paidCents = $balance['paid_cents'];
+            $balanceCents = $balance['balance_cents'];
 
             if ($balanceCents === 0) {
                 $newStatus = 'paid';
             } elseif (
                 $lockedInvoice->due_date !== null
-                && $lockedInvoice->due_date->lt($evaluationDate)
+                && $lockedInvoice->due_date->lt(
+                    $evaluationDate
+                )
             ) {
                 $newStatus = 'overdue';
             } elseif ($paidCents > 0) {
@@ -127,7 +131,9 @@ class InvoiceLifecycleService
                 $this->activityLogger->record(
                     action: 'billing.invoice_status_updated',
                     actor: $actor,
-                    target: $lockedInvoice->customer?->user,
+                    target: $lockedInvoice
+                        ->customer
+                        ?->user,
                     description: sprintf(
                         'Invoice %s status changed from %s to %s.',
                         $lockedInvoice->invoice_number,
@@ -135,21 +141,26 @@ class InvoiceLifecycleService
                         $newStatus
                     ),
                     metadata: [
-                        'invoice_id' => $lockedInvoice->id,
+                        'invoice_id' =>
+                            $lockedInvoice->id,
                         'invoice_number' =>
                             $lockedInvoice->invoice_number,
                         'customer_id' =>
                             $lockedInvoice->customer_id,
-                        'old_status' => $oldStatus,
-                        'new_status' => $newStatus,
+                        'old_status' =>
+                            $oldStatus,
+                        'new_status' =>
+                            $newStatus,
                         'total_amount' =>
-                            $this->centsToDecimal($totalCents),
+                            $balance['total_amount'],
                         'completed_payment_amount' =>
-                            $this->centsToDecimal($paidCents),
+                            $balance['paid_amount'],
                         'balance_amount' =>
-                            $this->centsToDecimal($balanceCents),
+                            $balance['balance_amount'],
                         'due_date' =>
-                            $lockedInvoice->due_date?->toDateString(),
+                            $lockedInvoice
+                                ->due_date
+                                ?->toDateString(),
                         'evaluated_at' =>
                             $evaluationDate->toDateString(),
                     ],
@@ -163,52 +174,10 @@ class InvoiceLifecycleService
                 'old_status' => $oldStatus,
                 'new_status' => $newStatus,
                 'paid_amount' =>
-                    $this->centsToDecimal($paidCents),
+                    $balance['paid_amount'],
                 'balance_amount' =>
-                    $this->centsToDecimal($balanceCents),
+                    $balance['balance_amount'],
             ];
         });
     }
-
-    private function decimalToCents(
-        string|int|float|null $amount
-    ): int {
-        $value = trim((string) ($amount ?? '0'));
-
-        if (! preg_match('/^\d+(?:\.\d{1,2})?$/', $value)) {
-            throw new InvalidArgumentException(
-                'Invalid monetary amount.'
-            );
-        }
-
-        [$whole, $fraction] = array_pad(
-            explode('.', $value, 2),
-            2,
-            ''
-        );
-
-        $fraction = str_pad($fraction, 2, '0');
-
-        return ((int) $whole * 100)
-            + (int) substr($fraction, 0, 2);
-    }
-
-    private function centsToDecimal(int $cents): string
-    {
-        if ($cents < 0) {
-            throw new InvalidArgumentException(
-                'Monetary amount cannot be negative.'
-            );
-        }
-
-        return sprintf(
-            '%d.%02d',
-            intdiv($cents, 100),
-            $cents % 100
-        );
-    }
 }
-
-
-
-

@@ -24,6 +24,9 @@ class Invoice extends Model
         'status',
         'disconnection_notice_date',
         'remarks',
+        'billed_service_plan_id',
+        'billed_service_plan_name',
+        'billed_speed_mbps',
     ];
 
     protected $casts = [
@@ -35,6 +38,8 @@ class Invoice extends Model
         'discount_amount' => 'decimal:2',
         'adjustment_amount' => 'decimal:2',
         'total_amount' => 'decimal:2',
+        'billed_service_plan_id' => 'integer',
+        'billed_speed_mbps' => 'integer',
     ];
 
     public function customer(): BelongsTo

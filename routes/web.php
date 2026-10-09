@@ -20,7 +20,9 @@ use App\Http\Controllers\Auth\PasswordResetVerificationController;
 use App\Http\Controllers\Auth\RegisteredUserController;
 use App\Http\Controllers\Auth\RegistrationVerificationController;
 use App\Http\Controllers\Auth\ResetPasswordController;
+use App\Http\Controllers\Customer\BillingController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
+use App\Http\Controllers\Customer\GatewayPaymentController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\ProfileController;
@@ -29,6 +31,7 @@ use App\Http\Controllers\ServiceCoverageController;
 use App\Http\Controllers\Technician\DashboardController as TechnicianDashboardController;
 use App\Http\Controllers\Technician\JobOrderController;
 use App\Http\Controllers\Technician\JobOrderProofController;
+use App\Http\Controllers\Webhook\PayMongoWebhookController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -45,6 +48,11 @@ Route::get('/apply/coverage', [ServiceCoverageController::class, 'create'])
 
 Route::post('/apply/coverage', [ServiceCoverageController::class, 'check'])
     ->name('apply.coverage.check');
+
+Route::post(
+    '/webhooks/paymongo',
+    PayMongoWebhookController::class
+)->name('webhooks.paymongo');
 
 /*
 |--------------------------------------------------------------------------
@@ -491,6 +499,24 @@ Route::middleware(['auth', 'active', 'role:technician'])->group(function () {
 Route::middleware(['auth', 'active', 'role:customer'])->group(function () {
     Route::get('/customer/dashboard', [CustomerDashboardController::class, 'index'])
         ->name('customer.dashboard');
+
+    Route::get('/customer/billing', [BillingController::class, 'index'])
+        ->name('customer.billing.index');
+
+    Route::get(
+        '/customer/billing/invoices/{invoice}',
+        [BillingController::class, 'show']
+    )->name('customer.billing.show');
+
+    Route::post(
+        '/customer/billing/invoices/{invoice}/gateway-payments',
+        [GatewayPaymentController::class, 'store']
+    )->name('customer.billing.gateway-payments.store');
+
+    Route::post(
+        '/customer/billing/invoices/{invoice}/gateway-payments/recover',
+        [GatewayPaymentController::class, 'recover']
+    )->name('customer.billing.gateway-payments.recover');
 
     Route::get('/customer/application', [ServiceApplicationController::class, 'create'])
         ->name('customer.application.create');

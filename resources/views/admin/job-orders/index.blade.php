@@ -1051,7 +1051,7 @@ $createdJobOrderId =
             relative z-10
             w-full max-w-[620px]
             overflow-hidden
-            rounded-lg
+            rounded-none
             border border-gray-200
             bg-white shadow-2xl
             dark:border-neutral-700
@@ -1529,7 +1529,7 @@ $createdJobOrderId =
             relative z-10
             w-full max-w-[560px]
             overflow-hidden
-            rounded-lg
+            rounded-none
             border border-gray-200
             bg-white
             shadow-2xl
@@ -1862,7 +1862,7 @@ $createdJobOrderId =
             relative z-10
             w-full max-w-[520px]
             overflow-hidden
-            rounded-lg
+            rounded-none
             border border-gray-200
             bg-white
             shadow-2xl

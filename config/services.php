@@ -32,6 +32,7 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+
     /*
     |--------------------------------------------------------------------------
     | IPROG SMS
@@ -53,6 +54,42 @@ return [
         'timeout' => (int) env(
             'IPROG_SMS_TIMEOUT',
             10
+        ),
+    ],
+
+    /*
+    |--------------------------------------------------------------------------
+    | PayMongo
+    |--------------------------------------------------------------------------
+    |
+    | PayMongo provides the online GCash payment flow used by Rincomm.
+    | Secret and webhook credentials must remain server-side and must never
+    | be committed to source control.
+    |
+    */
+
+    'paymongo' => [
+        'base_url' => env(
+            'PAYMONGO_BASE_URL',
+            'https://api.paymongo.com'
+        ),
+
+        'public_key' => env('PAYMONGO_PUBLIC_KEY'),
+
+        'secret_key' => env('PAYMONGO_SECRET_KEY'),
+
+        'webhook_secret' => env(
+            'PAYMONGO_WEBHOOK_SECRET'
+        ),
+
+        'live_mode' => env(
+            'PAYMONGO_LIVE_MODE',
+            false
+        ),
+
+        'timeout' => (int) env(
+            'PAYMONGO_TIMEOUT',
+            15
         ),
     ],
 ];

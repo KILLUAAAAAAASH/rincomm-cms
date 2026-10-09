@@ -780,7 +780,7 @@
                             dark:text-gray-400
                         ">
                         {{ $invoice->customer?->customer_code ?? 'No customer code' }}
-                        <span aria-hidden="true">·</span>
+                        <span aria-hidden="true">ï¿½</span>
                         {{ $subscriberName !== ''
                             ? $subscriberName
                             : 'Subscriber' }}

@@ -212,6 +212,7 @@ class CashPaymentEntryTest extends TestCase
             'payment_status' => 'completed',
             'paid_at' => now(),
             'gateway_reference' => null,
+            'gateway_payment_reference' => null,
             'remarks' => null,
         ]);
 
@@ -236,6 +237,108 @@ class CashPaymentEntryTest extends TestCase
         $this->assertDatabaseCount(
             'payments',
             1
+        );
+
+        $this->assertSame(
+            'issued',
+            $invoice->fresh()->status
+        );
+    }
+
+    public function test_cash_payment_is_rejected_while_gcash_payment_is_pending(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $staff = $this->createActiveUser('staff');
+
+        $invoice = $this->createInvoice(
+            totalAmount: '1500.00'
+        );
+
+        Payment::query()->create([
+            'invoice_id' =>
+                $invoice->id,
+            'customer_id' =>
+                $invoice->customer_id,
+            'payment_reference' =>
+                'GCASH-PENDING-CASH-CONFLICT-001',
+            'amount' =>
+                '1500.00',
+            'payment_method' =>
+                'gcash',
+            'payment_status' =>
+                'pending',
+            'paid_at' =>
+                null,
+            'gateway_reference' =>
+                'pi_cash_conflict_001',
+            'gateway_payment_reference' =>
+                null,
+            'remarks' =>
+                null,
+        ]);
+
+        $response = $this
+            ->actingAs($staff)
+            ->from(
+                route(
+                    'admin.invoices.show',
+                    $invoice
+                )
+            )
+            ->post(
+                route(
+                    'admin.invoices.cash-payments.store',
+                    $invoice
+                ),
+                [
+                    'payment_token' =>
+                        (string) Str::uuid(),
+                    'amount' =>
+                        '500.00',
+                    'remarks' =>
+                        'Counter payment.',
+                ]
+            );
+
+        $response
+            ->assertRedirect(
+                route(
+                    'admin.invoices.show',
+                    $invoice
+                )
+            )
+            ->assertSessionHasErrors(
+                'payment'
+            );
+
+        $this->assertDatabaseCount(
+            'payments',
+            1
+        );
+
+        $this->assertDatabaseHas(
+            'payments',
+            [
+                'invoice_id' =>
+                    $invoice->id,
+                'payment_reference' =>
+                    'GCASH-PENDING-CASH-CONFLICT-001',
+                'payment_method' =>
+                    'gcash',
+                'payment_status' =>
+                    'pending',
+            ]
+        );
+
+        $this->assertDatabaseMissing(
+            'payments',
+            [
+                'invoice_id' =>
+                    $invoice->id,
+                'payment_method' =>
+                    'cash',
+            ]
         );
 
         $this->assertSame(
@@ -502,6 +605,7 @@ class CashPaymentEntryTest extends TestCase
             'payment_status' => 'completed',
             'paid_at' => now(),
             'gateway_reference' => null,
+            'gateway_payment_reference' => null,
             'remarks' => null,
         ]);
 

@@ -8,12 +8,13 @@ use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use InvalidArgumentException;
 
 class DisconnectionNoticeService
 {
     public function __construct(
-        private readonly ActivityLogger $activityLogger
+        private readonly ActivityLogger $activityLogger,
+        private readonly InvoiceBalanceService $invoiceBalanceService,
+        private readonly MoneyService $moneyService
     ) {}
 
     /**
@@ -71,35 +72,29 @@ class DisconnectionNoticeService
                 ->lockForUpdate()
                 ->firstOrFail();
 
-            $totalCents = $this->decimalToCents(
-                $lockedInvoice->total_amount
-            );
-
             /*
              * Only completed payments represent money actually
              * received and therefore reduce the outstanding balance.
              */
             $completedPayments = $lockedInvoice
                 ->payments()
-                ->where('payment_status', 'completed')
+                ->where(
+                    'payment_status',
+                    'completed'
+                )
                 ->lockForUpdate()
                 ->get([
                     'id',
                     'amount',
                 ]);
 
-            $paidCents = 0;
-
-            foreach ($completedPayments as $payment) {
-                $paidCents += $this->decimalToCents(
-                    $payment->amount
-                );
-            }
-
-            $balanceCents = max(
-                0,
-                $totalCents - $paidCents
+            $balance = $this->invoiceBalanceService->calculate(
+                $lockedInvoice->total_amount,
+                $completedPayments->pluck('amount')
             );
+
+            $paidCents = $balance['paid_cents'];
+            $balanceCents = $balance['balance_cents'];
 
             /*
              * Idempotency guard.
@@ -181,8 +176,8 @@ class DisconnectionNoticeService
              */
             if (
                 $lockedInvoice
-                ->disconnection_notice_date
-                ->gt($evaluationDate)
+                    ->disconnection_notice_date
+                    ->gt($evaluationDate)
             ) {
                 return $this->result(
                     invoice: $lockedInvoice,
@@ -219,35 +214,35 @@ class DisconnectionNoticeService
                 description: sprintf(
                     'Disconnection notice triggered for invoice %s with an outstanding balance of %s.',
                     $lockedInvoice->invoice_number,
-                    $this->centsToDecimal($balanceCents)
+                    $balance['balance_amount']
                 ),
                 metadata: [
                     'invoice_id' =>
-                    $lockedInvoice->id,
+                        $lockedInvoice->id,
                     'invoice_number' =>
-                    $lockedInvoice->invoice_number,
+                        $lockedInvoice->invoice_number,
                     'customer_id' =>
-                    $lockedInvoice->customer_id,
+                        $lockedInvoice->customer_id,
                     'subscription_id' =>
-                    $lockedInvoice->subscription_id,
+                        $lockedInvoice->subscription_id,
                     'invoice_status' =>
-                    $lockedInvoice->status,
+                        $lockedInvoice->status,
                     'due_date' =>
-                    $lockedInvoice
-                        ->due_date
-                        ?->toDateString(),
+                        $lockedInvoice
+                            ->due_date
+                            ?->toDateString(),
                     'disconnection_notice_date' =>
-                    $lockedInvoice
-                        ->disconnection_notice_date
-                        ?->toDateString(),
+                        $lockedInvoice
+                            ->disconnection_notice_date
+                            ?->toDateString(),
                     'disconnection_notice_triggered_at' =>
-                    $triggeredAt->toDateTimeString(),
+                        $triggeredAt->toDateTimeString(),
                     'total_amount' =>
-                    $this->centsToDecimal($totalCents),
+                        $balance['total_amount'],
                     'completed_payment_amount' =>
-                    $this->centsToDecimal($paidCents),
+                        $balance['paid_amount'],
                     'balance_amount' =>
-                    $this->centsToDecimal($balanceCents),
+                        $balance['balance_amount'],
                 ],
                 request: $request
             );
@@ -285,63 +280,13 @@ class DisconnectionNoticeService
             'triggered' => $triggered,
             'reason' => $reason,
             'paid_amount' =>
-            $this->centsToDecimal($paidCents),
+                $this->moneyService->toDecimal(
+                    $paidCents
+                ),
             'balance_amount' =>
-            $this->centsToDecimal($balanceCents),
+                $this->moneyService->toDecimal(
+                    $balanceCents
+                ),
         ];
-    }
-
-    private function decimalToCents(
-        string|int|float|null $amount
-    ): int {
-        $value = trim(
-            (string) ($amount ?? '0')
-        );
-
-        if (
-            ! preg_match(
-                '/^\d+(?:\.\d{1,2})?$/',
-                $value
-            )
-        ) {
-            throw new InvalidArgumentException(
-                'Invalid monetary amount.'
-            );
-        }
-
-        [$whole, $fraction] = array_pad(
-            explode('.', $value, 2),
-            2,
-            ''
-        );
-
-        $fraction = str_pad(
-            $fraction,
-            2,
-            '0'
-        );
-
-        return ((int) $whole * 100)
-            + (int) substr(
-                $fraction,
-                0,
-                2
-            );
-    }
-
-    private function centsToDecimal(
-        int $cents
-    ): string {
-        if ($cents < 0) {
-            throw new InvalidArgumentException(
-                'Monetary amount cannot be negative.'
-            );
-        }
-
-        return sprintf(
-            '%d.%02d',
-            intdiv($cents, 100),
-            $cents % 100
-        );
     }
 }

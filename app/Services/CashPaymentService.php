@@ -2,20 +2,26 @@
 
 namespace App\Services;
 
+use App\Contracts\PaymentGateway;
 use App\Models\Invoice;
 use App\Models\Payment;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
-use InvalidArgumentException;
 use RuntimeException;
 
 class CashPaymentService
 {
+    private const GCASH_RECONCILIATION_AGE_HOURS = 4;
+
     public function __construct(
+        private readonly PaymentGateway $paymentGateway,
+        private readonly GatewayPaymentReconciliationService $gatewayPaymentReconciliationService,
         private readonly InvoiceLifecycleService $invoiceLifecycleService,
-        private readonly ActivityLogger $activityLogger
+        private readonly ActivityLogger $activityLogger,
+        private readonly InvoiceBalanceService $invoiceBalanceService,
+        private readonly MoneyService $moneyService
     ) {}
 
     /**
@@ -40,7 +46,9 @@ class CashPaymentService
         ?string $remarks = null,
         ?Request $request = null
     ): array {
-        $amountCents = $this->decimalToCents($amount);
+        $amountCents = $this->moneyService->toCents(
+            $amount
+        );
 
         if ($amountCents <= 0) {
             throw ValidationException::withMessages([
@@ -48,7 +56,7 @@ class CashPaymentService
             ]);
         }
 
-        $normalizedAmount = $this->centsToDecimal(
+        $normalizedAmount = $this->moneyService->toDecimal(
             $amountCents
         );
 
@@ -62,6 +70,24 @@ class CashPaymentService
 
         $paymentReference = $this->paymentReference(
             $paymentToken
+        );
+
+        /*
+         * A provider-backed GCash attempt may remain locally pending after
+         * its normal checkout window.
+         *
+         * We must never perform provider network I/O while the invoice or
+         * payment rows are locked. Identify one stale provider-backed
+         * attempt first, retrieve its state without locks, then let the
+         * reconciliation service perform a fresh Invoice -> Payment locked
+         * transaction.
+         *
+         * If PayMongo still reports an unresolved state, or if retrieval
+         * fails, the ordinary cash transaction below will continue blocking
+         * the cash payment.
+         */
+        $this->reconcileStalePendingGatewayPayment(
+            $invoice
         );
 
         return DB::transaction(function () use (
@@ -103,7 +129,7 @@ class CashPaymentService
                         !== (int) $lockedInvoice->customer_id
                     || $existingPayment->payment_method !== 'cash'
                     || $existingPayment->payment_status !== 'completed'
-                    || $this->decimalToCents(
+                    || $this->moneyService->toCents(
                         $existingPayment->amount
                     ) !== $amountCents
                 ) {
@@ -129,6 +155,40 @@ class CashPaymentService
                         $lifecycle['balance_amount'],
                     'idempotent' => true,
                 ];
+            }
+
+            /*
+             * A pending GCash checkout represents an unresolved external
+             * payment attempt. Recording new cash while it is unresolved
+             * could allow the invoice to be paid twice if PayMongo later
+             * confirms the GCash transaction.
+             *
+             * Any stale provider-backed attempt has already had an
+             * opportunity to reconcile before this transaction. If a GCash
+             * row is still pending here, it remains unresolved and must
+             * continue blocking cash.
+             */
+            $pendingGatewayPayment = $lockedInvoice
+                ->payments()
+                ->where(
+                    'payment_method',
+                    'gcash'
+                )
+                ->where(
+                    'payment_status',
+                    'pending'
+                )
+                ->lockForUpdate()
+                ->first([
+                    'id',
+                    'payment_reference',
+                ]);
+
+            if ($pendingGatewayPayment !== null) {
+                throw ValidationException::withMessages([
+                    'payment' =>
+                        'A GCash payment is currently pending for this invoice. Wait for it to complete, fail, or be cancelled before recording a cash payment.',
+                ]);
             }
 
             if (
@@ -163,22 +223,12 @@ class CashPaymentService
                     'amount',
                 ]);
 
-            $paidCents = 0;
-
-            foreach ($completedPayments as $payment) {
-                $paidCents += $this->decimalToCents(
-                    $payment->amount
-                );
-            }
-
-            $totalCents = $this->decimalToCents(
-                $lockedInvoice->total_amount
+            $balance = $this->invoiceBalanceService->calculate(
+                $lockedInvoice->total_amount,
+                $completedPayments->pluck('amount')
             );
 
-            $balanceCents = max(
-                0,
-                $totalCents - $paidCents
-            );
+            $balanceCents = $balance['balance_cents'];
 
             if ($balanceCents === 0) {
                 throw ValidationException::withMessages([
@@ -220,6 +270,8 @@ class CashPaymentService
                     now(),
                 'gateway_reference' =>
                     null,
+                'gateway_payment_reference' =>
+                    null,
                 'remarks' =>
                     $normalizedRemarks,
             ]);
@@ -259,9 +311,7 @@ class CashPaymentService
                     'amount' =>
                         $normalizedAmount,
                     'balance_before' =>
-                        $this->centsToDecimal(
-                            $balanceCents
-                        ),
+                        $balance['balance_amount'],
                     'balance_after' =>
                         $lifecycle['balance_amount'],
                     'invoice_status_before' =>
@@ -290,6 +340,74 @@ class CashPaymentService
         });
     }
 
+    private function reconcileStalePendingGatewayPayment(
+        Invoice $invoice
+    ): void {
+        $candidate = Payment::query()
+            ->where(
+                'invoice_id',
+                $invoice->getKey()
+            )
+            ->where(
+                'payment_method',
+                'gcash'
+            )
+            ->where(
+                'payment_status',
+                'pending'
+            )
+            ->whereNotNull(
+                'gateway_reference'
+            )
+            ->where(
+                'created_at',
+                '<=',
+                now()->subHours(
+                    self::GCASH_RECONCILIATION_AGE_HOURS
+                )
+            )
+            ->orderBy('created_at')
+            ->orderBy('id')
+            ->first([
+                'id',
+                'gateway_reference',
+            ]);
+
+        if ($candidate === null) {
+            return;
+        }
+
+        $providerIntentId = trim(
+            (string) $candidate->gateway_reference
+        );
+
+        if ($providerIntentId === '') {
+            return;
+        }
+
+        try {
+            $providerIntent =
+                $this->paymentGateway
+                    ->retrievePaymentIntent(
+                        $providerIntentId
+                    );
+        } catch (RuntimeException) {
+            /*
+             * Fail closed. A provider outage, malformed response, or other
+             * retrieval error must never permit cash to bypass an unresolved
+             * external payment attempt.
+             */
+            return;
+        }
+
+        $this
+            ->gatewayPaymentReconciliationService
+            ->reconcilePaymentIntent(
+                paymentId: $candidate->id,
+                providerIntent: $providerIntent
+            );
+    }
+
     private function paymentReference(
         string $paymentToken
     ): string {
@@ -299,67 +417,6 @@ class CashPaymentService
                 '',
                 $paymentToken
             )
-        );
-    }
-
-    private function decimalToCents(
-        string|int|float|null $amount
-    ): int {
-        $value = trim(
-            (string) ($amount ?? '0')
-        );
-
-        if (
-            ! preg_match(
-                '/^\d+(?:\.\d{1,2})?$/',
-                $value
-            )
-        ) {
-            throw new InvalidArgumentException(
-                'Invalid monetary amount.'
-            );
-        }
-
-        [$whole, $fraction] = array_pad(
-            explode(
-                '.',
-                $value,
-                2
-            ),
-            2,
-            ''
-        );
-
-        $fraction = str_pad(
-            $fraction,
-            2,
-            '0'
-        );
-
-        return ((int) $whole * 100)
-            + (int) substr(
-                $fraction,
-                0,
-                2
-            );
-    }
-
-    private function centsToDecimal(
-        int $cents
-    ): string {
-        if ($cents < 0) {
-            throw new InvalidArgumentException(
-                'Monetary amount cannot be negative.'
-            );
-        }
-
-        return sprintf(
-            '%d.%02d',
-            intdiv(
-                $cents,
-                100
-            ),
-            $cents % 100
         );
     }
 }
