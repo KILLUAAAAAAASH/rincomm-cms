@@ -23,6 +23,21 @@ class InvoiceController extends Controller
         $search = trim((string) $request->query('q', ''));
         $status = trim((string) $request->query('status', ''));
 
+        $sort = (string) $request->query('sort', 'newest');
+
+        $allowedSorts = [
+            'newest',
+            'oldest',
+            'due_earliest',
+            'due_latest',
+            'amount_high',
+            'amount_low',
+        ];
+
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'newest';
+        }
+
         $allowedStatuses = [
             'draft',
             'issued',
@@ -39,15 +54,22 @@ class InvoiceController extends Controller
             $status = '';
         }
 
+        // MySQL and SQLite use different string concatenation syntax.
+        $fullNameExpression =
+            Invoice::query()->getConnection()->getDriverName() === 'sqlite'
+                ? "first_name || ' ' || last_name"
+                : "CONCAT(first_name, ' ', last_name)";
+
         $invoices = Invoice::query()
             ->with([
                 'customer:id,customer_code,first_name,last_name',
                 'subscription.servicePlan:id,name,speed_mbps',
+                'items:id,invoice_id,description',
             ])
             ->when(
                 $search !== '',
-                function ($query) use ($search): void {
-                    $query->where(function ($query) use ($search): void {
+                function ($query) use ($search, $fullNameExpression): void {
+                    $query->where(function ($query) use ($search, $fullNameExpression): void {
                         $query->where(
                             'invoice_number',
                             'like',
@@ -55,7 +77,7 @@ class InvoiceController extends Controller
                         )
                             ->orWhereHas(
                                 'customer',
-                                function ($query) use ($search): void {
+                                function ($query) use ($search, $fullNameExpression): void {
                                     $query->where(
                                         'customer_code',
                                         'like',
@@ -72,7 +94,7 @@ class InvoiceController extends Controller
                                             '%' . $search . '%'
                                         )
                                         ->orWhereRaw(
-                                            "CONCAT(first_name, ' ', last_name) LIKE ?",
+                                            $fullNameExpression . ' LIKE ?',
                                             ['%' . $search . '%']
                                         );
                                 }
@@ -84,8 +106,42 @@ class InvoiceController extends Controller
                 $status !== '',
                 fn($query) => $query->where('status', $status)
             )
-            ->orderByDesc('billing_date')
-            ->orderByDesc('id')
+            ->when(
+                $sort === 'newest',
+                fn ($query) => $query
+                    ->orderByDesc('billing_date')
+                    ->orderByDesc('id')
+            )
+            ->when(
+                $sort === 'oldest',
+                fn ($query) => $query
+                    ->orderBy('billing_date')
+                    ->orderBy('id')
+            )
+            ->when(
+                $sort === 'due_earliest',
+                fn ($query) => $query
+                    ->orderBy('due_date')
+                    ->orderByDesc('id')
+            )
+            ->when(
+                $sort === 'due_latest',
+                fn ($query) => $query
+                    ->orderByDesc('due_date')
+                    ->orderByDesc('id')
+            )
+            ->when(
+                $sort === 'amount_high',
+                fn ($query) => $query
+                    ->orderByDesc('total_amount')
+                    ->orderByDesc('id')
+            )
+            ->when(
+                $sort === 'amount_low',
+                fn ($query) => $query
+                    ->orderBy('total_amount')
+                    ->orderByDesc('id')
+            )
             ->paginate(20)
             ->withQueryString();
 
@@ -95,6 +151,7 @@ class InvoiceController extends Controller
                 'invoices',
                 'search',
                 'status',
+                'sort',
                 'allowedStatuses'
             )
         );

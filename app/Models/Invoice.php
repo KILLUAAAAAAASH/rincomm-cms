@@ -57,6 +57,61 @@ class Invoice extends Model
         return $this->hasMany(InvoiceItem::class);
     }
 
+    /**
+     * Resolve the billed plan without using the subscription's current plan.
+     */
+    public function billedPlanDisplayName(): string
+    {
+        $name = trim((string) $this->billed_service_plan_name);
+
+        if ($name !== '') {
+            return $name;
+        }
+
+        $prefix = 'Monthly internet service - ';
+
+        $legacyNames = $this->items
+            ->pluck('description')
+            ->filter(fn ($description) => is_string($description)
+                && str_starts_with($description, $prefix))
+            ->map(fn ($description) => trim(substr(
+                $description,
+                strlen($prefix)
+            )))
+            ->filter(fn ($name) => $name !== '')
+            ->unique()
+            ->values();
+
+        return $legacyNames->count() === 1
+            ? $legacyNames->first()
+            : 'Not recorded';
+    }
+
+    /**
+     * Display speed using the invoice snapshot or an identifiable
+     * historical Fiber plan name. Does not modify saved values.
+     */
+    public function billedSpeedDisplayMbps(): ?int
+    {
+        if ($this->billed_speed_mbps !== null) {
+            return (int) $this->billed_speed_mbps;
+        }
+
+        $name = $this->billedPlanDisplayName();
+
+        if (
+            preg_match(
+                '/^Fiber\s+([1-9][0-9]{0,4})$/i',
+                $name,
+                $matches
+            ) !== 1
+        ) {
+            return null;
+        }
+
+        return (int) $matches[1];
+    }
+
     public function payments(): HasMany
     {
         return $this->hasMany(Payment::class);

@@ -13,9 +13,15 @@ class ServiceRequest extends Model
 
     protected $fillable = [
         'ticket_number',
+        'subject',
         'customer_id',
+        'subscription_id',
         'service_plan_id',
         'request_type',
+        'issue_type',
+        'priority',
+        'assigned_user_id',
+        'assigned_at',
         'description',
         'status',
         'requested_date',
@@ -23,11 +29,22 @@ class ServiceRequest extends Model
 
     protected $casts = [
         'requested_date' => 'date',
+        'assigned_at' => 'datetime',
     ];
+
+    public function assignedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_user_id');
+    }
 
     public function customer(): BelongsTo
     {
         return $this->belongsTo(Customer::class);
+    }
+
+    public function subscription(): BelongsTo
+    {
+        return $this->belongsTo(Subscription::class);
     }
 
     public function servicePlan(): BelongsTo
@@ -44,8 +61,9 @@ class ServiceRequest extends Model
     {
         return $this->hasMany(TicketNote::class);
     }
+
     public function jobOrders(): HasMany
     {
-    return $this->hasMany(JobOrder::class);
+        return $this->hasMany(JobOrder::class);
     }
 }

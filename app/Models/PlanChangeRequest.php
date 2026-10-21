@@ -19,12 +19,18 @@ class PlanChangeRequest extends Model
         'reason',
         'review_notes',
         'reviewed_at',
+        'effective_on',
+        'approved_lock_in_months',
+        'applied_at',
     ];
 
     protected function casts(): array
     {
         return [
             'reviewed_at' => 'datetime',
+            'effective_on' => 'date',
+            'approved_lock_in_months' => 'integer',
+            'applied_at' => 'datetime',
         ];
     }
 

@@ -23,78 +23,102 @@
 
 @php
 $statusFilters = [
-    '' => 'All',
-    'assigned' => 'Assigned',
-    'in_progress' => 'In Progress',
-    'completed' => 'Completed',
-    'cancelled' => 'Cancelled',
+'' => 'All',
+'assigned' => 'Assigned',
+'in_progress' => 'In Progress',
+'completed' => 'Completed',
+'cancelled' => 'Cancelled',
 ];
 
 $statusClassFor = fn (string $jobStatus) => match ($jobStatus) {
-    'assigned' => 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-400/30',
-    'in_progress' => 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-400/30',
-    'completed' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-400/30',
-    'cancelled' => 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-400/30',
-    default => 'bg-neutral-100 text-neutral-700 ring-neutral-600/20 dark:bg-neutral-800 dark:text-neutral-300 dark:ring-neutral-500/30',
+'assigned' => 'bg-blue-50 text-blue-700 ring-blue-600/20 dark:bg-blue-950/40 dark:text-blue-300 dark:ring-blue-400/30',
+'in_progress' => 'bg-amber-50 text-amber-700 ring-amber-600/20 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-400/30',
+'completed' => 'bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-400/30',
+'cancelled' => 'bg-red-50 text-red-700 ring-red-600/20 dark:bg-red-950/40 dark:text-red-300 dark:ring-red-400/30',
+default => 'bg-neutral-100 text-neutral-700 ring-neutral-600/20 dark:bg-neutral-800 dark:text-neutral-300 dark:ring-neutral-500/30',
 };
 
 $customerNameFor = fn ($jobOrder) => trim(
-    collect([
-        $jobOrder->customer?->first_name,
-        $jobOrder->customer?->middle_name,
-        $jobOrder->customer?->last_name,
-    ])->filter()->implode(' ')
+collect([
+$jobOrder->customer?->first_name,
+$jobOrder->customer?->middle_name,
+$jobOrder->customer?->last_name,
+])->filter()->implode(' ')
 );
 
 $jobTypeLabelFor = fn ($jobOrder) =>
-    $jobOrder->job_type
-        ? \Illuminate\Support\Str::headline($jobOrder->job_type)
-        : 'Type Not Set';
+$jobOrder->job_type
+? \Illuminate\Support\Str::headline($jobOrder->job_type)
+: 'Type Not Set';
 
 $modalContext = (string) old('modal_context', '');
+$oldStartJobOrderId = (string) old('start_job_order_id', '');
 $oldProofJobOrderId = (string) old('proof_job_order_id', '');
 $oldCompletionJobOrderId = (string) old('completion_job_order_id', '');
 $sessionProofJobOrderId = (string) session('proof_job_order_id', '');
 
 $requestedJobOrderId = (string) request()->query(
-    'job',
-    request()->query('proof', '')
+'job',
+request()->query('proof', '')
 );
 
 $requestedJobIsAvailable =
-    $requestedJobOrderId !== ''
-    && $jobOrders->contains(
-        fn ($jobOrder) =>
-            (string) $jobOrder->id === $requestedJobOrderId
-    );
+$requestedJobOrderId !== ''
+&& $jobOrders->contains(
+fn ($jobOrder) =>
+(string) $jobOrder->id === $requestedJobOrderId
+);
 
 $proofValidationFailed =
-    $errors->has('proof')
-    || $errors->has('notes');
+$errors->has('proof')
+|| $errors->has('notes');
 
 $completionValidationFailed =
-    $errors->has('completion_report');
+$errors->has('completion_report');
+
+$startValidationFailed =
+$errors->has('job_order')
+&& $modalContext === 'start';
+
+$startErrorJobOrderIsAvailable =
+$startValidationFailed
+&& $oldStartJobOrderId !== ''
+&& $jobOrders->contains(
+fn ($jobOrder) =>
+(string) $jobOrder->id === $oldStartJobOrderId
+);
 
 $reopenCompletionJobOrderId =
-    $completionValidationFailed
-    && $modalContext === 'completion'
-        ? $oldCompletionJobOrderId
-        : (
-            $proofValidationFailed
-            && $modalContext === 'completion_proof'
-                ? $oldProofJobOrderId
-                : (
-                    $sessionProofJobOrderId !== ''
-                        ? $sessionProofJobOrderId
-                        : ''
-                )
-        );
+$completionValidationFailed
+&& $modalContext === 'completion'
+? $oldCompletionJobOrderId
+: (
+$proofValidationFailed
+&& $modalContext === 'completion_proof'
+? $oldProofJobOrderId
+: (
+$sessionProofJobOrderId !== ''
+? $sessionProofJobOrderId
+: ''
+)
+);
 
 $reopenJobOrderId =
-    $reopenCompletionJobOrderId === ''
-    && $requestedJobIsAvailable
-        ? $requestedJobOrderId
-        : '';
+$reopenCompletionJobOrderId !== ''
+? ''
+: (
+$startValidationFailed
+? (
+$startErrorJobOrderIsAvailable
+? $oldStartJobOrderId
+: ''
+)
+: (
+$requestedJobIsAvailable
+? $requestedJobOrderId
+: ''
+)
+);
 @endphp
 
 
@@ -163,6 +187,28 @@ $reopenJobOrderId =
     @endif
 
 
+    @if (
+    $errors->has('job_order')
+    && ! $startErrorJobOrderIsAvailable
+    )
+
+    <div
+        class="flex items-start gap-3 border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300"
+        role="alert">
+
+        <i
+            data-lucide="triangle-alert"
+            class="mt-0.5 h-4 w-4 shrink-0"
+            aria-hidden="true">
+        </i>
+
+        <span>{{ $errors->first('job_order') }}</span>
+
+    </div>
+
+    @endif
+
+
     <div class="overflow-x-auto border-y border-neutral-200 py-2 dark:border-neutral-800 sm:border sm:bg-white sm:px-3 dark:sm:bg-neutral-900">
 
         <div class="flex min-w-max items-center gap-1">
@@ -220,11 +266,11 @@ $reopenJobOrderId =
 
         <p class="mx-auto mt-1 max-w-sm text-xs leading-5 text-neutral-500 dark:text-neutral-400">
             @if ($status !== '')
-                You currently have no
-                {{ \Illuminate\Support\Str::headline($status) }}
-                Job Orders.
+            You currently have no
+            {{ \Illuminate\Support\Str::headline($status) }}
+            Job Orders.
             @else
-                No Job Orders are currently assigned to your technician account.
+            No Job Orders are currently assigned to your technician account.
             @endif
         </p>
 
@@ -290,16 +336,16 @@ $reopenJobOrderId =
 
                         <p class="mt-0.5 text-sm text-neutral-700 dark:text-neutral-300">
                             @if ($jobOrder->scheduled_date)
-                                {{ $jobOrder->scheduled_date->format('M j, Y') }}
+                            {{ $jobOrder->scheduled_date->format('M j, Y') }}
 
-                                @if ($jobOrder->scheduled_time)
-                                    &middot;
-                                    {{ \Carbon\Carbon::parse(
+                            @if ($jobOrder->scheduled_time)
+                            &middot;
+                            {{ \Carbon\Carbon::parse(
                                         $jobOrder->scheduled_time
                                     )->format('g:i A') }}
-                                @endif
+                            @endif
                             @else
-                                Not scheduled
+                            Not scheduled
                             @endif
                         </p>
                     </div>
@@ -493,8 +539,8 @@ $statusClasses = $statusClassFor($jobOrder->status);
 $proofCount = $jobOrder->proofs->count();
 
 $isCompletionModalReopened =
-    $reopenCompletionJobOrderId ===
-    (string) $jobOrder->id;
+$reopenCompletionJobOrderId ===
+(string) $jobOrder->id;
 @endphp
 
 
@@ -559,6 +605,29 @@ $isCompletionModalReopened =
 
         <div class="overflow-hidden">
 
+            @if (
+            $startValidationFailed
+            && $oldStartJobOrderId === (string) $jobOrder->id
+            )
+
+            <div class="px-4 pt-3">
+                <div
+                    class="flex items-start gap-2 border border-red-200 bg-red-50 px-3 py-2 text-[11px] leading-5 text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300"
+                    role="alert">
+
+                    <i
+                        data-lucide="triangle-alert"
+                        class="mt-0.5 h-3.5 w-3.5 shrink-0"
+                        aria-hidden="true">
+                    </i>
+
+                    <span>{{ $errors->first('job_order') }}</span>
+                </div>
+            </div>
+
+            @endif
+
+
             @if ($jobOrder->job_type === null)
 
             <div class="px-4 pt-3">
@@ -607,8 +676,8 @@ $isCompletionModalReopened =
                         {{ $jobOrder->scheduled_date->format('M j, Y') }}
 
                         @if ($jobOrder->scheduled_time)
-                            &middot;
-                            {{ \Carbon\Carbon::parse(
+                        &middot;
+                        {{ \Carbon\Carbon::parse(
                                 $jobOrder->scheduled_time
                             )->format('g:i A') }}
                         @endif
@@ -685,8 +754,8 @@ $isCompletionModalReopened =
 
 
             @if (
-                $jobOrder->customer?->installation_address
-                || $jobOrder->customer?->address
+            $jobOrder->customer?->installation_address
+            || $jobOrder->customer?->address
             )
 
             <div class="border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
@@ -734,8 +803,8 @@ $isCompletionModalReopened =
 
 
             @if (
-                $jobOrder->status === 'completed'
-                && $jobOrder->completion_report
+            $jobOrder->status === 'completed'
+            && $jobOrder->completion_report
             )
 
             <div class="border-t border-neutral-200 px-4 py-3 dark:border-neutral-800">
@@ -903,6 +972,16 @@ $isCompletionModalReopened =
                 @csrf
                 @method('PATCH')
 
+                <input
+                    type="hidden"
+                    name="modal_context"
+                    value="start">
+
+                <input
+                    type="hidden"
+                    name="start_job_order_id"
+                    value="{{ $jobOrder->id }}">
+
                 <button
                     type="submit"
                     @disabled($jobOrder->job_type === null)
@@ -995,9 +1074,9 @@ $isCompletionModalReopened =
         <div class="overflow-hidden">
 
             @if (
-                session('success')
-                && $sessionProofJobOrderId
-                    === (string) $jobOrder->id
+            session('success')
+            && $sessionProofJobOrderId
+            === (string) $jobOrder->id
             )
 
             <div class="px-4 pt-3">
@@ -1082,8 +1161,8 @@ $isCompletionModalReopened =
 
 
                 @if (
-                    $isCompletionModalReopened
-                    && $errors->has('completion_report')
+                $isCompletionModalReopened
+                && $errors->has('completion_report')
                 )
 
                 <p class="mt-1 flex items-start gap-1 text-[10px] text-red-600 dark:text-red-400">
@@ -1286,8 +1365,8 @@ $isCompletionModalReopened =
 
 
                     @if (
-                        $isCompletionModalReopened
-                        && $errors->has('proof')
+                    $isCompletionModalReopened
+                    && $errors->has('proof')
                     )
 
                     <div class="mb-2 flex items-start gap-2 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-[10px] text-red-700 dark:border-red-900 dark:bg-red-950/30 dark:text-red-300" role="alert">
@@ -1408,8 +1487,8 @@ $isCompletionModalReopened =
 
 
                     @if (
-                        $isCompletionModalReopened
-                        && $errors->has('notes')
+                    $isCompletionModalReopened
+                    && $errors->has('notes')
                     )
 
                     <p class="mt-1 text-[10px] text-red-600 dark:text-red-400">
@@ -1461,7 +1540,7 @@ $isCompletionModalReopened =
             <button
                 type="submit"
                 form="completion-form-{{ $jobOrder->id }}"
-                @disabled($proofCount === 0)
+                @disabled($proofCount===0)
                 class="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md bg-[#008080] px-4 py-2 text-xs font-semibold text-white transition hover:bg-[#006f6f] focus:outline-none focus:ring-2 focus:ring-[#008080]/30 disabled:cursor-not-allowed disabled:bg-neutral-300 disabled:text-neutral-500 dark:disabled:bg-neutral-700 dark:disabled:text-neutral-400">
 
                 <i
@@ -1660,728 +1739,725 @@ $isCompletionModalReopened =
 
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const body =
-        document.body;
+    document.addEventListener('DOMContentLoaded', () => {
+        const body =
+            document.body;
 
-    const state =
-        document.getElementById(
-            'technician-job-modal-state'
-        );
-
-    const workflowModals = [
-        ...document.querySelectorAll(
-            '[data-workflow-modal]'
-        ),
-    ];
-
-    const jobModals = [
-        ...document.querySelectorAll(
-            '[data-job-modal]'
-        ),
-    ];
-
-    const completionModals = [
-        ...document.querySelectorAll(
-            '[data-completion-modal]'
-        ),
-    ];
-
-    const previewModal =
-        document.querySelector(
-            '[data-proof-preview-modal]'
-        );
-
-    const previewFrame =
-        previewModal?.querySelector(
-            '[data-proof-preview-frame]'
-        ) ?? null;
-
-    const previewTitle =
-        previewModal?.querySelector(
-            '[data-proof-preview-title]'
-        ) ?? null;
-
-    const previewMeta =
-        previewModal?.querySelector(
-            '[data-proof-preview-meta]'
-        ) ?? null;
-
-    const deleteModal =
-        document.querySelector(
-            '[data-proof-delete-modal]'
-        );
-
-    const deleteForm =
-        document.querySelector(
-            '[data-proof-delete-form]'
-        );
-
-    const deleteName =
-        document.querySelector(
-            '[data-proof-delete-name]'
-        );
-
-    const deleteJobOrderId =
-        document.querySelector(
-            '[data-proof-delete-job-order-id]'
-        );
-
-    const modalTriggers =
-        new Map();
-
-    let previewReturnModalId =
-        null;
-
-    let deleteReturnModalId =
-        null;
-
-
-    workflowModals.forEach((modal) => {
-        if (modal.parentElement !== body) {
-            body.appendChild(modal);
-        }
-    });
-
-
-    const modalIsOpen = (modal) =>
-        modal
-        && modal.getAttribute(
-            'aria-hidden'
-        ) === 'false';
-
-
-    const syncBodyLock = () => {
-        const anyOpen =
-            workflowModals.some(
-                (modal) =>
-                    modalIsOpen(modal)
+        const state =
+            document.getElementById(
+                'technician-job-modal-state'
             );
 
-        body.classList.toggle(
-            'overflow-hidden',
-            anyOpen
-        );
-    };
+        const workflowModals = [
+            ...document.querySelectorAll(
+                '[data-workflow-modal]'
+            ),
+        ];
+
+        const jobModals = [
+            ...document.querySelectorAll(
+                '[data-job-modal]'
+            ),
+        ];
+
+        const completionModals = [
+            ...document.querySelectorAll(
+                '[data-completion-modal]'
+            ),
+        ];
+
+        const previewModal =
+            document.querySelector(
+                '[data-proof-preview-modal]'
+            );
+
+        const previewFrame =
+            previewModal?.querySelector(
+                '[data-proof-preview-frame]'
+            ) ?? null;
+
+        const previewTitle =
+            previewModal?.querySelector(
+                '[data-proof-preview-title]'
+            ) ?? null;
+
+        const previewMeta =
+            previewModal?.querySelector(
+                '[data-proof-preview-meta]'
+            ) ?? null;
+
+        const deleteModal =
+            document.querySelector(
+                '[data-proof-delete-modal]'
+            );
+
+        const deleteForm =
+            document.querySelector(
+                '[data-proof-delete-form]'
+            );
+
+        const deleteName =
+            document.querySelector(
+                '[data-proof-delete-name]'
+            );
+
+        const deleteJobOrderId =
+            document.querySelector(
+                '[data-proof-delete-job-order-id]'
+            );
+
+        const modalTriggers =
+            new Map();
+
+        let previewReturnModalId =
+            null;
+
+        let deleteReturnModalId =
+            null;
 
 
-    const focusFirstControl = (modal) => {
-        window.setTimeout(() => {
-            const control =
-                modal?.querySelector(
-                    'button:not([disabled]), a[href], input:not([type="hidden"]):not([disabled]), textarea:not([disabled])'
+        workflowModals.forEach((modal) => {
+            if (modal.parentElement !== body) {
+                body.appendChild(modal);
+            }
+        });
+
+
+        const modalIsOpen = (modal) =>
+            modal &&
+            modal.getAttribute(
+                'aria-hidden'
+            ) === 'false';
+
+
+        const syncBodyLock = () => {
+            const anyOpen =
+                workflowModals.some(
+                    (modal) =>
+                    modalIsOpen(modal)
                 );
 
-            control?.focus();
-        }, 0);
-    };
-
-
-    const showModal = (
-        modal,
-        trigger = null
-    ) => {
-        if (!modal) {
-            return;
-        }
-
-        if (
-            trigger
-            instanceof HTMLElement
-        ) {
-            modalTriggers.set(
-                modal.id,
-                trigger
+            body.classList.toggle(
+                'overflow-hidden',
+                anyOpen
             );
-        }
-
-        modal.classList.remove(
-            'hidden'
-        );
-
-        modal.classList.add(
-            'flex'
-        );
-
-        modal.setAttribute(
-            'aria-hidden',
-            'false'
-        );
-
-        syncBodyLock();
-        focusFirstControl(modal);
-    };
+        };
 
 
-    const hideModal = (
-        modal,
-        restoreFocus = false
-    ) => {
-        if (!modal) {
-            return;
-        }
+        const focusFirstControl = (modal) => {
+            window.setTimeout(() => {
+                const control =
+                    modal?.querySelector(
+                        'button:not([disabled]), a[href], input:not([type="hidden"]):not([disabled]), textarea:not([disabled])'
+                    );
 
-        const activeElement =
-            document.activeElement;
+                control?.focus();
+            }, 0);
+        };
 
-        const trigger =
-            modalTriggers.get(
-                modal.id
+
+        const showModal = (
+            modal,
+            trigger = null
+        ) => {
+            if (!modal) {
+                return;
+            }
+
+            if (
+                trigger instanceof HTMLElement
+            ) {
+                modalTriggers.set(
+                    modal.id,
+                    trigger
+                );
+            }
+
+            modal.classList.remove(
+                'hidden'
             );
 
-        if (
-            restoreFocus
-            && trigger
-                instanceof HTMLElement
-            && trigger.offsetParent
-                !== null
-        ) {
-            trigger.focus();
-        } else if (
-            activeElement
-                instanceof HTMLElement
-            && modal.contains(
-                activeElement
+            modal.classList.add(
+                'flex'
+            );
+
+            modal.setAttribute(
+                'aria-hidden',
+                'false'
+            );
+
+            syncBodyLock();
+            focusFirstControl(modal);
+        };
+
+
+        const hideModal = (
+            modal,
+            restoreFocus = false
+        ) => {
+            if (!modal) {
+                return;
+            }
+
+            const activeElement =
+                document.activeElement;
+
+            const trigger =
+                modalTriggers.get(
+                    modal.id
+                );
+
+            if (
+                restoreFocus &&
+                trigger instanceof HTMLElement &&
+                trigger.offsetParent !==
+                null
+            ) {
+                trigger.focus();
+            } else if (
+                activeElement instanceof HTMLElement &&
+                modal.contains(
+                    activeElement
+                )
+            ) {
+                activeElement.blur();
+            }
+
+            modal.classList.add(
+                'hidden'
+            );
+
+            modal.classList.remove(
+                'flex'
+            );
+
+            modal.setAttribute(
+                'aria-hidden',
+                'true'
+            );
+
+            syncBodyLock();
+        };
+
+
+        const getJobModal = (
+                jobOrderId
+            ) =>
+            document.getElementById(
+                `job-modal-${jobOrderId}`
+            );
+
+
+        const getCompletionModal = (
+                jobOrderId
+            ) =>
+            document.getElementById(
+                `completion-modal-${jobOrderId}`
+            );
+
+
+        const closeAllWorkflow = () => {
+            workflowModals.forEach(
+                (modal) => {
+                    if (
+                        modalIsOpen(modal)
+                    ) {
+                        hideModal(
+                            modal,
+                            true
+                        );
+                    }
+                }
+            );
+
+            if (previewFrame) {
+                previewFrame.src =
+                    'about:blank';
+            }
+
+            previewReturnModalId =
+                null;
+
+            deleteReturnModalId =
+                null;
+        };
+
+
+        document
+            .querySelectorAll(
+                '[data-job-modal-open]'
             )
-        ) {
-            activeElement.blur();
-        }
-
-        modal.classList.add(
-            'hidden'
-        );
-
-        modal.classList.remove(
-            'flex'
-        );
-
-        modal.setAttribute(
-            'aria-hidden',
-            'true'
-        );
-
-        syncBodyLock();
-    };
+            .forEach((button) => {
+                button.addEventListener(
+                    'click',
+                    () => {
+                        showModal(
+                            getJobModal(
+                                button.dataset
+                                .jobModalOpen
+                            ),
+                            button
+                        );
+                    }
+                );
+            });
 
 
-    const getJobModal = (
-        jobOrderId
-    ) =>
-        document.getElementById(
-            `job-modal-${jobOrderId}`
-        );
+        document
+            .querySelectorAll(
+                '[data-completion-modal-open]'
+            )
+            .forEach((button) => {
+                button.addEventListener(
+                    'click',
+                    () => {
+                        const jobOrderId =
+                            button.dataset
+                            .completionModalOpen;
+
+                        hideModal(
+                            getJobModal(
+                                jobOrderId
+                            ),
+                            false
+                        );
+
+                        showModal(
+                            getCompletionModal(
+                                jobOrderId
+                            ),
+                            button
+                        );
+                    }
+                );
+            });
 
 
-    const getCompletionModal = (
-        jobOrderId
-    ) =>
-        document.getElementById(
-            `completion-modal-${jobOrderId}`
-        );
+        document
+            .querySelectorAll(
+                '[data-completion-back]'
+            )
+            .forEach((button) => {
+                button.addEventListener(
+                    'click',
+                    () => {
+                        const jobOrderId =
+                            button.dataset
+                            .completionBack;
+
+                        hideModal(
+                            getCompletionModal(
+                                jobOrderId
+                            ),
+                            false
+                        );
+
+                        showModal(
+                            getJobModal(
+                                jobOrderId
+                            )
+                        );
+                    }
+                );
+            });
 
 
-    const closeAllWorkflow = () => {
+        document
+            .querySelectorAll(
+                '[data-workflow-close]'
+            )
+            .forEach((button) => {
+                button.addEventListener(
+                    'click',
+                    closeAllWorkflow
+                );
+            });
+
+
         workflowModals.forEach(
             (modal) => {
+                modal
+                    .querySelector(
+                        '[data-workflow-overlay]'
+                    )
+                    ?.addEventListener(
+                        'click',
+                        closeAllWorkflow
+                    );
+            }
+        );
+
+
+        completionModals.forEach(
+            (modal) => {
+                const fileInput =
+                    modal.querySelector(
+                        '[data-proof-file-input]'
+                    );
+
+                const fileName =
+                    modal.querySelector(
+                        '[data-proof-file-name]'
+                    );
+
+                fileInput
+                    ?.addEventListener(
+                        'change',
+                        () => {
+                            const selectedFile =
+                                fileInput
+                                .files?.[0];
+
+                            if (
+                                !selectedFile ||
+                                !fileName
+                            ) {
+                                return;
+                            }
+
+                            fileName
+                                .textContent =
+                                selectedFile
+                                .name;
+
+                            fileName
+                                .classList
+                                .remove(
+                                    'hidden'
+                                );
+                        }
+                    );
+            }
+        );
+
+
+        document
+            .querySelectorAll(
+                '[data-proof-preview-open]'
+            )
+            .forEach((button) => {
+                button.addEventListener(
+                    'click',
+                    () => {
+                        const returnModalId =
+                            button.dataset
+                            .proofReturnModal;
+
+                        const returnModal =
+                            returnModalId ?
+                            document
+                            .getElementById(
+                                returnModalId
+                            ) :
+                            null;
+
+                        previewReturnModalId =
+                            returnModalId ||
+                            null;
+
+                        if (returnModal) {
+                            hideModal(
+                                returnModal,
+                                false
+                            );
+                        }
+
+                        if (previewTitle) {
+                            previewTitle
+                                .textContent =
+                                button.dataset
+                                .proofPreviewName ||
+                                'Proof Preview';
+                        }
+
+                        if (previewMeta) {
+                            previewMeta
+                                .textContent =
+                                button.dataset
+                                .proofPreviewMeta ||
+                                '';
+                        }
+
+                        if (previewFrame) {
+                            previewFrame.src =
+                                button.dataset
+                                .proofPreviewUrl;
+                        }
+
+                        showModal(
+                            previewModal,
+                            button
+                        );
+                    }
+                );
+            });
+
+
+        const returnFromPreview = () => {
+            hideModal(
+                previewModal,
+                false
+            );
+
+            if (previewFrame) {
+                previewFrame.src =
+                    'about:blank';
+            }
+
+            const returnModal =
+                previewReturnModalId ?
+                document
+                .getElementById(
+                    previewReturnModalId
+                ) :
+                null;
+
+            previewReturnModalId =
+                null;
+
+            if (returnModal) {
+                showModal(
+                    returnModal
+                );
+            }
+        };
+
+
+        document
+            .querySelector(
+                '[data-preview-back]'
+            )
+            ?.addEventListener(
+                'click',
+                returnFromPreview
+            );
+
+
+        document
+            .querySelector(
+                '[data-preview-overlay]'
+            )
+            ?.addEventListener(
+                'click',
+                returnFromPreview
+            );
+
+
+        document
+            .querySelectorAll(
+                '[data-proof-delete-open]'
+            )
+            .forEach((button) => {
+                button.addEventListener(
+                    'click',
+                    () => {
+                        const returnModalId =
+                            button.dataset
+                            .proofReturnModal;
+
+                        const returnModal =
+                            returnModalId ?
+                            document
+                            .getElementById(
+                                returnModalId
+                            ) :
+                            null;
+
+                        deleteReturnModalId =
+                            returnModalId ||
+                            null;
+
+                        if (returnModal) {
+                            hideModal(
+                                returnModal,
+                                false
+                            );
+                        }
+
+                        if (deleteForm) {
+                            deleteForm.action =
+                                button.dataset
+                                .proofDeleteAction;
+                        }
+
+                        if (deleteName) {
+                            deleteName
+                                .textContent =
+                                button.dataset
+                                .proofDeleteName ||
+                                'This proof file';
+                        }
+
+                        if (
+                            deleteJobOrderId
+                        ) {
+                            deleteJobOrderId
+                                .value =
+                                button.dataset
+                                .proofDeleteJobOrderId ||
+                                '';
+                        }
+
+                        showModal(
+                            deleteModal,
+                            button
+                        );
+                    }
+                );
+            });
+
+
+        const returnFromDelete = () => {
+            hideModal(
+                deleteModal,
+                false
+            );
+
+            const returnModal =
+                deleteReturnModalId ?
+                document
+                .getElementById(
+                    deleteReturnModalId
+                ) :
+                null;
+
+            deleteReturnModalId =
+                null;
+
+            if (returnModal) {
+                showModal(
+                    returnModal
+                );
+            }
+        };
+
+
+        document
+            .querySelector(
+                '[data-delete-cancel]'
+            )
+            ?.addEventListener(
+                'click',
+                returnFromDelete
+            );
+
+
+        document
+            .querySelector(
+                '[data-delete-overlay]'
+            )
+            ?.addEventListener(
+                'click',
+                returnFromDelete
+            );
+
+
+        document.addEventListener(
+            'keydown',
+            (event) => {
                 if (
-                    modalIsOpen(modal)
+                    event.key !== 'Escape'
                 ) {
+                    return;
+                }
+
+                if (
+                    modalIsOpen(
+                        previewModal
+                    )
+                ) {
+                    event.preventDefault();
+                    returnFromPreview();
+                    return;
+                }
+
+                if (
+                    modalIsOpen(
+                        deleteModal
+                    )
+                ) {
+                    event.preventDefault();
+                    returnFromDelete();
+                    return;
+                }
+
+                const completionModal =
+                    completionModals.find(
+                        (modal) =>
+                        modalIsOpen(
+                            modal
+                        )
+                    );
+
+                if (completionModal) {
+                    event.preventDefault();
+
+                    const jobOrderId =
+                        completionModal
+                        .dataset
+                        .completionModal;
+
                     hideModal(
-                        modal,
+                        completionModal,
+                        false
+                    );
+
+                    showModal(
+                        getJobModal(
+                            jobOrderId
+                        )
+                    );
+
+                    return;
+                }
+
+                const jobModal =
+                    jobModals.find(
+                        (modal) =>
+                        modalIsOpen(
+                            modal
+                        )
+                    );
+
+                if (jobModal) {
+                    event.preventDefault();
+
+                    hideModal(
+                        jobModal,
                         true
                     );
                 }
             }
         );
 
-        if (previewFrame) {
-            previewFrame.src =
-                'about:blank';
-        }
 
-        previewReturnModalId =
-            null;
-
-        deleteReturnModalId =
-            null;
-    };
-
-
-    document
-        .querySelectorAll(
-            '[data-job-modal-open]'
-        )
-        .forEach((button) => {
-            button.addEventListener(
-                'click',
-                () => {
-                    showModal(
-                        getJobModal(
-                            button.dataset
-                                .jobModalOpen
-                        ),
-                        button
-                    );
-                }
-            );
-        });
-
-
-    document
-        .querySelectorAll(
-            '[data-completion-modal-open]'
-        )
-        .forEach((button) => {
-            button.addEventListener(
-                'click',
-                () => {
-                    const jobOrderId =
-                        button.dataset
-                            .completionModalOpen;
-
-                    hideModal(
-                        getJobModal(
-                            jobOrderId
-                        ),
-                        false
-                    );
-
-                    showModal(
-                        getCompletionModal(
-                            jobOrderId
-                        ),
-                        button
-                    );
-                }
-            );
-        });
-
-
-    document
-        .querySelectorAll(
-            '[data-completion-back]'
-        )
-        .forEach((button) => {
-            button.addEventListener(
-                'click',
-                () => {
-                    const jobOrderId =
-                        button.dataset
-                            .completionBack;
-
-                    hideModal(
-                        getCompletionModal(
-                            jobOrderId
-                        ),
-                        false
-                    );
-
-                    showModal(
-                        getJobModal(
-                            jobOrderId
-                        )
-                    );
-                }
-            );
-        });
-
-
-    document
-        .querySelectorAll(
-            '[data-workflow-close]'
-        )
-        .forEach((button) => {
-            button.addEventListener(
-                'click',
-                closeAllWorkflow
-            );
-        });
-
-
-    workflowModals.forEach(
-        (modal) => {
-            modal
-                .querySelector(
-                    '[data-workflow-overlay]'
-                )
-                ?.addEventListener(
-                    'click',
-                    closeAllWorkflow
-                );
-        }
-    );
-
-
-    completionModals.forEach(
-        (modal) => {
-            const fileInput =
-                modal.querySelector(
-                    '[data-proof-file-input]'
-                );
-
-            const fileName =
-                modal.querySelector(
-                    '[data-proof-file-name]'
-                );
-
-            fileInput
-                ?.addEventListener(
-                    'change',
-                    () => {
-                        const selectedFile =
-                            fileInput
-                                .files?.[0];
-
-                        if (
-                            !selectedFile
-                            || !fileName
-                        ) {
-                            return;
-                        }
-
-                        fileName
-                            .textContent =
-                                selectedFile
-                                    .name;
-
-                        fileName
-                            .classList
-                            .remove(
-                                'hidden'
-                            );
-                    }
-                );
-        }
-    );
-
-
-    document
-        .querySelectorAll(
-            '[data-proof-preview-open]'
-        )
-        .forEach((button) => {
-            button.addEventListener(
-                'click',
-                () => {
-                    const returnModalId =
-                        button.dataset
-                            .proofReturnModal;
-
-                    const returnModal =
-                        returnModalId
-                            ? document
-                                .getElementById(
-                                    returnModalId
-                                )
-                            : null;
-
-                    previewReturnModalId =
-                        returnModalId
-                        || null;
-
-                    if (returnModal) {
-                        hideModal(
-                            returnModal,
-                            false
-                        );
-                    }
-
-                    if (previewTitle) {
-                        previewTitle
-                            .textContent =
-                                button.dataset
-                                    .proofPreviewName
-                                || 'Proof Preview';
-                    }
-
-                    if (previewMeta) {
-                        previewMeta
-                            .textContent =
-                                button.dataset
-                                    .proofPreviewMeta
-                                || '';
-                    }
-
-                    if (previewFrame) {
-                        previewFrame.src =
-                            button.dataset
-                                .proofPreviewUrl;
-                    }
-
-                    showModal(
-                        previewModal,
-                        button
-                    );
-                }
-            );
-        });
-
-
-    const returnFromPreview = () => {
-        hideModal(
-            previewModal,
-            false
-        );
-
-        if (previewFrame) {
-            previewFrame.src =
-                'about:blank';
-        }
-
-        const returnModal =
-            previewReturnModalId
-                ? document
-                    .getElementById(
-                        previewReturnModalId
-                    )
-                : null;
-
-        previewReturnModalId =
-            null;
-
-        if (returnModal) {
-            showModal(
-                returnModal
-            );
-        }
-    };
-
-
-    document
-        .querySelector(
-            '[data-preview-back]'
-        )
-        ?.addEventListener(
-            'click',
-            returnFromPreview
-        );
-
-
-    document
-        .querySelector(
-            '[data-preview-overlay]'
-        )
-        ?.addEventListener(
-            'click',
-            returnFromPreview
-        );
-
-
-    document
-        .querySelectorAll(
-            '[data-proof-delete-open]'
-        )
-        .forEach((button) => {
-            button.addEventListener(
-                'click',
-                () => {
-                    const returnModalId =
-                        button.dataset
-                            .proofReturnModal;
-
-                    const returnModal =
-                        returnModalId
-                            ? document
-                                .getElementById(
-                                    returnModalId
-                                )
-                            : null;
-
-                    deleteReturnModalId =
-                        returnModalId
-                        || null;
-
-                    if (returnModal) {
-                        hideModal(
-                            returnModal,
-                            false
-                        );
-                    }
-
-                    if (deleteForm) {
-                        deleteForm.action =
-                            button.dataset
-                                .proofDeleteAction;
-                    }
-
-                    if (deleteName) {
-                        deleteName
-                            .textContent =
-                                button.dataset
-                                    .proofDeleteName
-                                || 'This proof file';
-                    }
-
-                    if (
-                        deleteJobOrderId
-                    ) {
-                        deleteJobOrderId
-                            .value =
-                                button.dataset
-                                    .proofDeleteJobOrderId
-                                || '';
-                    }
-
-                    showModal(
-                        deleteModal,
-                        button
-                    );
-                }
-            );
-        });
-
-
-    const returnFromDelete = () => {
-        hideModal(
-            deleteModal,
-            false
-        );
-
-        const returnModal =
-            deleteReturnModalId
-                ? document
-                    .getElementById(
-                        deleteReturnModalId
-                    )
-                : null;
-
-        deleteReturnModalId =
-            null;
-
-        if (returnModal) {
-            showModal(
-                returnModal
-            );
-        }
-    };
-
-
-    document
-        .querySelector(
-            '[data-delete-cancel]'
-        )
-        ?.addEventListener(
-            'click',
-            returnFromDelete
-        );
-
-
-    document
-        .querySelector(
-            '[data-delete-overlay]'
-        )
-        ?.addEventListener(
-            'click',
-            returnFromDelete
-        );
-
-
-    document.addEventListener(
-        'keydown',
-        (event) => {
-            if (
-                event.key !== 'Escape'
-            ) {
-                return;
-            }
-
-            if (
-                modalIsOpen(
-                    previewModal
-                )
-            ) {
-                event.preventDefault();
-                returnFromPreview();
-                return;
-            }
-
-            if (
-                modalIsOpen(
-                    deleteModal
-                )
-            ) {
-                event.preventDefault();
-                returnFromDelete();
-                return;
-            }
-
-            const completionModal =
-                completionModals.find(
-                    (modal) =>
-                        modalIsOpen(
-                            modal
-                        )
-                );
-
-            if (completionModal) {
-                event.preventDefault();
-
-                const jobOrderId =
-                    completionModal
-                        .dataset
-                        .completionModal;
-
-                hideModal(
-                    completionModal,
-                    false
-                );
-
-                showModal(
-                    getJobModal(
-                        jobOrderId
-                    )
-                );
-
-                return;
-            }
-
-            const jobModal =
-                jobModals.find(
-                    (modal) =>
-                        modalIsOpen(
-                            modal
-                        )
-                );
-
-            if (jobModal) {
-                event.preventDefault();
-
-                hideModal(
-                    jobModal,
-                    true
-                );
-            }
-        }
-    );
-
-
-    const reopenCompletionJobOrderId =
-        state?.dataset
+        const reopenCompletionJobOrderId =
+            state?.dataset
             .reopenCompletionJobOrderId;
 
-    const reopenJobOrderId =
-        state?.dataset
+        const reopenJobOrderId =
+            state?.dataset
             .reopenJobOrderId;
 
 
-    if (
-        reopenCompletionJobOrderId
-    ) {
-        showModal(
-            getCompletionModal(
-                reopenCompletionJobOrderId
-            )
-        );
-    } else if (
-        reopenJobOrderId
-    ) {
-        showModal(
-            getJobModal(
-                reopenJobOrderId
-            )
-        );
-    }
-});
+        if (
+            reopenCompletionJobOrderId
+        ) {
+            showModal(
+                getCompletionModal(
+                    reopenCompletionJobOrderId
+                )
+            );
+        } else if (
+            reopenJobOrderId
+        ) {
+            showModal(
+                getJobModal(
+                    reopenJobOrderId
+                )
+            );
+        }
+    });
 </script>
 
 @endsection

@@ -207,6 +207,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initHeroDeleteModal();
     initUserAccountModals();
     initUserManagementFilters();
+    initListFilters();
     initHeroCarousel();
     initCoverageMap();
 });
@@ -853,6 +854,25 @@ function initUserManagementFilters() {
         return url;
     };
 
+    const synchronizeUserClear = (nextDocument) => {
+        const nextForm = nextDocument.querySelector(
+            '[data-user-filters]'
+        );
+
+        // The User Management GET form contains only one link:
+        // its conditional Clear Filters link.
+        const nextClear = nextForm?.querySelector('a[href]');
+        const currentClear = form.querySelector('a[href]');
+
+        currentClear?.remove();
+
+        if (nextClear && form.firstElementChild) {
+            form.firstElementChild.appendChild(
+                nextClear.cloneNode(true)
+            );
+        }
+    };
+
     const loadResults = async (url, historyMode = 'replace') => {
         requestController?.abort();
         requestController = new AbortController();
@@ -878,6 +898,7 @@ function initUserManagementFilters() {
             }
 
             results.innerHTML = nextResults.innerHTML;
+            synchronizeUserClear(nextDocument);
             createIcons({ icons });
 
             if (historyMode === 'push') {
@@ -934,6 +955,220 @@ function initUserManagementFilters() {
 
         event.preventDefault();
         loadResults(url, 'push');
+    });
+}
+
+// Shared live search, filters, sorting, and pagination.
+// Only pages with data-list-filters and data-list-results use this.
+function initListFilters() {
+    const form = document.querySelector('[data-list-filters]');
+    const results = document.querySelector('[data-list-results]');
+
+    if (!form || !results) {
+        return;
+    }
+
+    const searchInput = form.querySelector('[data-list-search]');
+    const filterSelects = form.querySelectorAll('[data-list-filter]');
+
+    let searchTimer = null;
+    let requestController = null;
+    let requestNumber = 0;
+
+    const cancelPendingSearch = () => {
+        if (searchTimer !== null) {
+            clearTimeout(searchTimer);
+            searchTimer = null;
+        }
+    };
+
+    const buildFilterUrl = () => {
+        const url = new URL(form.getAttribute('action'), window.location.origin);
+        const formData = new FormData(form);
+
+        formData.forEach((value, key) => {
+            const cleanValue = String(value).trim();
+
+            if (cleanValue !== '') {
+                url.searchParams.set(key, cleanValue);
+            }
+        });
+
+        return url;
+    };
+
+    const synchronizeClear = (nextDocument) => {
+        const nextForm = nextDocument.querySelector('[data-list-filters]');
+        const nextClear = nextForm?.querySelector('[data-list-clear]');
+        const currentClear = form.querySelector('[data-list-clear]');
+
+        currentClear?.remove();
+
+        if (nextClear && form.firstElementChild) {
+            form.firstElementChild.appendChild(
+                nextClear.cloneNode(true)
+            );
+        }
+    };
+
+    const synchronizeInputs = (url) => {
+        const params = url.searchParams;
+
+        Array.from(form.elements).forEach((element) => {
+            if (!element.name || !('value' in element)) {
+                return;
+            }
+
+            if (element.tagName === 'SELECT') {
+                const requested = params.get(element.name);
+                const fallback = element.options[0]?.value ?? '';
+                const nextValue = requested ?? fallback;
+
+                element.value = Array.from(element.options).some(
+                    option => option.value === nextValue
+                ) ? nextValue : fallback;
+            } else if (
+                element.tagName === 'INPUT' &&
+                !['hidden', 'checkbox', 'radio'].includes(element.type)
+            ) {
+                element.value = params.get(element.name) ?? '';
+            }
+        });
+    };
+
+    const loadResults = async (url, historyMode = 'replace') => {
+        requestController?.abort();
+
+        const controller = new AbortController();
+        requestController = controller;
+
+        const currentRequest = ++requestNumber;
+        results.setAttribute('aria-busy', 'true');
+
+        try {
+            const response = await fetch(url.toString(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                },
+                signal: controller.signal,
+            });
+
+            if (!response.ok) {
+                throw new Error('Unable to load filtered results.');
+            }
+
+            const html = await response.text();
+
+            if (currentRequest !== requestNumber) {
+                return;
+            }
+
+            const nextDocument = new DOMParser().parseFromString(
+                html,
+                'text/html'
+            );
+
+            const nextResults = nextDocument.querySelector(
+                '[data-list-results]'
+            );
+
+            if (!nextResults) {
+                window.location.assign(url.toString());
+                return;
+            }
+
+            results.innerHTML = nextResults.innerHTML;
+            synchronizeClear(nextDocument);
+
+            const liveCount = document.querySelector('[data-list-count]');
+            const nextCount = nextDocument.querySelector('[data-list-count]');
+
+            if (liveCount && nextCount) {
+                liveCount.textContent = nextCount.textContent;
+            }
+
+            createIcons({ icons });
+
+            if (historyMode === 'push') {
+                window.history.pushState({}, '', url.toString());
+            } else if (historyMode === 'replace') {
+                window.history.replaceState({}, '', url.toString());
+            }
+        } catch (error) {
+            if (error.name === 'AbortError') {
+                return;
+            }
+
+            if (currentRequest === requestNumber) {
+                window.location.assign(url.toString());
+            }
+        } finally {
+            if (currentRequest === requestNumber) {
+                results.setAttribute('aria-busy', 'false');
+            }
+        }
+    };
+
+    searchInput?.addEventListener('input', () => {
+        cancelPendingSearch();
+        requestController?.abort();
+
+        searchTimer = setTimeout(() => {
+            searchTimer = null;
+            loadResults(buildFilterUrl());
+        }, 400);
+    });
+
+    filterSelects.forEach((select) => {
+        select.addEventListener('change', () => {
+            cancelPendingSearch();
+            loadResults(buildFilterUrl());
+        });
+    });
+
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        cancelPendingSearch();
+        loadResults(buildFilterUrl());
+    });
+
+    results.addEventListener('click', (event) => {
+        const link = event.target.closest('a[href]');
+
+        if (!link || !results.contains(link)) {
+            return;
+        }
+
+        const url = new URL(link.href, window.location.origin);
+        const formUrl = new URL(form.getAttribute('action'), window.location.origin);
+
+        if (
+            url.origin !== formUrl.origin ||
+            url.pathname !== formUrl.pathname ||
+            !url.searchParams.has('page')
+        ) {
+            return;
+        }
+
+        event.preventDefault();
+        cancelPendingSearch();
+
+        loadResults(url, 'push');
+    });
+
+    window.addEventListener('popstate', () => {
+        const url = new URL(window.location.href);
+
+        if (
+            url.pathname !==
+            new URL(form.getAttribute('action'), window.location.origin).pathname
+        ) {
+            return;
+        }
+
+        cancelPendingSearch();
+        synchronizeInputs(url);
+        loadResults(url, 'none');
     });
 }
 

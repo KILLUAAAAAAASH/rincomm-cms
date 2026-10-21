@@ -195,7 +195,42 @@
                 </a>
 
 
+                {{-- Customer Support Tickets --}}
+                @if (Route::has('customer.tickets.index'))
+                    <a
+                        href="{{ route('customer.tickets.index') }}"
+                        class="
+                            flex items-center gap-3
+                            px-4 py-2.5 text-sm transition
+                            {{ request()->routeIs('customer.tickets.*')
+                                ? 'bg-[#008080] font-medium text-white shadow-sm'
+                                : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                                   dark:text-neutral-300 dark:hover:bg-[#008080]/15
+                                   dark:hover:text-[#5EEAD4]' }}
+                        ">
+                        <i data-lucide="ticket"
+                           class="h-5 w-5 shrink-0"
+                           aria-hidden="true"></i>
+                        <span>My Support Tickets</span>
+                    </a>
+                @endif
                 @if ($portalCustomer !== null)
+
+                    <a
+                        href="{{ route('customer.plan-changes.index') }}"
+                        class="
+                            flex items-center gap-3
+                            px-4 py-2.5 text-sm transition
+                            {{ request()->routeIs('customer.plan-changes.*')
+                                ? 'bg-[#008080] font-medium text-white shadow-sm'
+                                : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                                   dark:text-neutral-300 dark:hover:bg-[#008080]/15
+                                   dark:hover:text-[#5EEAD4]'
+                            }}
+                        ">
+                        <i data-lucide="refresh-cw" class="h-5 w-5 shrink-0" aria-hidden="true"></i>
+                        <span>My Internet Plan</span>
+                    </a>
 
                     <a
                         href="{{ route('customer.billing.index') }}"

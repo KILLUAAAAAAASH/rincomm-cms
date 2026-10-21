@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Subscribers')
 
@@ -123,9 +123,9 @@ $featureContext = [
                 aria-hidden="true">
             </i>
 
-            <span>
-                {{ number_format($subscribers->count()) }}
-                {{ $subscribers->count() === 1 ? 'subscriber' : 'subscribers' }}
+            <span data-list-count>
+                {{ number_format($subscribers->total()) }}
+                {{ $subscribers->total() === 1 ? 'subscriber' : 'subscribers' }}
             </span>
 
         </div>
@@ -198,205 +198,92 @@ $featureContext = [
     <form
         method="GET"
         action="{{ route('admin.subscribers.index') }}"
-        class="
-            border border-gray-200
-            bg-white
-            p-3
-            dark:border-neutral-800
-            dark:bg-neutral-900
-        ">
+        data-list-filters
+        class="border border-gray-200 bg-white p-3 dark:border-neutral-800 dark:bg-neutral-900">
 
-        @if ($featureContext)
+        <div class="flex flex-col gap-3 lg:flex-row lg:items-center">
 
-        <input
-            type="hidden"
-            name="feature"
-            value="{{ $featureKey }}">
+            @if ($featureContext)
+                <input type="hidden" name="feature" value="{{ $featureKey }}">
+            @endif
 
-        @endif
-
-
-        <div
-            class="
-                flex flex-col gap-2
-                md:flex-row
-                md:items-center
-            ">
-
-            {{-- Search --}}
             <div class="relative min-w-0 flex-1">
-
-                <label
-                    for="subscriber-search"
-                    class="sr-only">
+                <label for="subscriber-search" class="sr-only">
                     Search subscribers
                 </label>
 
-
-                <i
-                    data-lucide="search"
-                    class="
-                        pointer-events-none
-                        absolute left-3 top-1/2
-                        h-4 w-4
-                        -translate-y-1/2
-                        text-gray-400
-                        dark:text-gray-500
-                    "
-                    aria-hidden="true">
-                </i>
-
+                <i data-lucide="search"
+                   class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500 dark:text-gray-400"
+                   aria-hidden="true"></i>
 
                 <input
                     id="subscriber-search"
                     type="search"
                     name="search"
                     value="{{ $search }}"
-                    placeholder="Search customer code, name, email, or phone"
+                    data-list-search
+                    placeholder="Search customer code, name, email, or phone..."
                     autocomplete="off"
-                    class="
-                        min-h-10 w-full
-                        border border-gray-300
-                        bg-white
-                        py-2 pl-10 pr-3
-                        text-sm text-gray-900
-                        outline-none transition
-                        placeholder:text-gray-400
-                        focus:border-[#008080]
-                        focus:ring-2
-                        focus:ring-[#008080]/20
-                        dark:border-neutral-700
-                        dark:bg-neutral-950
-                        dark:text-white
-                        dark:placeholder:text-gray-500
-                    ">
-
+                    class="min-h-11 w-full border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 outline-none transition placeholder:text-gray-500 focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-gray-100">
             </div>
 
-
-            {{-- Status --}}
-            <div class="md:w-44 md:shrink-0">
-
-                <label
-                    for="subscriber-status"
-                    class="sr-only">
-                    Filter by status
+            <div class="lg:w-48">
+                <label for="subscriber-status" class="sr-only">
+                    Filter by subscriber status
                 </label>
-
 
                 <select
                     id="subscriber-status"
                     name="status"
-                    class="
-                        min-h-10 w-full
-                        border border-gray-300
-                        bg-white
-                        px-3 py-2
-                        text-sm text-gray-800
-                        outline-none transition
-                        focus:border-[#008080]
-                        focus:ring-2
-                        focus:ring-[#008080]/20
-                        dark:border-neutral-700
-                        dark:bg-neutral-950
-                        dark:text-gray-100
-                    ">
+                    data-list-filter
+                    class="min-h-11 w-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-gray-100">
 
-                    <option value="">
-                        All Status
-                    </option>
-
+                    <option value="">All statuses</option>
 
                     @foreach ($statuses as $subscriberStatus)
-
-                    <option
-                        value="{{ $subscriberStatus }}"
-                        @selected($status === $subscriberStatus)>
-
-                        {{ ucfirst($subscriberStatus) }}
-
-                    </option>
-
+                        <option
+                            value="{{ $subscriberStatus }}"
+                            @selected($status === $subscriberStatus)>
+                            {{ ucfirst($subscriberStatus) }}
+                        </option>
                     @endforeach
-
                 </select>
-
             </div>
 
+            <div class="lg:w-48">
+                <label for="subscriber-sort" class="sr-only">
+                    Sort subscribers
+                </label>
 
-            {{-- Apply --}}
-            <button
-                type="submit"
-                class="
-                    inline-flex min-h-10 shrink-0
-                    items-center justify-center gap-2
-                    bg-[#008080]
-                    px-4 py-2
-                    text-sm font-semibold
-                    text-white
-                    transition
-                    hover:bg-[#006666]
-                    focus:outline-none
-                    focus:ring-2
-                    focus:ring-[#008080]/30
-                ">
+                <select
+                    id="subscriber-sort"
+                    name="sort"
+                    data-list-filter
+                    class="min-h-11 w-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-gray-100">
 
-                <i
-                    data-lucide="list-filter"
-                    class="h-4 w-4"
-                    aria-hidden="true">
-                </i>
+                    <option value="newest" @selected($sort === 'newest')>Newest first</option>
+                    <option value="oldest" @selected($sort === 'oldest')>Oldest first</option>
+                    <option value="name_asc" @selected($sort === 'name_asc')>Name A-Z</option>
+                    <option value="name_desc" @selected($sort === 'name_desc')>Name Z-A</option>
+                    <option value="code_asc" @selected($sort === 'code_asc')>Customer code A-Z</option>
+                    <option value="code_desc" @selected($sort === 'code_desc')>Customer code Z-A</option>
+                </select>
+            </div>
 
-                Filter
-
-            </button>
-
-
-            {{-- Clear --}}
-            @if ($search !== '' || $status !== '')
-
-            <a
-                href="{{ route(
-                    'admin.subscribers.index',
-                    $featureContext
-                        ? ['feature' => $featureKey]
-                        : []
-                ) }}"
-                aria-label="Clear subscriber filters"
-                title="Clear filters"
-                class="
-                    inline-flex h-10 w-10 shrink-0
-                    items-center justify-center
-                    border border-gray-300
-                    text-gray-500
-                    transition
-                    hover:bg-gray-50
-                    hover:text-gray-900
-                    focus:outline-none
-                    focus:ring-2
-                    focus:ring-gray-300
-                    dark:border-neutral-700
-                    dark:text-gray-400
-                    dark:hover:bg-neutral-800
-                    dark:hover:text-white
-                ">
-
-                <i
-                    data-lucide="x"
-                    class="h-4 w-4"
-                    aria-hidden="true">
-                </i>
-
-            </a>
-
+            @if ($search !== '' || $status !== '' || $sort !== 'newest')
+                <a
+                    href="{{ route('admin.subscribers.index', $featureContext ? ['feature' => $featureKey] : []) }}"
+                    data-list-clear
+                    class="inline-flex min-h-11 shrink-0 items-center justify-center gap-2 border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 dark:border-neutral-700 dark:text-gray-200 dark:hover:bg-neutral-800">
+                    <i data-lucide="x" class="h-4 w-4" aria-hidden="true"></i>
+                    Clear
+                </a>
             @endif
-
         </div>
-
     </form>
 
-
     {{-- Results --}}
+    <div data-list-results aria-live="polite" aria-busy="false">
     @if ($subscribers->isEmpty())
 
     <section
@@ -1124,8 +1011,9 @@ $featureContext = [
                     text-xs text-gray-500
                     dark:text-gray-400
                 ">
-                Showing {{ number_format($subscribers->count()) }}
-                {{ $subscribers->count() === 1 ? 'record' : 'records' }}
+                Showing {{ number_format($subscribers->firstItem()) }}
+                - {{ number_format($subscribers->lastItem()) }}
+                of {{ number_format($subscribers->total()) }} records
             </p>
 
 
@@ -1545,6 +1433,14 @@ $featureContext = [
     </section>
 
     @endif
+    @if ($subscribers->hasPages())
+        <nav
+            class="mt-4 border border-gray-200 bg-white px-4 py-3 dark:border-neutral-800 dark:bg-neutral-900"
+            aria-label="Subscriber pagination">
+            {{ $subscribers->onEachSide(1)->links() }}
+        </nav>
+    @endif
+    </div>
 
 </div>
 

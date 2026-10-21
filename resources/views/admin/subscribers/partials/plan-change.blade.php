@@ -10,11 +10,17 @@ $currentPlan = $activeSubscription?->servicePlan;
 $previousPlanChangeRequests = $subscriber->planChangeRequests
 ->reject(fn ($request) => $request->status === 'pending');
 
+$canChooseDowngrade = $activeSubscription?->end_date
+    && $activeSubscription->end_date->startOfDay()->lt(today());
+
 $selectablePlans = $currentPlan
 ? $availablePlans->filter(
 fn ($plan) =>
-(float) $plan->speed_mbps !==
-(float) $currentPlan->speed_mbps
+(float) $plan->speed_mbps > (float) $currentPlan->speed_mbps ||
+(
+    $canChooseDowngrade &&
+    (float) $plan->speed_mbps < (float) $currentPlan->speed_mbps
+)
 )->values()
 : collect();
 
@@ -36,7 +42,7 @@ $pendingPlanChangeRequest !== null =>
 null,
 
 $selectablePlans->isEmpty() =>
-'No alternative upgrade or downgrade plan is available.',
+'No eligible alternative plan is available. Downgrades require a completed lock-in.',
 
 default => null,
 };
@@ -448,9 +454,9 @@ request('feature') === 'plan-change'
                         </dd>
                     </div>
                 </dl>
-                @if ((float) $activeSubscription->discount_amount > 0)
+                @if ((float) ($currentBillingRate?->discount_amount ?? $activeSubscription->discount_amount) > 0)
                 <p class="mt-3 border-t border-gray-200 pt-2 text-xs text-gray-600 dark:border-neutral-800 dark:text-gray-300">
-                    Existing subscription discount: <strong>&#8369;{{ number_format((float) $activeSubscription->discount_amount, 2) }}</strong> — this discount will be cleared if the request is approved.
+                    Existing subscription discount: <strong>&#8369;{{ number_format((float) ($currentBillingRate?->discount_amount ?? $activeSubscription->discount_amount), 2) }}</strong> — this discount ends on approval. The updated monthly rate takes effect immediately and is used for future unissued invoices on their regular billing dates.
                 </p>
                 @endif
             </section>
@@ -508,7 +514,7 @@ request('feature') === 'plan-change'
                         Step 1 of 2 · Choose a plan
                     </p>
                     <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                        Select an alternative package. This creates a pending request; the subscriber's active plan will not change yet.
+                        Select an eligible package. Downgrades are available only after lock-in ends. The current plan remains active until approval.
                     </p>
                 </div>
 
@@ -615,7 +621,7 @@ request('feature') === 'plan-change'
 
                 <div class="mt-4 border-t border-gray-100 pt-3 text-xs leading-5 text-gray-600 dark:border-neutral-800 dark:text-gray-300">
                     <p class="font-semibold text-gray-800 dark:text-gray-200">What happens next?</p>
-                    <p class="mt-1">The request will be marked Pending. The existing subscription remains unchanged until an administrator approves it. On approval, the new plan is applied immediately, any existing subscription discount is cleared, and the contract end date is recalculated from the original start date using the new plan duration.</p>
+                    <p class="mt-1">The request will be marked Pending for administrator review. If approved, the new plan, monthly rate, and renewed contract take effect immediately on approval. Existing subscription discounts do not carry over. Future unissued invoices use the new rate on their regular billing dates. Already issued invoices remain unchanged, and no proration is applied.</p>
                 </div>
 
                 @error('requested_service_plan_id')
@@ -857,7 +863,7 @@ request('feature') === 'plan-change'
 
                 <div class="mt-4 border border-gray-200 bg-gray-50 px-3 py-3 text-xs leading-5 text-gray-600 dark:border-neutral-800 dark:bg-neutral-950 dark:text-gray-300">
                     <p class="font-semibold text-gray-900 dark:text-white">The current plan is still active.</p>
-                    <p class="mt-1">Approve to apply the requested plan immediately, or reject to keep the current plan unchanged. Approval clears any existing subscription discount and recalculates the contract end date using the original subscription start date.</p>
+                    <p class="mt-1">Approve to activate the requested plan, renewed contract, and monthly rate immediately, or reject to keep the existing plan. Future unissued invoices use the new rate on their regular billing dates; already issued invoices remain unchanged.</p>
                 </div>
 
                 <div
@@ -965,6 +971,13 @@ request('feature') === 'plan-change'
 
             @endif
 
+
+            @if ($scheduledPlanChangeRequest)
+                <div role="status" class="mt-4 rounded-lg border border-teal-200 bg-teal-50 p-4 text-sm text-teal-900 dark:border-teal-900 dark:bg-teal-950/30 dark:text-teal-200">
+                    <p class="font-semibold">Approved plan change awaiting activation</p>
+                    <p class="mt-1">{{ $scheduledPlanChangeRequest->requestedPlan?->name ?? 'Requested plan' }} takes effect on {{ $scheduledPlanChangeRequest->effective_on?->format('M j, Y') }}. The existing plan and contract remain in effect until then.</p>
+                </div>
+            @endif
 
             {{-- History --}}
             @if ($previousPlanChangeRequests->isNotEmpty())
@@ -1240,7 +1253,7 @@ request('feature') === 'plan-change'
                 text-gray-900
                 dark:text-white
             ">
-            Approve and Apply Plan Change?
+            Approve and Activate Plan Change?
         </h2>
 
 
@@ -1261,7 +1274,7 @@ request('feature') === 'plan-change'
 
 
         <div class="mt-4 border border-gray-200 bg-gray-50 p-3 text-xs leading-5 dark:border-neutral-800 dark:bg-neutral-950">
-            <p class="font-semibold text-gray-900 dark:text-white">Changes applied immediately on approval</p>
+            <p class="font-semibold text-gray-900 dark:text-white">Changes effective immediately upon approval</p>
             <dl class="mt-2 space-y-1 text-gray-700 dark:text-gray-300">
                 <div class="flex justify-between gap-3">
                     <dt>New plan speed</dt>
@@ -1277,7 +1290,7 @@ request('feature') === 'plan-change'
                 </div>
             </dl>
             <p class="mt-3 border-t border-gray-200 pt-2 text-gray-600 dark:border-neutral-800 dark:text-gray-400">
-                Any existing subscription discount will be removed. The contract end date will be recalculated from the original subscription start date, not today's date.
+                Any existing subscription discount ends on approval. The new plan and renewed contract begin immediately. Future unissued invoices use the new monthly rate on their regular billing dates. No proration or changes to already-issued invoices.
             </p>
         </div>
 

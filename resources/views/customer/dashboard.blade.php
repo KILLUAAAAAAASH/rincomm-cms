@@ -208,6 +208,15 @@
 
     @else
 
+        <a href="{{ route('customer.plan-changes.index') }}"
+           class="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-md border border-[#008080]/30 bg-white px-5 py-4 text-[#008080] shadow-sm transition hover:border-[#008080] hover:bg-[#008080]/5 dark:bg-neutral-900 dark:text-[#5EEAD4] dark:hover:bg-[#008080]/15">
+            <span class="flex items-center gap-3">
+                <i data-lucide="refresh-cw" class="h-5 w-5" aria-hidden="true"></i>
+                <span class="font-semibold">My Internet Plan</span>
+            </span>
+            <span class="text-sm font-medium">Review plan and request changes →</span>
+        </a>
+
         <div
             class="
                 grid gap-5
@@ -383,6 +392,9 @@
                         </div>
 
 
+
+
+
                         <div>
 
                             <p
@@ -396,20 +408,14 @@
                             </p>
 
                             <p class="mt-1 text-md font-semibold text-neutral-900 dark:text-white">
-
                                 @if ($subscription?->servicePlan)
-                                    ₱{{ number_format(
-                                        (float) $subscription->servicePlan->monthly_fee,
-                                        2
-                                    ) }}
+                                    &#8369;{{ number_format((float) $subscription->servicePlan->monthly_fee, 2) }}
                                 @else
-                                    —
+                                    &mdash;
                                 @endif
-
                             </p>
 
                         </div>
-
 
                         <div>
 

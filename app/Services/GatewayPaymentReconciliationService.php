@@ -15,7 +15,8 @@ class GatewayPaymentReconciliationService
     public function __construct(
         private readonly InvoiceLifecycleService $invoiceLifecycleService,
         private readonly ActivityLogger $activityLogger,
-        private readonly MoneyService $moneyService
+        private readonly MoneyService $moneyService,
+        private readonly PaymentReceiptIssuanceService $paymentReceiptIssuanceService
     ) {}
 
     /**
@@ -611,6 +612,11 @@ class GatewayPaymentReconciliationService
                 'Unable to record gateway payment completion audit log.'
             );
         }
+
+        $this->paymentReceiptIssuanceService->issue(
+            $payment
+        );
+
 
         return true;
     }

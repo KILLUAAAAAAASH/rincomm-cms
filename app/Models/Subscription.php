@@ -15,19 +15,28 @@ class Subscription extends Model
         'customer_id',
         'service_plan_id',
         'start_date',
+        'billing_anchor_date',
         'end_date',
         'lock_in_months',
         'discount_amount',
         'is_custom_plan',
+        'activation_job_order_id',
+        'activation_mode',
+        'activated_by',
+        'activated_at',
         'status',
     ];
 
     protected $casts = [
         'start_date' => 'date',
+        'billing_anchor_date' => 'date',
         'end_date' => 'date',
         'lock_in_months' => 'integer',
         'discount_amount' => 'decimal:2',
         'is_custom_plan' => 'boolean',
+        'activated_at' => 'datetime',
+        'activation_job_order_id' => 'integer',
+        'activated_by' => 'integer',
     ];
 
     public function hasLockInPeriod(): bool

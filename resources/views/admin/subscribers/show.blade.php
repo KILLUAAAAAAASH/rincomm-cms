@@ -265,13 +265,13 @@ $hasDocumentErrors = $errors->hasAny([
     @php
     $displayPlan = $latestSubscription?->servicePlan;
 
-    $baseMonthlyFee = $displayPlan
-        ? (float) $displayPlan->monthly_fee
-        : 0;
+    $baseMonthlyFee = $currentBillingRate
+        ? (float) $currentBillingRate->monthly_fee
+        : ($displayPlan ? (float) $displayPlan->monthly_fee : 0);
 
-    $promotionalDiscount = $latestSubscription
-        ? (float) $latestSubscription->discount_amount
-        : 0;
+    $promotionalDiscount = $currentBillingRate
+        ? (float) $currentBillingRate->discount_amount
+        : ($latestSubscription ? (float) $latestSubscription->discount_amount : 0);
 
     $effectiveMonthlyFee = max(
         0,
@@ -2145,7 +2145,7 @@ $hasDocumentErrors = $errors->hasAny([
                                 text-xs text-gray-500
                                 dark:text-gray-400
                             ">
-                            Promotional Discount
+                            Current Billing Discount
                         </dt>
 
                         <dd
@@ -2170,7 +2170,7 @@ $hasDocumentErrors = $errors->hasAny([
                                 text-xs text-gray-500
                                 dark:text-gray-400
                             ">
-                            Effective Monthly Fee
+                            Current Monthly Fee (verified when available)
                         </dt>
 
                         <dd
@@ -2355,8 +2355,17 @@ $hasDocumentErrors = $errors->hasAny([
                                 text-gray-900
                                 dark:text-white
                             ">
-                            Promotional Discount
+                            Schedule Promotional Discount
                         </h3>
+                        <p class="mt-2 text-xs text-gray-600 dark:text-gray-400">
+                            The change is scheduled for the next billing cycle using verified pricing.
+                            Issued invoices remain unchanged.
+                            @if ($nextBillingRate)
+                                Next scheduled rate: {{ $nextBillingRate->effective_billing_date->format('M d, Y') }}.
+                            @elseif (! $currentBillingRate)
+                                Verified history is missing; manual billing review is required.
+                            @endif
+                        </p>
 
                     </div>
 
@@ -2390,7 +2399,7 @@ $hasDocumentErrors = $errors->hasAny([
                                         text-gray-700
                                         dark:text-gray-300
                                     ">
-                                    Discount Amount
+                                    Next Billing Cycle Discount Amount
                                 </label>
 
 
@@ -2414,17 +2423,11 @@ $hasDocumentErrors = $errors->hasAny([
                                         type="number"
                                         required
                                         min="0"
-                                        max="{{ number_format(
-                                            $baseMonthlyFee,
-                                            2,
-                                            '.',
-                                            ''
-                                        ) }}"
                                         step="0.01"
                                         value="{{ old(
                                             'discount_amount',
                                             number_format(
-                                                $promotionalDiscount,
+                                                (float) $latestSubscription->discount_amount,
                                                 2,
                                                 '.',
                                                 ''
@@ -2565,6 +2568,12 @@ $hasDocumentErrors = $errors->hasAny([
                 @endif
 
 
+                @if ($latestSubscription?->activation_mode === 'demo')
+                <section class="mt-5 border border-amber-400 p-3 text-xs text-amber-800 dark:border-amber-700 dark:text-amber-300">
+                    <strong>Local Demo Activation</strong> — This subscription is for workflow testing, does not certify live connectivity, and cannot be invoiced.
+                </section>
+                @endif
+
                 {{-- Pending subscription activation --}}
                 @if (
                     $latestSubscription->status === 'pending' &&
@@ -2608,6 +2617,43 @@ $hasDocumentErrors = $errors->hasAny([
 
                         @csrf
                         @method('PATCH')
+                        <div class="mb-4 border border-gray-200 p-3 dark:border-neutral-800">
+                            <label for="activation_installation_job_order" class="block text-xs font-medium text-gray-700 dark:text-gray-300">
+                                Verified Installation Job Order
+                            </label>
+
+                            <select id="activation_installation_job_order" name="installation_job_order_id" required
+                                class="mt-1.5 block min-h-10 w-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 outline-none focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white">
+                                <option value="">Select a completed installation...</option>
+                                @foreach ($eligibleInstallationJobOrders as $verifiedInstallation)
+                                    <option value="{{ $verifiedInstallation->id }}" @selected((string) old('installation_job_order_id') === (string) $verifiedInstallation->id)>
+                                        {{ $verifiedInstallation->job_order_number }} — Completed {{ $verifiedInstallation->completed_at ? \Illuminate\Support\Carbon::parse($verifiedInstallation->completed_at)->timezone('Asia/Manila')->format('M d, Y h:i A') : '' }}
+                                    </option>
+                                @endforeach
+                            </select>
+
+                            @if ($eligibleInstallationJobOrders->isEmpty())
+                                <p class="mt-2 text-xs text-amber-700 dark:text-amber-300">No eligible completed installation with proof is available for this pending subscription. Activation will be blocked.</p>
+                            @endif
+
+                            @error('installation_job_order_id')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+
+<label for="readiness_confirmed" class="mt-4 flex items-start gap-2 text-xs text-gray-700 dark:text-gray-300">
+                                <input id="readiness_confirmed" type="checkbox" name="readiness_confirmed" value="1" required @checked(old('readiness_confirmed'))
+                                    class="mt-0.5 h-4 w-4 shrink-0 accent-[#008080]">
+                                <span>@if (app()->environment('local', 'testing') && config('app.debug'))
+I reviewed the installation report and proof. This is a local demonstration only; no physical connectivity is certified and invoicing is blocked.
+@else
+I reviewed the installation report and proof and confirm that live service connectivity is operational.
+@endif</span>
+                            </label>
+                            @error('readiness_confirmed')
+                                <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                            @enderror
+                        </div>
+
 
 
                         <div
@@ -2635,9 +2681,11 @@ $hasDocumentErrors = $errors->hasAny([
                                     name="start_date"
                                     type="date"
                                     required
+                                    min="{{ now('Asia/Manila')->toDateString() }}"
+                                    max="{{ now('Asia/Manila')->toDateString() }}"
                                     value="{{ old(
                                         'start_date',
-                                        now()->format('Y-m-d')
+                                        now('Asia/Manila')->toDateString()
                                     ) }}"
                                     class="
                                         mt-1.5 block

@@ -23,6 +23,20 @@ class ServiceApplicationController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $status = (string) $request->query('status', '');
+        $sort = (string) $request->query('sort', 'newest');
+
+        $allowedSorts = [
+            'newest',
+            'oldest',
+            'application_asc',
+            'application_desc',
+            'name_asc',
+            'name_desc',
+        ];
+
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'newest';
+        }
 
         $allowedStatuses = [
             'pending',
@@ -70,8 +84,49 @@ class ServiceApplicationController extends Controller
                     $query->where('status', $status);
                 }
             )
-            ->orderByDesc('submitted_at')
-            ->orderByDesc('id')
+            ;
+
+        switch ($sort) {
+            case 'oldest':
+                $applications
+                    ->orderBy('submitted_at')
+                    ->orderBy('id');
+                break;
+
+            case 'application_asc':
+                $applications
+                    ->orderBy('application_number')
+                    ->orderBy('id');
+                break;
+
+            case 'application_desc':
+                $applications
+                    ->orderByDesc('application_number')
+                    ->orderByDesc('id');
+                break;
+
+            case 'name_asc':
+                $applications
+                    ->orderBy('last_name')
+                    ->orderBy('first_name')
+                    ->orderBy('id');
+                break;
+
+            case 'name_desc':
+                $applications
+                    ->orderByDesc('last_name')
+                    ->orderByDesc('first_name')
+                    ->orderByDesc('id');
+                break;
+
+            default:
+                $applications
+                    ->orderByDesc('submitted_at')
+                    ->orderByDesc('id');
+                break;
+        }
+
+        $applications = $applications
             ->paginate(20)
             ->withQueryString();
 
@@ -79,6 +134,7 @@ class ServiceApplicationController extends Controller
             'applications' => $applications,
             'search' => $search,
             'status' => $status,
+            'sort' => $sort,
         ]);
     }
 

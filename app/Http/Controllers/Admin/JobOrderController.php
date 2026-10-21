@@ -32,6 +32,21 @@ class JobOrderController extends Controller
         $status = (string) $request->query('status', '');
         $jobType = (string) $request->query('job_type', '');
 
+        $sort = (string) $request->query('sort', 'newest');
+
+        $allowedSorts = [
+            'newest',
+            'oldest',
+            'job_asc',
+            'job_desc',
+            'schedule_soon',
+            'schedule_latest',
+        ];
+
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'newest';
+        }
+
         $statuses = [
             'pending',
             'assigned',
@@ -111,7 +126,51 @@ class JobOrderController extends Controller
                     $jobType
                 )
             )
-            ->latest('id')
+            ;
+
+        switch ($sort) {
+            case 'oldest':
+                $jobOrders->orderBy('id');
+                break;
+
+            case 'job_asc':
+                $jobOrders
+                    ->orderBy('job_order_number')
+                    ->orderBy('id');
+                break;
+
+            case 'job_desc':
+                $jobOrders
+                    ->orderByDesc('job_order_number')
+                    ->orderByDesc('id');
+                break;
+
+            case 'schedule_soon':
+                $jobOrders
+                    ->orderByRaw(
+                        'CASE WHEN scheduled_date IS NULL THEN 1 ELSE 0 END'
+                    )
+                    ->orderBy('scheduled_date')
+                    ->orderBy('scheduled_time')
+                    ->orderBy('id');
+                break;
+
+            case 'schedule_latest':
+                $jobOrders
+                    ->orderByRaw(
+                        'CASE WHEN scheduled_date IS NULL THEN 1 ELSE 0 END'
+                    )
+                    ->orderByDesc('scheduled_date')
+                    ->orderByDesc('scheduled_time')
+                    ->orderByDesc('id');
+                break;
+
+            default:
+                $jobOrders->orderByDesc('id');
+                break;
+        }
+
+        $jobOrders = $jobOrders
             ->paginate(15)
             ->withQueryString();
 
@@ -120,6 +179,7 @@ class JobOrderController extends Controller
             'search' => $search,
             'status' => $status,
             'jobType' => $jobType,
+            'sort' => $sort,
             'statuses' => $statuses,
             'jobTypes' => $jobTypes,
             'customers' => $this->customersForCreation(),

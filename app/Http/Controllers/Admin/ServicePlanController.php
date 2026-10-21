@@ -46,9 +46,15 @@ class ServicePlanController extends Controller
     public function edit(
         ServicePlan $servicePlan
     ): View {
+        $hasExistingReferences = $servicePlan->subscriptions()->exists()
+            || $servicePlan->serviceApplications()->exists()
+            || $servicePlan->serviceRequests()->exists()
+            || $servicePlan->currentPlanChangeRequests()->where('status', 'pending')->exists()
+            || $servicePlan->requestedPlanChangeRequests()->where('status', 'pending')->exists();
+
         return view(
             'admin.service-plans.edit',
-            compact('servicePlan')
+            compact('servicePlan', 'hasExistingReferences')
         );
     }
 
@@ -56,7 +62,46 @@ class ServicePlanController extends Controller
         UpdateServicePlanRequest $request,
         ServicePlan $servicePlan
     ): RedirectResponse {
-        $servicePlan->update($request->validated());
+        $validated = $request->validated();
+
+        $result = \Illuminate\Support\Facades\DB::transaction(function () use ($servicePlan, $validated): array {
+            $lockedPlan = ServicePlan::query()
+                ->whereKey($servicePlan->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $hasMaterialChange = $lockedPlan->name !== $validated['name']
+                || (float) $lockedPlan->speed_mbps !== (float) $validated['speed_mbps']
+                || (float) $lockedPlan->monthly_fee !== (float) $validated['monthly_fee']
+                || (int) $lockedPlan->duration_months !== (int) $validated['duration_months']
+                || (bool) $lockedPlan->is_custom !== (bool) $validated['is_custom'];
+
+            $hasExistingReferences = $lockedPlan->subscriptions()->exists()
+                || $lockedPlan->serviceApplications()->exists()
+                || $lockedPlan->serviceRequests()->exists()
+                || $lockedPlan->currentPlanChangeRequests()->where('status', 'pending')->exists()
+                || $lockedPlan->requestedPlanChangeRequests()->where('status', 'pending')->exists();
+
+            if ($hasMaterialChange && $hasExistingReferences) {
+                return [
+                    'success' => false,
+                    'message' => 'This package is already referenced by subscribers, applications, service requests, or pending plan changes. '
+                        . 'To change its price, speed, name, or contract terms, create a new package version '
+                        . 'and deactivate the old package for new applications. Existing billing history is preserved.',
+                ];
+            }
+
+            $lockedPlan->update($validated);
+
+            return ['success' => true];
+        });
+
+        if (! $result['success']) {
+            return redirect()
+                ->route('admin.service-plans.edit', $servicePlan)
+                ->withInput()
+                ->with('error', $result['message']);
+        }
 
         return redirect()
             ->route('admin.service-plans.index')

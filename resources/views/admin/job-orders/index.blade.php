@@ -158,6 +158,7 @@ $createdJobOrderId =
     <form
         method="GET"
         action="{{ route('admin.job-orders.index') }}"
+        data-list-filters
         class="
             border border-gray-200
             bg-white p-3
@@ -165,168 +166,110 @@ $createdJobOrderId =
             dark:bg-neutral-900
         ">
 
-        <div
-            class="
-                flex flex-col gap-2
-                lg:flex-row lg:items-center
-            ">
+        <div class="flex flex-col gap-2 lg:flex-row lg:items-center">
 
             <div class="relative min-w-0 flex-1">
 
-                <label
-                    for="job-order-search"
-                    class="sr-only">
+                <label for="job-order-search" class="sr-only">
                     Search Job Orders
                 </label>
 
                 <i
                     data-lucide="search"
-                    class="
-                        pointer-events-none
-                        absolute left-3 top-1/2
-                        h-4 w-4 -translate-y-1/2
-                        text-gray-400
-                    ">
+                    class="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400">
                 </i>
 
                 <input
                     id="job-order-search"
                     type="search"
                     name="search"
+                    data-list-search
                     value="{{ $search }}"
-                    placeholder="Search JO number, customer code, name, email, or phone"
-                    class="
-                        min-h-10 w-full
-                        border border-gray-300
-                        bg-white py-2 pl-10 pr-3
-                        text-sm text-gray-900
-                        outline-none
-                        focus:border-[#008080]
-                        focus:ring-2
-                        focus:ring-[#008080]/20
-                        dark:border-neutral-700
-                        dark:bg-neutral-950
-                        dark:text-white
-                    ">
+                    placeholder="Search JO number, subscriber code, name, email, or phone"
+                    class="min-h-10 w-full border border-gray-300 bg-white py-2 pl-10 pr-3 text-sm text-gray-900 outline-none focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white">
 
             </div>
 
-
             <select
                 name="job_type"
+                data-list-filter
                 aria-label="Filter by Job Order type"
-                class="
-                    min-h-10
-                    border border-gray-300
-                    bg-white px-3 py-2
-                    text-sm text-gray-800
-                    outline-none
-                    focus:border-[#008080]
-                    focus:ring-2
-                    focus:ring-[#008080]/20
-                    dark:border-neutral-700
-                    dark:bg-neutral-950
-                    dark:text-gray-100
-                    lg:w-52
-                ">
+                class="min-h-10 w-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-gray-100 lg:w-48">
 
-                <option value="">
-                    All Job Types
-                </option>
+                <option value="">All Job Types</option>
 
                 @foreach ($jobTypes as $typeValue => $typeLabel)
-
-                <option
-                    value="{{ $typeValue }}"
-                    @selected($jobType===$typeValue)>
-                    {{ $typeLabel }}
-                </option>
-
+                    <option
+                        value="{{ $typeValue }}"
+                        @selected($jobType === $typeValue)>
+                        {{ $typeLabel }}
+                    </option>
                 @endforeach
 
             </select>
-
 
             <select
                 name="status"
+                data-list-filter
                 aria-label="Filter by Job Order status"
-                class="
-                    min-h-10
-                    border border-gray-300
-                    bg-white px-3 py-2
-                    text-sm text-gray-800
-                    outline-none
-                    focus:border-[#008080]
-                    focus:ring-2
-                    focus:ring-[#008080]/20
-                    dark:border-neutral-700
-                    dark:bg-neutral-950
-                    dark:text-gray-100
-                    lg:w-44
-                ">
+                class="min-h-10 w-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-gray-100 lg:w-40">
 
-                <option value="">
-                    All Status
-                </option>
+                <option value="">All Status</option>
 
                 @foreach ($statuses as $statusValue)
-
-                <option
-                    value="{{ $statusValue }}"
-                    @selected($status===$statusValue)>
-                    {{ \Illuminate\Support\Str::headline($statusValue) }}
-                </option>
-
+                    <option
+                        value="{{ $statusValue }}"
+                        @selected($status === $statusValue)>
+                        {{ \Illuminate\Support\Str::headline($statusValue) }}
+                    </option>
                 @endforeach
 
             </select>
 
+            <select
+                name="sort"
+                data-list-filter
+                aria-label="Sort Job Orders"
+                class="min-h-10 w-full border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-gray-100 lg:w-48">
 
-            <button
-                type="submit"
-                class="
-                    inline-flex min-h-10
-                    items-center justify-center gap-2
-                    bg-[#008080] px-4 py-2
-                    text-sm font-semibold text-white
-                    transition
-                    hover:bg-[#006666]
-                ">
+                <option value="newest" @selected($sort === 'newest')>
+                    Newest first
+                </option>
 
-                <i
-                    data-lucide="list-filter"
-                    class="h-4 w-4">
-                </i>
+                <option value="oldest" @selected($sort === 'oldest')>
+                    Oldest first
+                </option>
 
-                Filter
+                <option value="job_asc" @selected($sort === 'job_asc')>
+                    JO Number A-Z
+                </option>
 
-            </button>
+                <option value="job_desc" @selected($sort === 'job_desc')>
+                    JO Number Z-A
+                </option>
 
+                <option value="schedule_soon" @selected($sort === 'schedule_soon')>
+                    Schedule: Earliest
+                </option>
 
-            @if ($search !== '' || $status !== '' || $jobType !== '')
+                <option value="schedule_latest" @selected($sort === 'schedule_latest')>
+                    Schedule: Latest
+                </option>
 
-            <a
-                href="{{ route('admin.job-orders.index') }}"
-                title="Clear filters"
-                aria-label="Clear filters"
-                class="
-                        inline-flex h-10 w-10
-                        items-center justify-center
-                        border border-gray-300
-                        text-gray-500
-                        transition
-                        hover:border-[#008080]
-                        hover:text-[#008080]
-                        dark:border-neutral-700
-                        dark:text-gray-400
-                    ">
+            </select>
 
-                <i
-                    data-lucide="x"
-                    class="h-4 w-4">
-                </i>
+            @if ($search !== '' || $status !== '' || $jobType !== '' || $sort !== 'newest')
 
-            </a>
+                <a
+                    href="{{ route('admin.job-orders.index') }}"
+                    data-list-clear
+                    title="Clear filters"
+                    aria-label="Clear filters"
+                    class="inline-flex h-10 w-10 shrink-0 items-center justify-center border border-gray-300 text-gray-500 transition hover:border-[#008080] hover:text-[#008080] dark:border-neutral-700 dark:text-gray-400">
+
+                    <i data-lucide="x" class="h-4 w-4"></i>
+
+                </a>
 
             @endif
 
@@ -334,6 +277,7 @@ $createdJobOrderId =
 
     </form>
 
+    <div data-list-results aria-live="polite" aria-busy="false">
 
     @if ($jobOrders->isEmpty())
 
@@ -1017,6 +961,8 @@ $createdJobOrderId =
     @endif
 
     @endif
+
+    </div>
 
 </div>
 
@@ -2771,14 +2717,36 @@ $createdJobOrderId =
         };
 
 
-        viewButtons.forEach((button) => {
-            button.addEventListener(
-                'click',
-                () => {
-                    openDetailsModal(button);
+        /*
+        |--------------------------------------------------------------------------
+        | Delegated Job Order details action
+        |--------------------------------------------------------------------------
+        |
+        | Works for initial rows and rows replaced by live filtering.
+        | Keep viewButtons for initial modal-state restoration.
+        |
+        */
+
+        document.addEventListener(
+            'click',
+            (event) => {
+                const target = event.target;
+
+                if (!(target instanceof Element)) {
+                    return;
                 }
-            );
-        });
+
+                const button = target.closest(
+                    '[data-job-order-view]'
+                );
+
+                if (!button) {
+                    return;
+                }
+
+                openDetailsModal(button);
+            }
+        );
 
 
         detailsCloseButtons.forEach((button) => {

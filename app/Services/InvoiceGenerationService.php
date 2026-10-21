@@ -22,7 +22,8 @@ class InvoiceGenerationService
     public function __construct(
         private readonly BillingCycleService $billingCycleService,
         private readonly ActivityLogger $activityLogger,
-        private readonly MoneyService $moneyService
+        private readonly MoneyService $moneyService,
+        private readonly SubscriptionBillingRateService $billingRateService
     ) {}
 
     /**
@@ -84,6 +85,14 @@ class InvoiceGenerationService
                 );
             }
 
+            // A local simulation must never create a payable invoice,
+            // including when invoice generation is invoked explicitly.
+            if ($lockedSubscription->activation_mode === 'demo') {
+                throw new DomainException(
+                    'Demo subscriptions cannot be billed.'
+                );
+            }
+
             if ($lockedSubscription->start_date === null) {
                 throw new DomainException(
                     'The active subscription does not have a billing start date.'
@@ -109,11 +118,26 @@ class InvoiceGenerationService
             }
 
             $dates = $this->billingCycleService->datesForCycle(
-                $lockedSubscription->start_date,
+                $lockedSubscription->billing_anchor_date
+                    ?? $lockedSubscription->start_date,
                 $cycleNumber
             );
 
             $billingDate = $dates['billing_date']->toDateString();
+
+            // Fail closed: never invoice the new rate if a scheduled plan
+            // change due for this cycle has not actually been applied.
+            if ($lockedSubscription->planChangeRequests()
+                ->where('status', 'approved')
+                ->whereNotNull('effective_on')
+                ->whereNull('applied_at')
+                ->whereDate('effective_on', '<=', $billingDate)
+                ->exists()) {
+                throw new DomainException(
+                    'A scheduled plan change is awaiting application. Invoice generation is blocked.'
+                );
+            }
+
             $dueDate = $dates['due_date']->toDateString();
             $disconnectionNoticeDate =
                 $dates['disconnection_notice_date']->toDateString();
@@ -148,20 +172,20 @@ class InvoiceGenerationService
             }
 
             /*
-             * Capture the plan used for this invoice before creating it.
-             * This snapshot must not change if the subscription plan
-             * is upgraded, downgraded, renamed, or removed later.
-             *
-             * Existing billing-cycle pricing behavior is preserved.
+             * Existing invoices were returned unchanged above.
+             * New invoices require verified historical billing rates.
              */
-            $billedServicePlan = $lockedSubscription->servicePlan;
+            $billingRate = $this->billingRateService->rateForBillingDate(
+                $lockedSubscription,
+                $billingDate
+            );
 
             $baseMonthlyFeeCents = $this->moneyService->toCents(
-                $billedServicePlan->monthly_fee
+                $billingRate->monthly_fee
             );
 
             $discountCents = $this->moneyService->toCents(
-                $lockedSubscription->discount_amount
+                $billingRate->discount_amount
             );
 
             if ($discountCents > $baseMonthlyFeeCents) {
@@ -184,9 +208,9 @@ class InvoiceGenerationService
                 'customer_id' => $lockedSubscriber->id,
                 'subscription_id' => $lockedSubscription->id,
 
-                'billed_service_plan_id' => $billedServicePlan->id,
-                'billed_service_plan_name' => $billedServicePlan->name,
-                'billed_speed_mbps' => $billedServicePlan->speed_mbps,
+                'billed_service_plan_id' => $billingRate->service_plan_id,
+                'billed_service_plan_name' => $billingRate->billed_service_plan_name,
+                'billed_speed_mbps' => $billingRate->billed_speed_mbps,
 
                 'invoice_number' => 'INV-' . Str::ulid(),
                 'billing_date' => $billingDate,
@@ -212,7 +236,7 @@ class InvoiceGenerationService
             $invoice->items()->create([
                 'description' =>
                     'Monthly internet service - '
-                    . $billedServicePlan->name,
+                    . $billingRate->billed_service_plan_name,
                 'quantity' => '1.00',
                 'unit_price' => $this->moneyService->toDecimal(
                     $baseMonthlyFeeCents
@@ -240,7 +264,7 @@ class InvoiceGenerationService
                     'subscription_id' =>
                         $lockedSubscription->id,
                     'service_plan_id' =>
-                        $lockedSubscription->service_plan_id,
+                        $billingRate->service_plan_id,
                     'invoice_id' =>
                         $invoice->id,
                     'invoice_number' =>

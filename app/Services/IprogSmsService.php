@@ -106,6 +106,56 @@ class IprogSmsService
         ];
     }
 
+    /**
+     * Send a transactional account notification (never an OTP).
+     * Accepting a message for delivery does not mean the recipient received it.
+     */
+    public function sendNotificationMessage(string $phoneNumber, string $message): array
+    {
+        $phoneNumber = trim($phoneNumber);
+        $message = trim($message);
+
+        if (! preg_match('/^639\d{9}$/', $phoneNumber)) {
+            throw new RuntimeException('A valid Philippine mobile number is required for SMS notifications.');
+        }
+
+        if ($message === '' || strlen($message) > 320) {
+            throw new RuntimeException('An SMS notification must contain between 1 and 320 characters.');
+        }
+
+        $baseUrl = rtrim(trim((string) config('services.iprog_sms.base_url')), '/');
+        $apiToken = trim((string) config('services.iprog_sms.api_token'));
+        $timeout = max(1, (int) config('services.iprog_sms.timeout', 10));
+
+        if ($baseUrl === '' || $apiToken === '') {
+            throw new RuntimeException('IPROG SMS is not configured for notification delivery.');
+        }
+
+        $response = Http::acceptJson()
+            ->asJson()
+            ->timeout($timeout)
+            ->post("{$baseUrl}/api/v1/sms_messages", [
+                'api_token' => $apiToken,
+                'phone_number' => $phoneNumber,
+                'message' => $message,
+            ]);
+
+        $this->ensureSuccessfulResponse($response);
+        $result = $response->json();
+
+        if (! is_array($result)
+            || (int) ($result['status'] ?? 0) !== 200
+            || empty($result['message_id'])) {
+            throw new RuntimeException('IPROG SMS did not accept the account notification for delivery.');
+        }
+
+        return [
+            'message_id' => $result['message_id'],
+            'recipient' => $phoneNumber,
+            'status' => $result['message'] ?? 'Queued',
+        ];
+    }
+
     private function ensureSuccessfulResponse(
         Response $response
     ): void {

@@ -90,7 +90,7 @@
     </div>
 
 
-    {{-- Operational note --}}
+{{-- Operational note --}}
     <div
         class="
             flex items-start gap-2
@@ -126,6 +126,7 @@
     <form
         method="GET"
         action="{{ route('admin.invoices.index') }}"
+        data-list-filters
         class="
             border border-gray-200
             bg-white
@@ -168,6 +169,7 @@
                     type="search"
                     name="q"
                     value="{{ $search }}"
+                    data-list-search
                     placeholder="Search invoice number, customer code, or subscriber name"
                     autocomplete="off"
                     class="
@@ -202,6 +204,7 @@
                 <select
                     id="invoice-status"
                     name="status"
+                    data-list-filter
                     class="
                         min-h-10 w-full
                         border border-gray-300
@@ -237,40 +240,72 @@
             </div>
 
 
-            {{-- Apply --}}
-            <button
-                type="submit"
-                class="
-                    inline-flex min-h-10
-                    shrink-0
-                    items-center justify-center
-                    gap-2
-                    bg-[#008080]
-                    px-4 py-2
-                    text-sm font-semibold
-                    text-white
-                    transition
-                    hover:bg-[#006666]
-                    focus:outline-none
-                    focus:ring-2
-                    focus:ring-[#008080]/20
-                ">
+            {{-- Sort --}}
+            <div class="md:w-48 md:shrink-0">
 
-                <i
-                    data-lucide="list-filter"
-                    class="h-4 w-4"
-                    aria-hidden="true">
-                </i>
+                <label
+                    for="invoice-sort"
+                    class="sr-only">
+                    Sort invoices
+                </label>
 
-                Apply
+                <select
+                    id="invoice-sort"
+                    name="sort"
+                    data-list-filter
+                    class="
+                        min-h-10 w-full
+                        border border-gray-300
+                        bg-white
+                        px-3 py-2
+                        text-sm text-gray-800
+                        outline-none transition
+                        focus:border-[#008080]
+                        focus:ring-2
+                        focus:ring-[#008080]/20
+                        dark:border-neutral-700
+                        dark:bg-neutral-950
+                        dark:text-gray-100
+                    ">
 
-            </button>
+                    <option value="newest" @selected($sort === 'newest')>
+                        Newest first
+                    </option>
 
+                    <option value="oldest" @selected($sort === 'oldest')>
+                        Oldest first
+                    </option>
 
-            @if ($search !== '' || $status !== '')
+                    <option value="due_earliest" @selected($sort === 'due_earliest')>
+                        Due date: earliest
+                    </option>
+
+                    <option value="due_latest" @selected($sort === 'due_latest')>
+                        Due date: latest
+                    </option>
+
+                    <option value="amount_high" @selected($sort === 'amount_high')>
+                        Amount: highest
+                    </option>
+
+                    <option value="amount_low" @selected($sort === 'amount_low')>
+                        Amount: lowest
+                    </option>
+
+                </select>
+
+            </div>
+
+            {{-- Clear filters --}}
+            @if (
+                $search !== '' ||
+                $status !== '' ||
+                $sort !== 'newest'
+            )
 
             <a
                 href="{{ route('admin.invoices.index') }}"
+                data-list-clear
                 class="
                     inline-flex min-h-10
                     shrink-0
@@ -304,10 +339,13 @@
 
             @endif
 
+
         </div>
 
     </form>
 
+
+    <div data-list-results aria-live="polite" aria-busy="false">
 
     @if ($invoices->isEmpty())
 
@@ -417,7 +455,7 @@
 
                     <th
                         class="
-                            w-[19%]
+                            w-[18%]
                             px-3 py-2.5
                             text-left
                             text-[10px] font-semibold
@@ -430,7 +468,7 @@
 
                     <th
                         class="
-                            w-[24%]
+                            w-[20%]
                             px-3 py-2.5
                             text-left
                             text-[10px] font-semibold
@@ -443,7 +481,7 @@
 
                     <th
                         class="
-                            w-[15%]
+                            w-[14%]
                             px-3 py-2.5
                             text-left
                             text-[10px] font-semibold
@@ -456,7 +494,7 @@
 
                     <th
                         class="
-                            w-[12%]
+                            w-[11%]
                             px-3 py-2.5
                             text-left
                             text-[10px] font-semibold
@@ -469,7 +507,7 @@
 
                     <th
                         class="
-                            w-[12%]
+                            w-[11%]
                             px-3 py-2.5
                             text-left
                             text-[10px] font-semibold
@@ -495,7 +533,7 @@
 
                     <th
                         class="
-                            w-[8%]
+                            w-[16%]
                             px-3 py-2.5
                             text-left
                             text-[10px] font-semibold
@@ -621,11 +659,10 @@
                                 text-sm text-gray-700
                                 dark:text-gray-200
                             ">
-                            {{ $invoice->subscription?->servicePlan?->name
-                                ?? 'Unavailable' }}
+                            {{ $invoice->billedPlanDisplayName() }}
                         </p>
 
-                        @if ($invoice->subscription?->servicePlan)
+                        @if ($invoice->billedSpeedDisplayMbps() !== null)
 
                         <p
                             class="
@@ -634,7 +671,7 @@
                                 dark:text-gray-400
                             ">
                             {{ number_format(
-                                (float) $invoice->subscription->servicePlan->speed_mbps,
+                                (float) $invoice->billedSpeedDisplayMbps(),
                                 0
                             ) }}
                             Mbps
@@ -836,8 +873,14 @@
                             text-gray-800
                             dark:text-gray-200
                         ">
-                        {{ $invoice->subscription?->servicePlan?->name
-                            ?? 'Unavailable' }}
+                        {{ $invoice->billedPlanDisplayName() }}
+
+                        @if ($invoice->billedSpeedDisplayMbps() !== null)
+                        <span
+                            class="mt-0.5 block text-xs font-normal text-gray-500 dark:text-gray-400">
+                            {{ number_format((float) $invoice->billedSpeedDisplayMbps(), 0) }} Mbps
+                        </span>
+                        @endif
                     </dd>
 
                 </div>
@@ -986,6 +1029,9 @@
 
     @endif
 
+    </div>
+
 </div>
+
 
 @endsection

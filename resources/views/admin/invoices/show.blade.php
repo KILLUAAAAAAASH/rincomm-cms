@@ -86,6 +86,17 @@ if ($billedPlanName === '') {
 }
 
 $billedSpeedMbps = $invoice->billed_speed_mbps;
+$billedSpeedFromName = false;
+
+// Legacy invoices may contain the speed tier in the recorded
+// plan name. This is a display hint, not a historical snapshot.
+if (
+    $billedSpeedMbps === null
+    && preg_match('/^Fiber\s+([1-9][0-9]{0,4})$/i', $billedPlanName, $matches) === 1
+) {
+    $billedSpeedMbps = (int) $matches[1];
+    $billedSpeedFromName = true;
+}
 
 $subscriberName = trim(
 collect([
@@ -619,6 +630,10 @@ $paymentToken
                                     0
                                 ) }}
                             Mbps
+@if ($billedSpeedFromName)
+    <span class="text-xs text-gray-500 dark:text-gray-400">
+    </span>
+@endif
                             @else
                             Not recorded
                             @endif
@@ -1127,6 +1142,8 @@ $paymentToken
 
         </div>
 
+
+        @include('shared.payment-ledger')
 
         {{-- Gateway payments --}}
         <section

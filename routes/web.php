@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\ServiceApplicationController as AdminServiceAppli
 use App\Http\Controllers\Admin\ServicePlanController;
 use App\Http\Controllers\Admin\SubscriberController;
 use App\Http\Controllers\Admin\SubscriptionController;
+use App\Http\Controllers\Admin\TicketController as AdminTicketController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Auth\EmployeeActivationController;
@@ -23,6 +24,9 @@ use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Customer\BillingController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 use App\Http\Controllers\Customer\GatewayPaymentController;
+use App\Http\Controllers\Customer\TicketController as CustomerTicketController;
+use App\Http\Controllers\Customer\PlanChangeController as CustomerPlanChangeController;
+use App\Http\Controllers\PaymentReceiptController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\LandingPageController;
 use App\Http\Controllers\ProfileController;
@@ -212,6 +216,32 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
+    /*
+    |--------------------------------------------------------------------------
+    | Support Tickets
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/admin/tickets', [AdminTicketController::class, 'index'])
+        ->name('admin.tickets.index');
+
+    Route::get('/admin/tickets/create', [AdminTicketController::class, 'create'])
+        ->name('admin.tickets.create');
+
+    Route::post('/admin/tickets', [AdminTicketController::class, 'store'])
+        ->name('admin.tickets.store');
+
+    Route::get('/admin/tickets/{ticket}', [AdminTicketController::class, 'show'])
+        ->name('admin.tickets.show');
+    Route::patch(
+        '/admin/tickets/{ticket}/assignment',
+        [\App\Http\Controllers\Admin\TicketWorkflowController::class, 'assign']
+    )->name('admin.tickets.assignment.update');
+
+    Route::patch(
+        '/admin/tickets/{ticket}/status',
+        [\App\Http\Controllers\Admin\TicketWorkflowController::class, 'transition']
+    )->name('admin.tickets.status.update');
     Route::get('/admin/job-orders', [AdminJobOrderController::class, 'index'])
         ->name('admin.job-orders.index');
 
@@ -415,6 +445,11 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     Route::get('/admin/invoices/{invoice}', [InvoiceController::class, 'show'])
         ->name('admin.invoices.show');
 
+    Route::get(
+        '/admin/invoices/{invoice}/payments/{payment}/receipt',
+        [PaymentReceiptController::class, 'show']
+    )->name('admin.invoices.payments.receipt.show');
+
     /*
     |--------------------------------------------------------------------------
     | Hero Slides
@@ -500,6 +535,30 @@ Route::middleware(['auth', 'active', 'role:customer'])->group(function () {
     Route::get('/customer/dashboard', [CustomerDashboardController::class, 'index'])
         ->name('customer.dashboard');
 
+    // Customer-only plan management and requests. No subscriber ID in the URL.
+    /*
+    |--------------------------------------------------------------------------
+    | Customer Support Tickets
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/customer/tickets', [CustomerTicketController::class, 'index'])
+        ->name('customer.tickets.index');
+
+    Route::get('/customer/tickets/create', [CustomerTicketController::class, 'create'])
+        ->name('customer.tickets.create');
+
+    Route::post('/customer/tickets', [CustomerTicketController::class, 'store'])
+        ->name('customer.tickets.store');
+
+    Route::get('/customer/tickets/{ticket}', [CustomerTicketController::class, 'show'])
+        ->name('customer.tickets.show');
+    Route::get('/customer/plan-changes', [CustomerPlanChangeController::class, 'index'])
+        ->name('customer.plan-changes.index');
+
+    Route::post('/customer/plan-changes', [CustomerPlanChangeController::class, 'store'])
+        ->name('customer.plan-changes.store');
+
     Route::get('/customer/billing', [BillingController::class, 'index'])
         ->name('customer.billing.index');
 
@@ -507,6 +566,11 @@ Route::middleware(['auth', 'active', 'role:customer'])->group(function () {
         '/customer/billing/invoices/{invoice}',
         [BillingController::class, 'show']
     )->name('customer.billing.show');
+
+    Route::get(
+        '/customer/billing/invoices/{invoice}/payments/{payment}/receipt',
+        [PaymentReceiptController::class, 'show']
+    )->name('customer.billing.payments.receipt.show');
 
     Route::post(
         '/customer/billing/invoices/{invoice}/gateway-payments',

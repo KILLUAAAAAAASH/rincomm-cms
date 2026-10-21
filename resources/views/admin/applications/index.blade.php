@@ -87,6 +87,7 @@
     <form
         method="GET"
         action="{{ route('admin.applications.index') }}"
+        data-list-filters
         class="
             border border-gray-200
             bg-white p-2
@@ -123,6 +124,7 @@
                     id="application-search"
                     type="search"
                     name="search"
+                    data-list-search
                     value="{{ $search }}"
                     placeholder="Search application, applicant, email, or phone"
                     autocomplete="off"
@@ -160,6 +162,7 @@
                 <select
                     id="application-status"
                     name="status"
+                    data-list-filter
                     class="
                         min-h-10 w-full
                         border border-gray-300
@@ -198,35 +201,63 @@
             </div>
 
 
-            {{-- Apply --}}
-            <button
-                type="submit"
-                class="
-                    inline-flex min-h-10 shrink-0
-                    items-center justify-center gap-2
-                    bg-[#008080] px-4 py-2
-                    text-sm font-semibold text-white
-                    transition hover:bg-[#006666]
-                    focus:outline-none
-                    focus:ring-2 focus:ring-[#008080]
-                    focus:ring-offset-2
-                    dark:focus:ring-offset-neutral-900
-                "
-            >
-                <i
-                    data-lucide="list-filter"
-                    class="h-4 w-4"
-                    aria-hidden="true"
-                ></i>
+            {{-- Sort --}}
+            <div class="lg:w-48">
 
-                Apply
-            </button>
+                <label for="application-sort" class="sr-only">
+                    Sort service applications
+                </label>
+
+                <select
+                    id="application-sort"
+                    name="sort"
+                    data-list-filter
+                    class="
+                        min-h-10 w-full
+                        border border-gray-300
+                        bg-white px-3 py-2
+                        text-sm text-gray-800
+                        outline-none transition
+                        focus:border-[#008080]
+                        focus:ring-2 focus:ring-[#008080]/20
+                        dark:border-neutral-700
+                        dark:bg-neutral-950
+                        dark:text-gray-100
+                    "
+                >
+                    <option value="newest" @selected($sort === 'newest')>
+                        Newest first
+                    </option>
+
+                    <option value="oldest" @selected($sort === 'oldest')>
+                        Oldest first
+                    </option>
+
+                    <option value="application_asc" @selected($sort === 'application_asc')>
+                        Application No. A-Z
+                    </option>
+
+                    <option value="application_desc" @selected($sort === 'application_desc')>
+                        Application No. Z-A
+                    </option>
+
+                    <option value="name_asc" @selected($sort === 'name_asc')>
+                        Applicant Name A-Z
+                    </option>
+
+                    <option value="name_desc" @selected($sort === 'name_desc')>
+                        Applicant Name Z-A
+                    </option>
+                </select>
+
+            </div>
 
 
             {{-- Clear --}}
-            @if ($search !== '' || $status !== '')
+            @if ($search !== '' || $status !== '' || $sort !== 'newest')
             <a
                 href="{{ route('admin.applications.index') }}"
+                data-list-clear
                 class="
                     inline-flex min-h-10 shrink-0
                     items-center justify-center gap-2
@@ -258,7 +289,7 @@
 
 
     {{-- Application Results --}}
-    <div aria-live="polite">
+    <div data-list-results aria-live="polite" aria-busy="false">
 
         @if ($applications->isEmpty())
 

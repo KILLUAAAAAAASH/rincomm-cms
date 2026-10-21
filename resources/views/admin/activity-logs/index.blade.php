@@ -44,6 +44,7 @@
     <form
         method="GET"
         action="{{ route('admin.activity-logs.index') }}"
+        data-list-filters
         class="
             border border-gray-200
             bg-white p-3
@@ -51,10 +52,10 @@
             dark:bg-neutral-900
         ">
 
-        <div class="grid gap-2 lg:grid-cols-12">
+        <div class="flex flex-col gap-2 lg:flex-row lg:items-center">
 
             {{-- Search --}}
-            <div class="relative lg:col-span-4">
+            <div class="relative min-w-0 flex-1">
 
                 <label
                     for="activity-search"
@@ -78,6 +79,7 @@
                     type="search"
                     name="search"
                     value="{{ $search }}"
+                    data-list-search
                     placeholder="Search user, action, description, or IP"
                     autocomplete="off"
                     class="
@@ -100,7 +102,7 @@
 
 
             {{-- Action --}}
-            <div class="lg:col-span-2">
+            <div class="lg:w-40">
 
                 <label
                     for="activity-action"
@@ -111,6 +113,7 @@
                 <select
                     id="activity-action"
                     name="action"
+                    data-list-filter
                     class="
                         min-h-10 w-full
                         border border-gray-300
@@ -140,20 +143,22 @@
             </div>
 
 
-            {{-- Date from --}}
-            <div class="lg:col-span-2">
+            {{-- Single date filter --}}
+            <div class="lg:w-40">
 
                 <label
-                    for="date-from"
+                    for="activity-date"
                     class="sr-only">
-                    Date from
+                    Filter by date
                 </label>
 
                 <input
-                    id="date-from"
+                    id="activity-date"
                     type="date"
-                    name="date_from"
-                    value="{{ $dateFrom }}"
+                    name="date"
+                    value="{{ $date }}"
+                    data-list-filter
+                    aria-label="Filter by date"
                     class="
                         min-h-10 w-full
                         border border-gray-300
@@ -171,20 +176,19 @@
             </div>
 
 
-            {{-- Date to --}}
-            <div class="lg:col-span-2">
+            {{-- Sort --}}
+            <div class="lg:w-44">
 
                 <label
-                    for="date-to"
+                    for="activity-sort"
                     class="sr-only">
-                    Date to
+                    Sort activity logs
                 </label>
 
-                <input
-                    id="date-to"
-                    type="date"
-                    name="date_to"
-                    value="{{ $dateTo }}"
+                <select
+                    id="activity-sort"
+                    name="sort"
+                    data-list-filter
                     class="
                         min-h-10 w-full
                         border border-gray-300
@@ -199,72 +203,63 @@
                         dark:text-gray-100
                     ">
 
+                    <option value="newest" @selected($sort === 'newest')>
+                        Newest first
+                    </option>
+
+                    <option value="oldest" @selected($sort === 'oldest')>
+                        Oldest first
+                    </option>
+
+                    <option value="action_asc" @selected($sort === 'action_asc')>
+                        Action A-Z
+                    </option>
+
+                    <option value="action_desc" @selected($sort === 'action_desc')>
+                        Action Z-A
+                    </option>
+
+                </select>
+
             </div>
 
-
-            {{-- Apply --}}
-            <div class="flex gap-2 lg:col-span-2">
-
-                <button
-                    type="submit"
-                    class="
-                        inline-flex min-h-10 flex-1
-                        items-center justify-center gap-1.5
-                        bg-[#008080]
-                        px-3 py-2
-                        text-sm font-semibold text-white
-                        transition
-                        hover:bg-[#006666]
-                        focus:outline-none
-                        focus:ring-2
-                        focus:ring-[#008080]
-                        focus:ring-offset-2
-                        dark:focus:ring-offset-neutral-900
-                    ">
-                    <i
-                        data-lucide="list-filter"
-                        class="h-4 w-4"
-                        aria-hidden="true"></i>
-
-                    Apply
-                </button>
-
-                @if (
+            {{-- Clear filters --}}
+            @if (
                 $search !== '' ||
                 $action !== '' ||
-                $dateFrom !== '' ||
-                $dateTo !== ''
-                )
+                $date !== '' ||
+                $sort !== 'newest'
+            )
 
-                <a
-                    href="{{ route('admin.activity-logs.index') }}"
-                    class="
-                            inline-flex min-h-10
-                            items-center justify-center
-                            border border-gray-300
-                            px-3 py-2
-                            text-sm font-medium
-                            text-gray-700
-                            transition
-                            hover:bg-gray-50
-                            focus:outline-none
-                            focus:ring-2
-                            focus:ring-gray-400
-                            dark:border-neutral-700
-                            dark:text-gray-200
-                            dark:hover:bg-neutral-800
-                        "
-                    aria-label="Clear filters"
-                    title="Clear filters">
-                    <i
-                        data-lucide="x"
-                        class="h-4 w-4"
-                        aria-hidden="true"></i>
-                </a>
+            <a
+                href="{{ route('admin.activity-logs.index') }}"
+                data-list-clear
+                class="
+                    inline-flex min-h-10 shrink-0
+                    items-center justify-center gap-2
+                    border border-gray-300
+                    px-4 py-2
+                    text-sm font-medium
+                    text-gray-700 transition
+                    hover:bg-gray-50
+                    focus:outline-none
+                    focus:ring-2
+                    focus:ring-gray-400
+                    dark:border-neutral-700
+                    dark:text-gray-200
+                    dark:hover:bg-neutral-800
+                ">
 
-                @endif
+                <i
+                    data-lucide="x"
+                    class="h-4 w-4"
+                    aria-hidden="true"></i>
 
-            </div>
+                Clear
+
+            </a>
+
+            @endif
 
         </div>
 
@@ -272,6 +267,7 @@
 
 
     {{-- Results --}}
+    <div data-list-results aria-live="polite" aria-busy="false">
     @if ($logs->isEmpty())
 
     <div
@@ -626,6 +622,8 @@
     @endif
 
     @endif
+
+    </div>
 
 </div>
 

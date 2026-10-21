@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Customer;
 use App\Models\ServiceArea;
 use App\Models\ServicePlan;
+use App\Models\Subscription;
+use App\Models\SubscriptionBillingRate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +22,21 @@ class SubscriberController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $status = (string) $request->query('status', '');
+
+        $sort = (string) $request->query('sort', 'newest');
+
+        $allowedSorts = [
+            'newest',
+            'oldest',
+            'name_asc',
+            'name_desc',
+            'code_asc',
+            'code_desc',
+        ];
+
+        if (! in_array($sort, $allowedSorts, true)) {
+            $sort = 'newest';
+        }
 
         $statuses = [
             'pending',
@@ -52,7 +69,9 @@ class SubscriberController extends Controller
                         ->orWhere('middle_name', 'like', "%{$search}%")
                         ->orWhere('last_name', 'like', "%{$search}%")
                         ->orWhereRaw(
-                            "CONCAT_WS(' ', first_name, middle_name, last_name) LIKE ?",
+                            DB::connection()->getDriverName() === 'sqlite'
+                                ? "TRIM(REPLACE(COALESCE(first_name, '') || ' ' || COALESCE(middle_name, '') || ' ' || COALESCE(last_name, ''), '  ', ' ')) LIKE ?"
+                                : "CONCAT_WS(' ', first_name, middle_name, last_name) LIKE ?",
                             ["%{$search}%"]
                         )
                         ->orWhere('email', 'like', "%{$search}%")
@@ -63,13 +82,55 @@ class SubscriberController extends Controller
                 in_array($status, $statuses, true),
                 fn($query) => $query->where('status', $status)
             )
-            ->latest()
-            ->get();
+            ;
+
+        switch ($sort) {
+            case 'oldest':
+                $subscribers
+                    ->orderBy('created_at')
+                    ->orderBy('id');
+                break;
+
+            case 'name_asc':
+                $subscribers
+                    ->orderBy('last_name')
+                    ->orderBy('first_name')
+                    ->orderBy('id');
+                break;
+
+            case 'name_desc':
+                $subscribers
+                    ->orderByDesc('last_name')
+                    ->orderByDesc('first_name')
+                    ->orderByDesc('id');
+                break;
+
+            case 'code_asc':
+                $subscribers
+                    ->orderBy('customer_code')
+                    ->orderBy('id');
+                break;
+
+            case 'code_desc':
+                $subscribers
+                    ->orderByDesc('customer_code')
+                    ->orderByDesc('id');
+                break;
+
+            default:
+                $subscribers
+                    ->orderByDesc('created_at')
+                    ->orderByDesc('id');
+                break;
+        }
+
+        $subscribers = $subscribers->paginate(20)->withQueryString();
 
         return view('admin.subscribers.index', [
             'subscribers' => $subscribers,
             'search' => $search,
             'status' => $status,
+            'sort' => $sort,
             'statuses' => $statuses,
         ]);
     }
@@ -95,6 +156,7 @@ class SubscriberController extends Controller
                         'customer_id',
                         'service_plan_id',
                         'start_date',
+                        'billing_anchor_date',
                         'end_date',
                         'lock_in_months',
                         'discount_amount',
@@ -112,7 +174,7 @@ class SubscriberController extends Controller
                 $query
                     ->with([
                         'currentPlan:id,name,speed_mbps,monthly_fee',
-                        'requestedPlan:id,name,speed_mbps,monthly_fee',
+                        'requestedPlan:id,name,speed_mbps,monthly_fee,duration_months',
                         'requester:id,name,email',
                     ])
                     ->latest('id');
@@ -131,11 +193,59 @@ class SubscriberController extends Controller
 
         $latestSubscription = $subscriber->subscriptions->first();
 
+        $eligibleInstallationJobOrders = collect();
+
+        if (
+            $latestSubscription?->status === 'pending'
+            && $subscriber->status === 'pending'
+        ) {
+            $eligibleInstallationJobOrders = $subscriber->jobOrders()
+                ->where('job_type', 'new_installation')
+                ->where('status', 'completed')
+                ->whereNotNull('technician_id')
+                ->whereNotNull('completed_at')
+                ->whereNotNull('completion_report')
+                ->where('created_at', '>=', $latestSubscription->created_at)
+                ->whereHas('proofs')
+                ->whereNotIn(
+                    'id',
+                    Subscription::query()
+                        ->whereNotNull('activation_job_order_id')
+                        ->select('activation_job_order_id')
+                )
+                ->orderByDesc('completed_at')
+                ->get(['id', 'job_order_number', 'completed_at']);
+        }
+
         $activeSubscription = $subscriber->subscriptions
             ->firstWhere('status', 'active');
 
         $pendingPlanChangeRequest = $subscriber->planChangeRequests
             ->firstWhere('status', 'pending');
+
+        $scheduledPlanChangeRequest = $subscriber->planChangeRequests->first(
+            fn ($item) => $item->status === 'approved'
+                && $item->effective_on !== null
+                && $item->applied_at === null
+        );
+
+        $currentBillingRate = $activeSubscription
+            ? SubscriptionBillingRate::query()
+                ->where('subscription_id', $activeSubscription->id)
+                ->whereDate('effective_billing_date', '<=', today()->toDateString())
+                ->orderByDesc('effective_billing_date')
+                ->orderByDesc('id')
+                ->first()
+            : null;
+
+        $nextBillingRate = $activeSubscription
+            ? SubscriptionBillingRate::query()
+                ->where('subscription_id', $activeSubscription->id)
+                ->whereDate('effective_billing_date', '>', today()->toDateString())
+                ->orderBy('effective_billing_date')
+                ->orderByDesc('id')
+                ->first()
+            : null;
 
         $pendingRelocationRequest = $subscriber->relocationRequests
             ->firstWhere('status', 'pending');
@@ -183,8 +293,12 @@ class SubscriberController extends Controller
         return view('admin.subscribers.show', [
             'subscriber' => $subscriber,
             'latestSubscription' => $latestSubscription,
+            'eligibleInstallationJobOrders' => $eligibleInstallationJobOrders,
             'activeSubscription' => $activeSubscription,
+            'currentBillingRate' => $currentBillingRate,
+            'nextBillingRate' => $nextBillingRate,
             'pendingPlanChangeRequest' => $pendingPlanChangeRequest,
+            'scheduledPlanChangeRequest' => $scheduledPlanChangeRequest,
             'pendingRelocationRequest' => $pendingRelocationRequest,
             'availablePlans' => $availablePlans,
             'serviceableAreas' => $serviceableAreas,

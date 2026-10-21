@@ -65,6 +65,21 @@
     </div>
 
 
+    @if (session('error'))
+        <div role="alert" class="border border-red-300 bg-red-50 px-4 py-3 text-sm text-red-800 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">
+            {{ session('error') }}
+        </div>
+    @endif
+
+    @if ($hasExistingReferences)
+        <div class="border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-800 dark:bg-amber-950/20 dark:text-amber-200">
+            <strong>Existing subscribers / requests:</strong>
+            You can edit the description and availability, but the package name, speed, monthly fee,
+            and contract terms are protected. Create a new package for new pricing, then deactivate
+            this package for new subscriptions. Existing subscriber billing rates will not be rewritten.
+        </div>
+    @endif
+
     <form
         action="{{ route('admin.service-plans.update', $servicePlan) }}"
         method="POST"

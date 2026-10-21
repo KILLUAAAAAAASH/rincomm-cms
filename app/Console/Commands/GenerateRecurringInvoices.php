@@ -61,7 +61,8 @@ class GenerateRecurringInvoices extends Command
 
                         while (true) {
                             $dates = $billingCycleService->datesForCycle(
-                                $subscription->start_date,
+                                $subscription->billing_anchor_date
+                                    ?? $subscription->start_date,
                                 $cycleNumber
                             );
 

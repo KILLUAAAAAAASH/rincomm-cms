@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\JobOrder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -42,20 +43,13 @@ class JobOrderController extends Controller
                 'customer',
                 'serviceRequest.servicePlan',
                 'notes.user',
-                'proofs' => fn ($query) => $query
-                    ->latest(),
+                'proofs' => fn($query) => $query->latest(),
                 'proofs.uploader',
             ])
-            ->where(
-                'technician_id',
-                $technician->id
-            )
+            ->where('technician_id', $technician->id)
             ->when(
                 $status !== '',
-                fn ($query) => $query->where(
-                    'status',
-                    $status
-                )
+                fn($query) => $query->where('status', $status)
             )
             ->orderByRaw('scheduled_date IS NULL')
             ->orderBy('scheduled_date')
@@ -74,9 +68,6 @@ class JobOrderController extends Controller
 
     /**
      * Display one Job Order assigned to the authenticated technician.
-     *
-     * This route remains available as a secure fallback/direct link.
-     * The normal technician workflow uses the Job Orders workspace modal.
      */
     public function show(
         Request $request,
@@ -91,8 +82,7 @@ class JobOrderController extends Controller
             'customer',
             'serviceRequest.servicePlan',
             'notes.user',
-            'proofs' => fn ($query) => $query
-                ->latest(),
+            'proofs' => fn($query) => $query->latest(),
             'proofs.uploader',
         ]);
 
@@ -102,7 +92,8 @@ class JobOrderController extends Controller
     }
 
     /**
-     * Start an assigned Job Order.
+     * Start an assigned Job Order only when its
+     * scheduled date and time have been reached.
      */
     public function start(
         Request $request,
@@ -121,12 +112,13 @@ class JobOrderController extends Controller
                 ->lockForUpdate()
                 ->firstOrFail();
 
+            // Prevent access to another technician's Job Order.
             abort_unless(
-                $lockedJobOrder->technician_id
-                    === $technician->id,
+                $lockedJobOrder->technician_id === $technician->id,
                 404
             );
 
+            // Only assigned Job Orders may be started.
             if ($lockedJobOrder->status !== 'assigned') {
                 throw ValidationException::withMessages([
                     'job_order' => 'Only assigned Job Orders can be started.',
@@ -139,6 +131,38 @@ class JobOrderController extends Controller
                 ]);
             }
 
+            // An assigned Job Order must have a complete schedule.
+            if (
+                $lockedJobOrder->scheduled_date === null
+                || $lockedJobOrder->scheduled_time === null
+                || $lockedJobOrder->scheduled_time === ''
+            ) {
+                throw ValidationException::withMessages([
+                    'job_order' => 'This Job Order has no complete schedule. Please contact the administrator or staff.',
+                ]);
+            }
+
+            // The application stores the schedule as a local
+            // date and time. Interpret both in Asia/Manila.
+            $scheduledAt = Carbon::parse(
+                $lockedJobOrder->scheduled_date->format('Y-m-d')
+                    . ' '
+                    . $lockedJobOrder->scheduled_time,
+                'Asia/Manila'
+            );
+
+            $currentTime = Carbon::now('Asia/Manila');
+
+            // Prevent technicians from starting future jobs.
+            if ($currentTime->lt($scheduledAt)) {
+                throw ValidationException::withMessages([
+                    'job_order' => 'This Job Order cannot be started before its scheduled date and time: '
+                        . $scheduledAt->format('M d, Y h:i A')
+                        . '. Please contact the administrator or staff if rescheduling is required.',
+                ]);
+            }
+
+            // All checks passed. Start the Job Order.
             $lockedJobOrder->update([
                 'status' => 'in_progress',
                 'started_at' => now(),
@@ -194,8 +218,7 @@ class JobOrderController extends Controller
                 ->firstOrFail();
 
             abort_unless(
-                $lockedJobOrder->technician_id
-                    === $technician->id,
+                $lockedJobOrder->technician_id === $technician->id,
                 404
             );
 
@@ -245,8 +268,7 @@ class JobOrderController extends Controller
 
         abort_unless(
             $technician !== null
-                && $jobOrder->technician_id
-                    === $technician->id,
+                && $jobOrder->technician_id === $technician->id,
             404
         );
     }

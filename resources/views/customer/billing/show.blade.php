@@ -496,6 +496,8 @@
             </section>
 
 
+            @include('shared.payment-ledger')
+
             {{-- Gateway activity --}}
             <section
                 class="

@@ -16,8 +16,33 @@ class ActivityLogController extends Controller
     {
         $search = trim((string) $request->query('search', ''));
         $action = (string) $request->query('action', '');
-        $dateFrom = (string) $request->query('date_from', '');
-        $dateTo = (string) $request->query('date_to', '');
+        $date = trim((string) $request->query('date', ''));
+
+        $sort = (string) $request->query('sort', 'newest');
+
+        if (! in_array($sort, [
+            'newest',
+            'oldest',
+            'action_asc',
+            'action_desc',
+        ], true)) {
+            $sort = 'newest';
+        }
+
+        $parsedDate = \DateTimeImmutable::createFromFormat(
+            '!Y-m-d',
+            $date
+        );
+
+        if (
+            $date !== '' &&
+            (
+                ! $parsedDate ||
+                $parsedDate->format('Y-m-d') !== $date
+            )
+        ) {
+            $date = '';
+        }
 
         $actions = [
             'user.registered' => 'Registered',
@@ -66,22 +91,38 @@ class ActivityLogController extends Controller
                 fn($query) => $query->where('action', $action)
             )
             ->when(
-                $dateFrom !== '',
+                $date !== '',
                 fn($query) => $query->whereDate(
                     'created_at',
-                    '>=',
-                    $dateFrom
+                    $date
                 )
             )
             ->when(
-                $dateTo !== '',
-                fn($query) => $query->whereDate(
-                    'created_at',
-                    '<=',
-                    $dateTo
-                )
+                $sort === 'newest',
+                fn ($query) => $query
+                    ->orderByDesc('created_at')
+                    ->orderByDesc('id')
             )
-            ->latest('created_at')
+            ->when(
+                $sort === 'oldest',
+                fn ($query) => $query
+                    ->orderBy('created_at')
+                    ->orderBy('id')
+            )
+            ->when(
+                $sort === 'action_asc',
+                fn ($query) => $query
+                    ->orderBy('action')
+                    ->orderByDesc('created_at')
+                    ->orderByDesc('id')
+            )
+            ->when(
+                $sort === 'action_desc',
+                fn ($query) => $query
+                    ->orderByDesc('action')
+                    ->orderByDesc('created_at')
+                    ->orderByDesc('id')
+            )
             ->paginate(25)
             ->withQueryString();
 
@@ -90,8 +131,8 @@ class ActivityLogController extends Controller
             'actions' => $actions,
             'search' => $search,
             'action' => $action,
-            'dateFrom' => $dateFrom,
-            'dateTo' => $dateTo,
+            'date' => $date,
+            'sort' => $sort,
         ]);
     }
 }

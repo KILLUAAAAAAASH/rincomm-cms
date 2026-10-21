@@ -53,6 +53,39 @@ class BillingCycleService
         ];
     }
 
+    /**
+     * Get the first scheduled billing date strictly after a change.
+     */
+    public function nextBillingDateAfter(
+        CarbonInterface|string $anchorDate,
+        CarbonInterface|string $referenceDate,
+        ?int $billingCycleMonths = null
+    ): CarbonImmutable {
+        $reference = CarbonImmutable::parse($referenceDate)
+            ->startOfDay();
+
+        $billingDate = CarbonImmutable::parse($anchorDate)
+            ->startOfDay();
+
+        $cycleMonths = $this->resolvePolicy(
+            $billingCycleMonths,
+            null
+        )['billing_cycle_months'];
+
+        $monthOffset = 0;
+
+        while ($billingDate->lessThanOrEqualTo($reference)) {
+            $monthOffset += $cycleMonths;
+
+            $billingDate = $this->anchoredDate(
+                $anchorDate,
+                $monthOffset
+            );
+        }
+
+        return $billingDate;
+    }
+
     private function anchoredDate(
         CarbonInterface|string $anchorDate,
         int $monthOffset

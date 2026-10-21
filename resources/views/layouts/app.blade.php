@@ -208,6 +208,14 @@
     'visible' => Route::has('admin.job-orders.index'),
     ],
     [
+    'label' => 'Support Tickets',
+    'description' => 'Create, search, and review subscriber support tickets.',
+    'module' => 'Service Request & Ticketing',
+    'route' => 'admin.tickets.index',
+    'keywords' => 'ticket tickets support technical nontechnical issue complaint customer service request',
+    'visible' => Route::has('admin.tickets.index'),
+    ],
+    [
     'label' => 'Internet Packages',
     'description' => 'Manage internet packages, speed, fees, duration, and availability.',
     'module' => 'Internet Packages',
@@ -370,6 +378,8 @@
     'customer.dashboard'
     ) => 'Dashboard',
 
+    $isAdminOrStaff &&
+    request()->routeIs('admin.tickets.*') => 'Service Request & Ticketing',
     default => null,
     };
 
@@ -416,6 +426,15 @@
     ];
     }
 
+    if ($currentModule === 'Service Request & Ticketing') {
+        $contextualNavigation = [
+            [
+                'label' => 'Support Tickets',
+                'route' => 'admin.tickets.index',
+                'active' => request()->routeIs('admin.tickets.*'),
+            ],
+        ];
+    }
     if ($currentModule === 'System Administration') {
     $contextualNavigation = [
     [
@@ -634,6 +653,25 @@
                 </a>
 
 
+                {{-- Support Tickets --}}
+                @if (Route::has('admin.tickets.index'))
+                    <a
+                        href="{{ route('admin.tickets.index') }}"
+                        class="
+                            flex items-center gap-3
+                            px-4 py-2.5 text-sm transition
+                            {{ request()->routeIs('admin.tickets.*')
+                                ? 'bg-[#008080] font-medium text-white shadow-sm'
+                                : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                                   dark:text-neutral-300 dark:hover:bg-[#008080]/15
+                                   dark:hover:text-[#5EEAD4]' }}
+                        ">
+                        <i data-lucide="ticket"
+                           class="h-5 w-5 shrink-0"
+                           aria-hidden="true"></i>
+                        <span>Support Tickets</span>
+                    </a>
+                @endif
                 {{-- Admin / Staff Job Orders --}}
                 @if (Route::has('admin.job-orders.index'))
 
@@ -1793,6 +1831,8 @@
             filterItems();
         });
     </script>
+
+    @stack('scripts')
 
 </body>
 

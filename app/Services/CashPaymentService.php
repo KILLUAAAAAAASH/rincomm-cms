@@ -21,7 +21,8 @@ class CashPaymentService
         private readonly InvoiceLifecycleService $invoiceLifecycleService,
         private readonly ActivityLogger $activityLogger,
         private readonly InvoiceBalanceService $invoiceBalanceService,
-        private readonly MoneyService $moneyService
+        private readonly MoneyService $moneyService,
+        private readonly PaymentReceiptIssuanceService $paymentReceiptIssuanceService
     ) {}
 
     /**
@@ -327,6 +328,12 @@ class CashPaymentService
                     'Unable to record cash payment audit log.'
                 );
             }
+
+            $this->paymentReceiptIssuanceService->issue(
+                $payment,
+                $actor
+            );
+
 
             return [
                 'payment' => $payment->fresh(),

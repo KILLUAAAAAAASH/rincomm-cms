@@ -122,6 +122,82 @@ class InvoicePlanSnapshotTest extends TestCase
             ->assertSee('1,499.00');
     }
 
+    public function test_admin_invoice_list_recovers_legacy_plan_for_both_layouts(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        [$customer, $originalPlan, $otherPlan, $subscription] =
+            $this->prepareActiveSubscription();
+
+        $invoice = $this->createInvoice(
+            $customer,
+            $subscription,
+            'INV-PLAN-LIST-LEGACY-TEST',
+            $originalPlan,
+            false
+        );
+
+        $subscription->update([
+            'service_plan_id' => $otherPlan->id,
+        ]);
+
+        $this->assertNull($invoice->billed_service_plan_name);
+
+        $admin = User::query()
+            ->where('role', 'admin')
+            ->firstOrFail();
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.invoices.index'));
+
+        $response->assertOk()
+            ->assertSee($originalPlan->name)
+            ->assertDontSee($otherPlan->name);
+
+        // The plan appears once in the desktop table and once
+        // in the mobile invoice list.
+        $this->assertSame(
+            2,
+            substr_count($response->getContent(), e($originalPlan->name))
+        );
+    }
+
+    public function test_admin_invoice_list_does_not_guess_unrecorded_legacy_plan(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        [$customer, $originalPlan, $otherPlan, $subscription] =
+            $this->prepareActiveSubscription();
+
+        $invoice = $this->createInvoice(
+            $customer,
+            $subscription,
+            'INV-PLAN-LIST-UNKNOWN-TEST',
+            $originalPlan,
+            false
+        );
+
+        $invoice->items()->firstOrFail()->update([
+            'description' => 'One-time installation charge',
+        ]);
+
+        $subscription->update([
+            'service_plan_id' => $otherPlan->id,
+        ]);
+
+        $admin = User::query()
+            ->where('role', 'admin')
+            ->firstOrFail();
+
+        $response = $this->actingAs($admin)
+            ->get(route('admin.invoices.index'));
+
+        $response->assertOk()
+            ->assertSee('Not recorded')
+            ->assertDontSee($originalPlan->name)
+            ->assertDontSee($otherPlan->name);
+    }
+
     public function test_legacy_invoice_uses_recorded_plan_description_without_guessing_speed(): void
     {
         $this->seed(DemoDataSeeder::class);
@@ -206,6 +282,14 @@ class InvoicePlanSnapshotTest extends TestCase
             'is_custom_plan' => false,
             'status' => 'active',
         ]);
+
+        app(\App\Services\SubscriptionBillingRateService::class)
+            ->recordSnapshot(
+                $subscription,
+                $originalPlan,
+                $subscription->start_date,
+                'activation'
+            );
 
         return [$customer, $originalPlan, $otherPlan, $subscription];
     }

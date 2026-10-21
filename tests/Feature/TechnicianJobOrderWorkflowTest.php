@@ -26,6 +26,8 @@ class TechnicianJobOrderWorkflowTest extends TestCase
         $jobOrder->forceFill([
             'job_type' => 'repair',
             'status' => 'assigned',
+            'scheduled_date' => now('Asia/Manila')->subDay()->toDateString(),
+            'scheduled_time' => '09:00:00',
             'started_at' => null,
             'completed_at' => null,
         ])->save();
