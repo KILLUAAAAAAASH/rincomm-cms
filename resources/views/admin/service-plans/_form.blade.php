@@ -150,7 +150,6 @@ $isActive = (bool) old(
                         maxlength="255"
                         autocomplete="off"
                         value="{{ old('name', $plan?->name ?? '') }}"
-                        placeholder="Example: Fiber 250"
                         class="
                             w-full
                             border border-gray-300
@@ -199,7 +198,6 @@ $isActive = (bool) old(
                             max="99999999.99"
                             step="0.01"
                             value="{{ old('speed_mbps', $plan?->speed_mbps ?? '') }}"
-                            placeholder="250"
                             class="
                                 w-full
                                 border border-gray-300
@@ -273,7 +271,6 @@ $isActive = (bool) old(
                             max="99999999.99"
                             step="0.01"
                             value="{{ old('monthly_fee', $plan?->monthly_fee ?? '') }}"
-                            placeholder="1499.00"
                             class="
                                 w-full
                                 border border-gray-300

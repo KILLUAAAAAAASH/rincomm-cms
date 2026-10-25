@@ -143,7 +143,14 @@ class TicketController extends Controller
         abort_if($customer === null, 404);
 
         $serviceRequest = $customer->serviceRequests()
-            ->with(['servicePlan', 'subscription'])
+            ->with([
+                'servicePlan',
+                'subscription',
+                'ticketMessages' => fn ($query) => $query
+                    ->with('user:id,name,role')
+                    ->orderBy('created_at')
+                    ->orderBy('id'),
+            ])
             ->findOrFail($ticket);
 
         return view('customer.tickets.show', [

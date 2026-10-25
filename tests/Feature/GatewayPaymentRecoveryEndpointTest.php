@@ -17,6 +17,75 @@ class GatewayPaymentRecoveryEndpointTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_customer_can_resume_existing_provider_backed_gcash_checkout(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $customer = Customer::query()
+            ->with('user')
+            ->firstOrFail();
+
+        $invoice = $this->createInvoice(
+            customer: $customer,
+            invoiceNumber: 'INV-RECOVERY-RESUME-001'
+        );
+
+        $payment = $this->createPendingPayment(
+            invoice: $invoice,
+            paymentReference:
+                'GCASH-33333333333333333333333333333333',
+            gatewayReference:
+                'pi_existing_resume_001'
+        );
+
+        $this->mock(
+            PaymentGateway::class,
+            function (MockInterface $mock): void {
+                $mock->shouldReceive('retrievePaymentIntent')
+                    ->once()
+                    ->with('pi_existing_resume_001')
+                    ->andReturn([
+                        'provider_intent_id' =>
+                            'pi_existing_resume_001',
+                        'status' => 'awaiting_next_action',
+                        'redirect_url' =>
+                            'https://checkout.paymongo.test/existing-resume',
+                        'amount_cents' => 150000,
+                        'currency' => 'PHP',
+                        'livemode' => false,
+                        'payments' => [],
+                    ]);
+
+                $mock->shouldReceive('initiatePayment')
+                    ->never();
+            }
+        );
+
+        $response = $this
+            ->actingAs($customer->user)
+            ->post(
+                route(
+                    'customer.billing.gateway-payments.recover',
+                    $invoice
+                )
+            );
+
+        $response->assertRedirect(
+            'https://checkout.paymongo.test/existing-resume'
+        );
+
+        $this->assertSame(
+            'pending',
+            $payment->fresh()->payment_status
+        );
+
+        $this->assertSame(
+            'pi_existing_resume_001',
+            $payment->fresh()->gateway_reference
+        );
+
+        $this->assertDatabaseCount('payments', 1);
+    }
     public function test_customer_can_continue_null_reference_pending_gcash_checkout(): void
     {
         $this->seed(DemoDataSeeder::class);

@@ -65,6 +65,100 @@ class GatewayPaymentIntentReconciliationTest extends TestCase
         );
     }
 
+    public function test_provider_confirmed_cancelled_intent_cancels_pending_payment(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        [$invoice, $payment] =
+            $this->createPendingGatewayPayment(
+                hoursOld: 1
+            );
+
+        $changed = app(
+            GatewayPaymentReconciliationService::class
+        )->reconcilePaymentIntent(
+            paymentId: $payment->id,
+            providerIntent: $this->providerIntent(
+                status: 'cancelled',
+                payments: []
+            )
+        );
+
+        $this->assertTrue($changed);
+
+        $payment->refresh();
+
+        $this->assertSame(
+            'cancelled',
+            $payment->payment_status
+        );
+
+        $this->assertNull(
+            $payment->paid_at
+        );
+
+        $this->assertNull(
+            $payment->gateway_payment_reference
+        );
+
+        $this->assertSame(
+            'issued',
+            $invoice->fresh()->status
+        );
+
+        $this->assertDatabaseHas(
+            'activity_logs',
+            [
+                'action' =>
+                    'billing.gateway_payment_cancelled',
+            ]
+        );
+    }
+
+    public function test_cancelled_intent_with_payment_records_does_not_cancel_locally(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        [, $payment] =
+            $this->createPendingGatewayPayment(
+                hoursOld: 6
+            );
+
+        $changed = app(
+            GatewayPaymentReconciliationService::class
+        )->reconcilePaymentIntent(
+            paymentId: $payment->id,
+            providerIntent: $this->providerIntent(
+                status: 'cancelled',
+                payments: [
+                    [
+                        'provider_payment_id' =>
+                            'pay_conflicting_001',
+                        'status' =>
+                            'paid',
+                        'amount_cents' =>
+                            150000,
+                        'currency' =>
+                            'PHP',
+                        'livemode' =>
+                            false,
+                        'paid_at' =>
+                            1700000000,
+                        'source_type' =>
+                            'gcash',
+                    ],
+                ]
+            )
+        );
+
+        $this->assertFalse($changed);
+
+        $this->assertSame(
+            'pending',
+            $payment->fresh()->payment_status
+        );
+    }
+
     public function test_recent_awaiting_payment_method_remains_pending(): void
     {
         $this->seed(DemoDataSeeder::class);

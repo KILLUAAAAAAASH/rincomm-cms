@@ -16,6 +16,7 @@ class PayMongoService implements PaymentGateway
         'awaiting_next_action',
         'processing',
         'succeeded',
+        'cancelled',
     ];
 
     public function initiatePayment(
@@ -192,6 +193,75 @@ class PayMongoService implements PaymentGateway
             'redirect_url' => $redirectUrl,
             'status' => $status,
         ];
+    }
+
+    /**
+     * Request cancellation and independently verify the provider's
+     * terminal state before reporting success.
+     *
+     * A rejected or uncertain cancellation must fail closed.
+     */
+    public function cancelPaymentIntent(
+        string $providerIntentId,
+        string $idempotencyKey
+    ): array {
+        $providerIntentId = trim($providerIntentId);
+        $idempotencyKey = trim($idempotencyKey);
+
+        if ($providerIntentId === '') {
+            throw new RuntimeException(
+                'PayMongo Payment Intent ID is required.'
+            );
+        }
+
+        if ($idempotencyKey === '') {
+            throw new RuntimeException(
+                'PayMongo cancellation idempotency key is required.'
+            );
+        }
+
+        $response = $this->post(
+            path: '/v1/payment_intents/'
+                . rawurlencode($providerIntentId)
+                . '/cancel',
+            payload: [],
+            idempotencyKey: $idempotencyKey
+        );
+
+        if (
+            ($response['data']['id'] ?? null)
+                !== $providerIntentId
+            || ($response['data']['type'] ?? null)
+                !== 'payment_intent'
+            || ($response['data']['attributes']['status'] ?? null)
+                !== 'cancelled'
+        ) {
+            throw new RuntimeException(
+                'PayMongo did not confirm Payment Intent cancellation.'
+            );
+        }
+
+        $verifiedIntent = $this->retrievePaymentIntent(
+            $providerIntentId
+        );
+
+        $expectedLiveMode = filter_var(
+            config('services.paymongo.live_mode', false),
+            FILTER_VALIDATE_BOOLEAN
+        );
+
+        if (
+            $verifiedIntent['status'] !== 'cancelled'
+            || $verifiedIntent['currency'] !== 'PHP'
+            || $verifiedIntent['livemode'] !== $expectedLiveMode
+            || $verifiedIntent['payments'] !== []
+        ) {
+            throw new RuntimeException(
+                'PayMongo cancellation could not be safely verified.'
+            );
+        }
+
+        return $verifiedIntent;
     }
 
     public function retrievePaymentIntent(
@@ -397,11 +467,40 @@ class PayMongoService implements PaymentGateway
             ];
         }
 
+        $redirectUrl = null;
+
+        if ($status === 'awaiting_next_action') {
+            $candidate =
+                $attributes['next_action']['redirect']['url']
+                ?? null;
+
+            if (is_string($candidate)) {
+                $candidate = trim($candidate);
+
+                if (
+                    filter_var(
+                        $candidate,
+                        FILTER_VALIDATE_URL
+                    ) !== false
+                    && strtolower(
+                        (string) parse_url(
+                            $candidate,
+                            PHP_URL_SCHEME
+                        )
+                    ) === 'https'
+                ) {
+                    $redirectUrl = $candidate;
+                }
+            }
+        }
+
         return [
             'provider_intent_id' =>
                 $returnedIntentId,
             'status' =>
                 $status,
+            'redirect_url' =>
+                $redirectUrl,
             'amount_cents' =>
                 $amount,
             'currency' =>

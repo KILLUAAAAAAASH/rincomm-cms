@@ -238,6 +238,7 @@ class GatewayPaymentReconciliationService
                     'awaiting_next_action',
                     'processing',
                     'succeeded',
+                    'cancelled',
                 ],
                 true
             )
@@ -268,7 +269,8 @@ class GatewayPaymentReconciliationService
             $intentId,
             $status,
             $amountCents,
-            $payments
+            $payments,
+            $livemode
         ): bool {
             $lockedInvoice = Invoice::query()
                 ->with('customer.user')
@@ -311,6 +313,25 @@ class GatewayPaymentReconciliationService
                 return false;
             }
 
+            /*
+             * Reconcile an independently verified provider cancellation.
+             * Do not cancel locally if provider payment records exist.
+             */
+            if ($status === 'cancelled') {
+                if (
+                    $payments !== []
+                    || $lockedPayment->gateway_payment_reference !== null
+                ) {
+                    return false;
+                }
+
+                return $this->cancelPayment(
+                    $lockedInvoice,
+                    $lockedPayment,
+                    $status
+                );
+            }
+
             if (
                 $status
                     === 'awaiting_next_action'
@@ -348,6 +369,8 @@ class GatewayPaymentReconciliationService
             if ($providerPayment === null) {
                 return false;
             }
+
+            $providerPayment['livemode'] = $livemode;
 
             if (
                 $lockedPayment
@@ -547,6 +570,7 @@ class GatewayPaymentReconciliationService
         if (
             ! is_int($paidAt)
             || $paidAt <= 0
+            || ! is_bool($providerPayment['livemode'] ?? null)
         ) {
             return false;
         }
@@ -554,6 +578,8 @@ class GatewayPaymentReconciliationService
         $payment->update([
             'payment_status' =>
                 'completed',
+            'gateway_livemode' =>
+                $providerPayment['livemode'],
             'gateway_payment_reference' =>
                 $providerPayment['payment_id'],
             'paid_at' =>
@@ -918,6 +944,8 @@ class GatewayPaymentReconciliationService
                     $amountCents,
                 'paid_at' =>
                     $paidAt,
+                'livemode' =>
+                    $liveMode,
             ];
         }
 

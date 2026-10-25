@@ -21,12 +21,14 @@ class Payment extends Model
         'paid_at',
         'gateway_reference',
         'gateway_payment_reference',
+        'gateway_livemode',
         'remarks',
     ];
 
     protected $casts = [
         'amount' => 'decimal:2',
         'paid_at' => 'datetime',
+        'gateway_livemode' => 'boolean',
     ];
 
     public function invoice(): BelongsTo

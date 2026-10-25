@@ -303,11 +303,88 @@ class GatewayPaymentRecoveryService
                     $prepared['payment_id']
                 );
 
+            /*
+             * A stale GCash authorization may contain an expired
+             * redirect URL even when the provider still reports
+             * awaiting_next_action.
+             *
+             * Age alone never proves cancellation or payment.
+             * Validate the retrieved intent and current local record
+             * before requesting a provider-side cancellation.
+             *
+             * No provider network I/O occurs under database locks.
+             */
+            $shouldCancelStaleAuthorization =
+                ! $changed
+                && $payment->payment_status === 'pending'
+                && $payment->created_at !== null
+                && $payment->created_at->lte(
+                    now()->subHours(4)
+                )
+                && (int) $payment->invoice_id
+                    === (int) $invoice->getKey()
+                && (int) $payment->customer_id
+                    === (int) $invoice->customer_id
+                && $payment->payment_reference
+                    === $prepared['payment_reference']
+                && $payment->gateway_reference
+                    === $prepared['gateway_reference']
+                && $payment->gateway_payment_reference === null
+                && ($providerIntent['provider_intent_id'] ?? null)
+                    === $prepared['gateway_reference']
+                && ($providerIntent['status'] ?? null)
+                    === 'awaiting_next_action'
+                && ($providerIntent['amount_cents'] ?? null)
+                    === $prepared['amount_cents']
+                && ($providerIntent['currency'] ?? null) === 'PHP'
+                && ($providerIntent['livemode'] ?? null)
+                    === filter_var(
+                        config('services.paymongo.live_mode', false),
+                        FILTER_VALIDATE_BOOLEAN
+                    )
+                && ($providerIntent['payments'] ?? null) === [];
+
+            if ($shouldCancelStaleAuthorization) {
+                /*
+                 * The gateway implementation must independently
+                 * confirm terminal cancellation. Exceptions must
+                 * propagate; never release an uncertain attempt.
+                 */
+                $cancelledIntent = $this->paymentGateway
+                    ->cancelPaymentIntent(
+                        $prepared['gateway_reference'],
+                        $prepared['payment_reference'] . ':cancel'
+                    );
+
+                /*
+                 * Reconciliation performs fresh Invoice -> Payment
+                 * locking and verifies the provider response again.
+                 */
+                $changed = $this
+                    ->gatewayPaymentReconciliationService
+                    ->reconcilePaymentIntent(
+                        paymentId: $prepared['payment_id'],
+                        providerIntent: $cancelledIntent
+                    );
+
+                $payment = Payment::query()
+                    ->findOrFail(
+                        $prepared['payment_id']
+                    );
+
+                $providerIntent = $cancelledIntent;
+            }
+
             return [
                 'payment' =>
                     $payment,
                 'redirect_url' =>
-                    null,
+                    ! $changed
+                    && $payment->payment_status === 'pending'
+                    && ($providerIntent['status'] ?? null)
+                        === 'awaiting_next_action'
+                        ? ($providerIntent['redirect_url'] ?? null)
+                        : null,
                 'provider_status' =>
                     isset(
                         $providerIntent['status']

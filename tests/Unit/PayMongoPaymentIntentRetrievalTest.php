@@ -29,6 +29,46 @@ class PayMongoPaymentIntentRetrievalTest extends TestCase
         ]);
     }
 
+    public function test_awaiting_next_action_returns_existing_https_redirect(): void
+    {
+        Http::fake([
+            'https://api.paymongo.test/v1/payment_intents/pi_resume_001' =>
+                Http::response([
+                    'data' => [
+                        'id' => 'pi_resume_001',
+                        'type' => 'payment_intent',
+                        'attributes' => [
+                            'amount' => 150000,
+                            'currency' => 'PHP',
+                            'status' => 'awaiting_next_action',
+                            'livemode' => false,
+                            'payments' => [],
+                            'next_action' => [
+                                'redirect' => [
+                                    'url' =>
+                                        'https://checkout.paymongo.test/resume',
+                                ],
+                            ],
+                        ],
+                    ],
+                ], 200),
+        ]);
+
+        $result = app(PayMongoService::class)
+            ->retrievePaymentIntent('pi_resume_001');
+
+        $this->assertSame(
+            'awaiting_next_action',
+            $result['status']
+        );
+
+        $this->assertSame(
+            'https://checkout.paymongo.test/resume',
+            $result['redirect_url']
+        );
+
+        Http::assertSentCount(1);
+    }
     public function test_it_retrieves_and_normalizes_payment_intent(): void
     {
         Http::fake([

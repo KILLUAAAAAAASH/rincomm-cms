@@ -80,7 +80,12 @@ class TicketCreationService
                 ),
             ]);
 
-            return $ticket->refresh();
+            $ticket = $ticket->refresh();
+
+            app(TicketNotificationService::class)
+                ->ticketCreated($ticket);
+
+            return $ticket;
         });
     }
 }

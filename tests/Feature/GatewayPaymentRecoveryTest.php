@@ -272,6 +272,201 @@ class GatewayPaymentRecoveryTest extends TestCase
         );
     }
 
+    public function test_stale_gcash_authorization_requires_confirmed_cancellation(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $customer = Customer::query()->with('user')->firstOrFail();
+
+        $invoice = $this->createInvoice(
+            $customer,
+            'INV-RECOVERY-EXPIRED-001'
+        );
+
+        $payment = $this->createPendingPayment(
+            invoice: $invoice,
+            paymentReference: 'GCASH-CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC',
+            gatewayReference: 'pi_expired_recovery_001'
+        );
+
+        $payment->forceFill([
+            'created_at' => now()->subHours(5),
+        ])->save();
+
+        $this->mock(
+            PaymentGateway::class,
+            function (MockInterface $mock) use ($payment): void {
+                $mock->shouldReceive('retrievePaymentIntent')
+                    ->once()
+                    ->with('pi_expired_recovery_001')
+                    ->andReturn([
+                        'provider_intent_id' => 'pi_expired_recovery_001',
+                        'status' => 'awaiting_next_action',
+                        'redirect_url' => 'https://checkout.paymongo.test/expired',
+                        'amount_cents' => 150000,
+                        'currency' => 'PHP',
+                        'livemode' => false,
+                        'payments' => [],
+                    ]);
+
+                $mock->shouldReceive('cancelPaymentIntent')
+                    ->once()
+                    ->with(
+                        'pi_expired_recovery_001',
+                        $payment->payment_reference . ':cancel'
+                    )
+                    ->andReturn([
+                        'provider_intent_id' => 'pi_expired_recovery_001',
+                        'status' => 'cancelled',
+                        'redirect_url' => null,
+                        'amount_cents' => 150000,
+                        'currency' => 'PHP',
+                        'livemode' => false,
+                        'payments' => [],
+                    ]);
+
+                $mock->shouldReceive('initiatePayment')->never();
+            }
+        );
+
+        $result = app(GatewayPaymentRecoveryService::class)->recover(
+            invoice: $invoice,
+            actor: $customer->user,
+            returnUrl: 'https://rincomm.test/recovery-return'
+        );
+
+        $this->assertTrue($result['resolved']);
+        $this->assertNull($result['redirect_url']);
+        $this->assertSame('cancelled', $result['provider_status']);
+        $this->assertSame('cancelled', $payment->fresh()->payment_status);
+        $this->assertNull($payment->fresh()->paid_at);
+        $this->assertDatabaseCount('payments', 1);
+    }
+
+    public function test_recent_gcash_authorization_is_not_cancelled(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $customer = Customer::query()->with('user')->firstOrFail();
+
+        $invoice = $this->createInvoice(
+            $customer,
+            'INV-RECOVERY-RECENT-001'
+        );
+
+        $payment = $this->createPendingPayment(
+            invoice: $invoice,
+            paymentReference: 'GCASH-DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD',
+            gatewayReference: 'pi_recent_recovery_001'
+        );
+
+        $this->mock(
+            PaymentGateway::class,
+            function (MockInterface $mock): void {
+                $mock->shouldReceive('retrievePaymentIntent')
+                    ->once()
+                    ->with('pi_recent_recovery_001')
+                    ->andReturn([
+                        'provider_intent_id' => 'pi_recent_recovery_001',
+                        'status' => 'awaiting_next_action',
+                        'redirect_url' => 'https://checkout.paymongo.test/recent',
+                        'amount_cents' => 150000,
+                        'currency' => 'PHP',
+                        'livemode' => false,
+                        'payments' => [],
+                    ]);
+
+                $mock->shouldReceive('cancelPaymentIntent')->never();
+                $mock->shouldReceive('initiatePayment')->never();
+            }
+        );
+
+        $result = app(GatewayPaymentRecoveryService::class)->recover(
+            invoice: $invoice,
+            actor: $customer->user,
+            returnUrl: 'https://rincomm.test/recovery-return'
+        );
+
+        $this->assertFalse($result['resolved']);
+        $this->assertSame(
+            'https://checkout.paymongo.test/recent',
+            $result['redirect_url']
+        );
+        $this->assertSame('pending', $payment->fresh()->payment_status);
+        $this->assertDatabaseCount('payments', 1);
+    }
+
+    public function test_rejected_stale_authorization_cancellation_keeps_payment_pending(): void
+    {
+        $this->seed(DemoDataSeeder::class);
+
+        $customer = Customer::query()->with('user')->firstOrFail();
+
+        $invoice = $this->createInvoice(
+            $customer,
+            'INV-RECOVERY-REJECTED-001'
+        );
+
+        $payment = $this->createPendingPayment(
+            invoice: $invoice,
+            paymentReference: 'GCASH-EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE',
+            gatewayReference: 'pi_rejected_recovery_001'
+        );
+
+        $payment->forceFill([
+            'created_at' => now()->subHours(5),
+        ])->save();
+
+        $this->mock(
+            PaymentGateway::class,
+            function (MockInterface $mock) use ($payment): void {
+                $mock->shouldReceive('retrievePaymentIntent')
+                    ->once()
+                    ->with('pi_rejected_recovery_001')
+                    ->andReturn([
+                        'provider_intent_id' => 'pi_rejected_recovery_001',
+                        'status' => 'awaiting_next_action',
+                        'redirect_url' => 'https://checkout.paymongo.test/expired',
+                        'amount_cents' => 150000,
+                        'currency' => 'PHP',
+                        'livemode' => false,
+                        'payments' => [],
+                    ]);
+
+                $mock->shouldReceive('cancelPaymentIntent')
+                    ->once()
+                    ->with(
+                        'pi_rejected_recovery_001',
+                        $payment->payment_reference . ':cancel'
+                    )
+                    ->andThrow(
+                        new \RuntimeException('Provider cancellation rejected.')
+                    );
+
+                $mock->shouldReceive('initiatePayment')->never();
+            }
+        );
+
+        try {
+            app(GatewayPaymentRecoveryService::class)->recover(
+                invoice: $invoice,
+                actor: $customer->user,
+                returnUrl: 'https://rincomm.test/recovery-return'
+            );
+
+            $this->fail('Expected provider rejection.');
+        } catch (\RuntimeException $exception) {
+            $this->assertSame(
+                'Provider cancellation rejected.',
+                $exception->getMessage()
+            );
+        }
+
+        $this->assertSame('pending', $payment->fresh()->payment_status);
+        $this->assertNull($payment->fresh()->paid_at);
+        $this->assertDatabaseCount('payments', 1);
+    }
+
     private function createSecondCustomer(): Customer
     {
         $user = User::factory()->create();

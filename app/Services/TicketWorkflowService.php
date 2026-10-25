@@ -56,13 +56,22 @@ class TicketWorkflowService
                 ]);
             }
 
+            $statusChanged = $lockedTicket->status === 'open';
+
             $lockedTicket->update([
                 'assigned_user_id' => $assignee->getKey(),
                 'assigned_at' => now(),
                 'status' => 'assigned',
             ]);
 
-            return $lockedTicket->refresh();
+            $lockedTicket = $lockedTicket->refresh();
+
+            if ($statusChanged) {
+                app(TicketNotificationService::class)
+                    ->ticketStatusChanged($lockedTicket);
+            }
+
+            return $lockedTicket;
         });
     }
 
@@ -112,7 +121,12 @@ class TicketWorkflowService
                 'status' => $nextStatus,
             ]);
 
-            return $lockedTicket->refresh();
+            $lockedTicket = $lockedTicket->refresh();
+
+            app(TicketNotificationService::class)
+                ->ticketStatusChanged($lockedTicket);
+
+            return $lockedTicket;
         });
     }
 

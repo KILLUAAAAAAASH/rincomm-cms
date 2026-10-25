@@ -242,6 +242,17 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
         '/admin/tickets/{ticket}/status',
         [\App\Http\Controllers\Admin\TicketWorkflowController::class, 'transition']
     )->name('admin.tickets.status.update');
+    // Module 6 Feature 3: Customer-visible replies and private notes.
+    Route::post(
+        '/admin/tickets/{ticket}/replies',
+        [\App\Http\Controllers\Admin\TicketConversationController::class, 'reply']
+    )->name('admin.tickets.replies.store');
+
+    Route::post(
+        '/admin/tickets/{ticket}/notes',
+        [\App\Http\Controllers\Admin\TicketConversationController::class, 'addNote']
+    )->name('admin.tickets.notes.store');
+
     Route::get('/admin/job-orders', [AdminJobOrderController::class, 'index'])
         ->name('admin.job-orders.index');
 
@@ -553,6 +564,12 @@ Route::middleware(['auth', 'active', 'role:customer'])->group(function () {
 
     Route::get('/customer/tickets/{ticket}', [CustomerTicketController::class, 'show'])
         ->name('customer.tickets.show');
+    // Module 6 Feature 3: Subscriber ticket replies.
+    Route::post(
+        '/customer/tickets/{ticket}/replies',
+        [\App\Http\Controllers\Customer\TicketConversationController::class, 'reply']
+    )->name('customer.tickets.replies.store');
+
     Route::get('/customer/plan-changes', [CustomerPlanChangeController::class, 'index'])
         ->name('customer.plan-changes.index');
 

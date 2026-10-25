@@ -427,13 +427,13 @@
     }
 
     if ($currentModule === 'Service Request & Ticketing') {
-        $contextualNavigation = [
-            [
-                'label' => 'Support Tickets',
-                'route' => 'admin.tickets.index',
-                'active' => request()->routeIs('admin.tickets.*'),
-            ],
-        ];
+    $contextualNavigation = [
+    [
+    'label' => 'Support Tickets',
+    'route' => 'admin.tickets.index',
+    'active' => request()->routeIs('admin.tickets.*'),
+    ],
+    ];
     }
     if ($currentModule === 'System Administration') {
     $contextualNavigation = [
@@ -544,6 +544,9 @@
                         dark:text-neutral-300
                         dark:hover:bg-[#008080]/15
                         dark:hover:text-[#5EEAD4]
+                        focus-visible:outline-none
+                        focus-visible:ring-2
+                        focus-visible:ring-[#008080]/40
                         lg:hidden
                     ">
 
@@ -558,19 +561,20 @@
 
 
             {{-- Main module navigation --}}
-            <nav class="min-h-0 flex-1 space-y-1 overflow-y-auto p-4">
+            <nav aria-label="Primary navigation" class="min-h-0 flex-1 space-y-1 overflow-y-auto p-4">
 
                 {{-- Dashboard --}}
                 <a
                     href="{{ route($dashboardRouteName) }}"
+                    @if ($currentModule==='Dashboard' ) aria-current="page" @endif
                     class="
-                        flex items-center gap-3
+                        flex items-center gap-3 border-l-[3px]
                          px-4 py-2.5
-                        text-sm transition
+                        text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
 
                         {{ $currentModule === 'Dashboard'
-                            ? 'bg-[#008080] font-medium text-white shadow-sm'
-                            : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                            ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
+                            : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
                                dark:text-neutral-300 dark:hover:bg-[#008080]/15
                                dark:hover:text-[#5EEAD4]'
                         }}
@@ -594,14 +598,15 @@
                 {{-- Technician Job Orders --}}
                 <a
                     href="{{ route('technician.job-orders.index') }}"
+                    @if ($currentModule==='Field Operations' ) aria-current="true" @endif
                     class="
-                        flex items-center gap-3
+                        flex items-center gap-3 border-l-[3px]
                          px-4 py-2.5
-                        text-sm transition
+                        text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
 
                         {{ $currentModule === 'Field Operations'
-                            ? 'bg-[#008080] font-medium text-white shadow-sm'
-                            : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                            ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
+                            : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
                                dark:text-neutral-300 dark:hover:bg-[#008080]/15
                                dark:hover:text-[#5EEAD4]'
                         }}
@@ -627,14 +632,15 @@
                 {{-- Subscribers --}}
                 <a
                     href="{{ route('admin.subscribers.index') }}"
+                    @if ($currentModule==='Customer Management' ) aria-current="true" @endif
                     class="
-                            flex items-center gap-3
+                            flex items-center gap-3 border-l-[3px]
                              px-4 py-2.5
-                            text-sm transition
+                            text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
 
                             {{ $currentModule === 'Customer Management'
-                                ? 'bg-[#008080] font-medium text-white shadow-sm'
-                                : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                                ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
+                                : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
                                    dark:text-neutral-300 dark:hover:bg-[#008080]/15
                                    dark:hover:text-[#5EEAD4]'
                             }}
@@ -653,71 +659,20 @@
                 </a>
 
 
-                {{-- Support Tickets --}}
-                @if (Route::has('admin.tickets.index'))
-                    <a
-                        href="{{ route('admin.tickets.index') }}"
-                        class="
-                            flex items-center gap-3
-                            px-4 py-2.5 text-sm transition
-                            {{ request()->routeIs('admin.tickets.*')
-                                ? 'bg-[#008080] font-medium text-white shadow-sm'
-                                : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
-                                   dark:text-neutral-300 dark:hover:bg-[#008080]/15
-                                   dark:hover:text-[#5EEAD4]' }}
-                        ">
-                        <i data-lucide="ticket"
-                           class="h-5 w-5 shrink-0"
-                           aria-hidden="true"></i>
-                        <span>Support Tickets</span>
-                    </a>
-                @endif
-                {{-- Admin / Staff Job Orders --}}
-                @if (Route::has('admin.job-orders.index'))
-
-                <a
-                    href="{{ route('admin.job-orders.index') }}"
-                    class="
-                        flex items-center gap-3
-                         px-4 py-2.5
-                        text-sm transition
-
-                        {{ $currentModule === 'Field Operations'
-                            ? 'bg-[#008080] font-medium text-white shadow-sm'
-                            : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
-                               dark:text-neutral-300 dark:hover:bg-[#008080]/15
-                               dark:hover:text-[#5EEAD4]'
-                        }}
-                    ">
-
-                    <i
-                        data-lucide="clipboard-list"
-                        class="h-5 w-5 shrink-0"
-                        aria-hidden="true">
-                    </i>
-
-                    <span>
-                        Field Operations
-                    </span>
-
-                </a>
-
-                @endif
-
-
                 {{-- Internet Packages --}}
                 @if (Route::has('admin.service-plans.index'))
 
                 <a
                     href="{{ route('admin.service-plans.index') }}"
+                    @if ($currentModule==='Internet Packages' ) aria-current="true" @endif
                     class="
-                        flex items-center gap-3
+                        flex items-center gap-3 border-l-[3px]
                          px-4 py-2.5
-                        text-sm transition
+                        text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
 
                         {{ $currentModule === 'Internet Packages'
-                            ? 'bg-[#008080] font-medium text-white shadow-sm'
-                            : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                            ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
+                            : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
                                dark:text-neutral-300 dark:hover:bg-[#008080]/15
                                dark:hover:text-[#5EEAD4]'
                         }}
@@ -743,14 +698,15 @@
 
                 <a
                     href="{{ route('admin.invoices.index') }}"
+                    @if ($currentModule==='Billing & Invoicing' ) aria-current="true" @endif
                     class="
-                        flex items-center gap-3
+                        flex items-center gap-3 border-l-[3px]
                          px-4 py-2.5
-                        text-sm transition
+                        text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
 
                         {{ $currentModule === 'Billing & Invoicing'
-                            ? 'bg-[#008080] font-medium text-white shadow-sm'
-                            : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                            ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
+                            : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
                                dark:text-neutral-300 dark:hover:bg-[#008080]/15
                                dark:hover:text-[#5EEAD4]'
                         }}
@@ -771,17 +727,72 @@
                 @endif
 
 
+                {{-- Support Tickets --}}
+                @if (Route::has('admin.tickets.index'))
+                <a
+                    href="{{ route('admin.tickets.index') }}"
+                    @if (request()->routeIs('admin.tickets.*')) aria-current="true" @endif
+                    class="
+                    flex items-center gap-3 border-l-[3px]
+                    px-4 py-2.5 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
+                    {{ request()->routeIs('admin.tickets.*')
+                                ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
+                                : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                                   dark:text-neutral-300 dark:hover:bg-[#008080]/15
+                                   dark:hover:text-[#5EEAD4]' }}
+                    ">
+                    <i data-lucide="ticket"
+                        class="h-5 w-5 shrink-0"
+                        aria-hidden="true"></i>
+                    <span>Support Tickets</span>
+                </a>
+                @endif
+                {{-- Admin / Staff Job Orders --}}
+                @if (Route::has('admin.job-orders.index'))
+
+                <a
+                    href="{{ route('admin.job-orders.index') }}"
+                    @if ($currentModule==='Field Operations' ) aria-current="true" @endif
+                    class="
+                        flex items-center gap-3 border-l-[3px]
+                         px-4 py-2.5
+                        text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
+
+                        {{ $currentModule === 'Field Operations'
+                            ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
+                            : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                               dark:text-neutral-300 dark:hover:bg-[#008080]/15
+                               dark:hover:text-[#5EEAD4]'
+                        }}
+                    ">
+
+                    <i
+                        data-lucide="clipboard-list"
+                        class="h-5 w-5 shrink-0"
+                        aria-hidden="true">
+                    </i>
+
+                    <span>
+                        Field Operations
+                    </span>
+
+                </a>
+
+                @endif
+
+
                 {{-- System --}}
                 <a
                     href="{{ route('admin.users.index') }}"
+                    @if ($currentModule==='System Administration' ) aria-current="true" @endif
                     class="
-                            flex items-center gap-3
+                            flex items-center gap-3 border-l-[3px]
                              px-4 py-2.5
-                            text-sm transition
+                            text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
 
                             {{ $currentModule === 'System Administration'
-                                ? 'bg-[#008080] font-medium text-white shadow-sm'
-                                : 'text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                                ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
+                                : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
                                    dark:text-neutral-300 dark:hover:bg-[#008080]/15
                                    dark:hover:text-[#5EEAD4]'
                             }}
@@ -806,17 +817,16 @@
 
                 <a
                     href="{{ route('customer.application.create') }}"
+                    @if (request()->routeIs('customer.application.*')) aria-current="true" @endif
                     class="
-                            flex items-center gap-3
-                             px-4 py-2.5
-                            text-sm transition
-                            text-neutral-700
-                            hover:bg-[#008080]/10
-                            hover:text-[#008080]
-                            dark:text-neutral-300
-                            dark:hover:bg-[#008080]/15
-                            dark:hover:text-[#5EEAD4]
-                        ">
+                    flex items-center gap-3 border-l-[3px]
+                    px-4 py-2.5
+                    text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
+                    {{ request()->routeIs('customer.application.*')
+                                ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
+                                : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
+                                   dark:text-neutral-300 dark:hover:bg-[#008080]/15 dark:hover:text-[#5EEAD4]' }}
+                    ">
 
                     <i
                         data-lucide="clipboard-list"
@@ -858,20 +868,20 @@
                             inline-flex min-h-10 w-full
                             items-center justify-start gap-3
 
-                            border border-red-200
+                            border border-transparent
                             px-4 py-2.5
                             text-sm font-semibold
-                            text-red-600
+                            text-neutral-600
                             transition
-                            hover:border-red-300
-                            hover:bg-red-50
+                            hover:border-neutral-200
+                            hover:bg-neutral-100
                             focus:outline-none
                             focus:ring-2
-                            focus:ring-red-500/30
-                            dark:border-red-900
-                            dark:text-red-400
-                            dark:hover:border-red-800
-                            dark:hover:bg-red-950/40
+                            focus:ring-[#008080]/30
+                            dark:border-transparent
+                            dark:text-neutral-300
+                            dark:hover:border-neutral-700
+                            dark:hover:bg-neutral-800
                         ">
 
                         <i

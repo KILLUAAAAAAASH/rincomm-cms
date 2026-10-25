@@ -254,6 +254,14 @@ class TicketController extends Controller
                 'servicePlan',
                 'assignedUser',
                 'jobOrders',
+                'ticketMessages' => fn ($query) => $query
+                    ->with('user:id,name,role')
+                    ->orderBy('created_at')
+                    ->orderBy('id'),
+                'ticketNotes' => fn ($query) => $query
+                    ->with('user:id,name,role')
+                    ->orderBy('created_at')
+                    ->orderBy('id'),
             ])
             ->findOrFail($ticket);
 
