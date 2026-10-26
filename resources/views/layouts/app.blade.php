@@ -160,7 +160,7 @@
     [
     'label' => 'Plan Change Requests',
     'description' => 'Select a subscriber to record or process plan changes.',
-    'module' => 'Customer Management',
+    'module' => 'Subscription & Plan Management',
     'route' => 'admin.subscribers.index',
     'parameters' => ['feature' => 'plan-change'],
     'keywords' => 'plan change upgrade downgrade account upgrade account downgrade plan change request record plan change approve plan change reject plan change plan change history',
@@ -190,7 +190,7 @@
     [
     'label' => 'Job Orders',
     'description' => 'Create and monitor field Job Orders.',
-    'module' => 'Field Operations',
+    'module' => 'Field Technician Management',
     'route' => 'admin.job-orders.index',
     'keywords' => implode(' ', [
     'job order',
@@ -218,7 +218,7 @@
     [
     'label' => 'Internet Packages',
     'description' => 'Manage internet packages, speed, fees, duration, and availability.',
-    'module' => 'Internet Packages',
+    'module' => 'Subscription & Plan Management',
     'route' => 'admin.service-plans.index',
     'keywords' => implode(' ', [
     'internet package',
@@ -244,7 +244,7 @@
     [
     'label' => 'User Management',
     'description' => 'Manage system users and account access.',
-    'module' => 'System Administration',
+    'module' => 'User Management',
     'route' => 'admin.users.index',
     'keywords' => implode(' ', [
     'user',
@@ -267,7 +267,7 @@
     [
     'label' => 'Activity Logs',
     'description' => 'Review recorded system and user activities.',
-    'module' => 'System Administration',
+    'module' => 'System Administration & Database',
     'route' => 'admin.activity-logs.index',
     'keywords' => implode(' ', [
     'activity',
@@ -288,7 +288,7 @@
     [
     'label' => 'Hero Slides',
     'description' => 'Manage landing-page carousel content.',
-    'module' => 'System Administration',
+    'module' => 'System Administration & Database',
     'route' => 'admin.hero-slides.index',
     'keywords' => implode(' ', [
     'hero',
@@ -313,7 +313,7 @@
     $featureSearchItems[] = [
     'label' => 'Job Orders',
     'description' => 'View and process field work assigned to you.',
-    'module' => 'Field Operations',
+    'module' => 'Field Technician Management',
     'route' => 'technician.job-orders.index',
     'keywords' => 'job order job orders assigned work field work installation site survey repair line maintenance physical disconnection proof of work completion report',
     'visible' => true,
@@ -348,12 +348,12 @@
     $isAdminOrStaff &&
     request()->routeIs(
     'admin.job-orders.*'
-    ) => 'Field Operations',
+    ) => 'Field Technician Management',
 
     $isAdminOrStaff &&
     request()->routeIs(
     'admin.service-plans.*'
-    ) => 'Internet Packages',
+    ) => 'Subscription & Plan Management',
 
     $isAdminOrStaff &&
     request()->routeIs(
@@ -362,15 +362,19 @@
 
     $isAdminOrStaff &&
     request()->routeIs(
-    'admin.users.*',
+    'admin.users.*'
+    ) => 'User Management',
+
+    $isAdminOrStaff &&
+    request()->routeIs(
     'admin.activity-logs.*',
     'admin.hero-slides.*'
-    ) => 'System Administration',
+    ) => 'System Administration & Database',
 
     $isTechnician &&
     request()->routeIs(
     'technician.job-orders.*'
-    ) => 'Field Operations',
+    ) => 'Field Technician Management',
 
     request()->routeIs(
     'dashboard',
@@ -401,7 +405,7 @@
     }
 
     if (
-    $currentModule === 'Field Operations' &&
+    $currentModule === 'Field Technician Management' &&
     $isAdminOrStaff
     ) {
     $contextualNavigation = [
@@ -414,7 +418,7 @@
     }
 
     if (
-    $currentModule === 'Field Operations' &&
+    $currentModule === 'Field Technician Management' &&
     $isTechnician
     ) {
     $contextualNavigation = [
@@ -435,7 +439,7 @@
     ],
     ];
     }
-    if ($currentModule === 'System Administration') {
+    if ($currentModule === 'User Management') {
     $contextualNavigation = [
     [
     'label' => 'User Management',
@@ -444,7 +448,10 @@
     ],
     ];
 
-    if ($authenticatedUser->role === 'admin') {
+    }
+
+    if ($currentModule === 'System Administration & Database') {
+    if ($authenticatedUser->role === 'admin' && Route::has('admin.activity-logs.index')) {
     $contextualNavigation[] = [
     'label' => 'Activity Logs',
     'route' => 'admin.activity-logs.index',
@@ -452,10 +459,163 @@
     ];
     }
 
+    if (Route::has('admin.hero-slides.index')) {
     $contextualNavigation[] = [
     'label' => 'Hero Slides',
     'route' => 'admin.hero-slides.index',
     'active' => request()->routeIs('admin.hero-slides.*'),
+    ];
+    }
+    }
+
+    // Sidebar IA: the management navigation includes a direct Dashboard link.
+    // Customer Self-Service Portal stays in the customer role, not admin/staff.
+    // A missing route never becomes a broken link; its submenu is read-only.
+    // Keep role-based access: Admin/Staff see management areas; customers and
+    // technicians see only areas appropriate to their existing route access.
+    $sidebarModules = [];
+
+    if ($isAdminOrStaff) {
+    $sidebarModules = [
+    [
+    'label' => 'Users',
+    'icon' => 'user-cog',
+    'patterns' => ['admin.users.*'],
+    'items' => [
+    ['label' => 'User Accounts', 'route' => 'admin.users.index'],
+    ['label' => 'Roles & Permissions', 'status' => 'In users'],
+    ],
+    ],
+    [
+    'label' => 'Customers',
+    'icon' => 'users',
+    'patterns' => ['admin.subscribers.*', 'admin.applications.*'],
+    'items' => [
+    ['label' => 'All Subscribers', 'route' => 'admin.subscribers.index', 'patterns' => ['admin.subscribers.*']],
+    ['label' => 'Applications', 'route' => 'admin.applications.index'],
+    ['label' => 'Requests', 'status' => 'In subscriber records'],
+    ['label' => 'Relocation & Transfer', 'route' => 'admin.subscribers.index', 'parameters' => ['feature' => 'relocation-transfer']],
+    ['label' => 'Customer Documents', 'route' => 'admin.subscribers.index', 'parameters' => ['feature' => 'customer-documents']],
+    ],
+    ],
+    [
+    'label' => 'Plans & Subscriptions',
+    'icon' => 'router',
+    'patterns' => ['admin.service-plans.*'],
+    'items' => [
+    ['label' => 'Internet Packages', 'route' => 'admin.service-plans.index'],
+    ['label' => 'Plan Change Requests', 'route' => 'admin.subscribers.index', 'parameters' => ['feature' => 'plan-change']],
+    ['label' => 'Subscriber Subscriptions', 'status' => 'In profiles'],
+    ],
+    ],
+    [
+    'label' => 'Billing & Invoicing',
+    'icon' => 'receipt-text',
+    'patterns' => ['admin.invoices.*'],
+    'items' => [
+    ['label' => 'Invoices', 'route' => 'admin.invoices.index'],
+    ['label' => 'Statements of Account', 'status' => 'In invoices'],
+    ],
+    ],
+    [
+    'label' => 'Payments',
+    'icon' => 'credit-card',
+    'patterns' => ['admin.payments.*', 'admin.receipts.*', 'admin.transactions.*'],
+    'items' => [
+    ['label' => 'Payments via Invoices', 'route' => 'admin.invoices.index'],
+    ['label' => 'Payment History', 'status' => 'In invoices'],
+    ['label' => 'Receipts', 'status' => 'In invoices'],
+    ],
+    ],
+    [
+    'label' => 'Support Tickets',
+    'icon' => 'ticket',
+    'patterns' => ['admin.tickets.*'],
+    'items' => [
+    ['label' => 'Support Tickets', 'route' => 'admin.tickets.index'],
+    ['label' => 'Ticket Conversations', 'status' => 'In tickets'],
+    ],
+    ],
+    [
+    'label' => 'Field Technician',
+    'icon' => 'clipboard-list',
+    'patterns' => ['admin.job-orders.*', 'admin.technicians.*'],
+    'items' => [
+    ['label' => 'Job Orders', 'route' => 'admin.job-orders.index'],
+    ['label' => 'Technician Accounts', 'route' => 'admin.users.index'],
+    ],
+    ],
+    [
+    'label' => 'Equipment & Network',
+    'icon' => 'cable',
+    'patterns' => ['admin.equipment.*', 'admin.inventory.*'],
+    'items' => [
+    ['label' => 'Hardware Assets', 'status' => 'Planned'],
+    ['label' => 'Customer Equipment', 'status' => 'Planned'],
+    ['label' => 'Equipment Retrieval', 'status' => 'Planned'],
+    ],
+    ],
+    [
+    'label' => 'Advisory',
+    'icon' => 'radio-tower',
+    'patterns' => ['admin.outages.*', 'admin.maintenance.*'],
+    'items' => [
+    ['label' => 'Outage Advisories', 'status' => 'Planned'],
+    ['label' => 'Maintenance Notices', 'status' => 'Planned'],
+    ],
+    ],
+    [
+    'label' => 'Communications',
+    'icon' => 'mail',
+    'patterns' => ['admin.notifications.*', 'admin.announcements.*'],
+    'items' => [
+    ['label' => 'Notifications', 'status' => 'Planned'],
+    ['label' => 'Announcements', 'status' => 'Planned'],
+    ],
+    ],
+    [
+    'label' => 'Reports & Analytics',
+    'icon' => 'activity',
+    'patterns' => ['admin.reports.*', 'admin.analytics.*'],
+    'items' => [
+    ['label' => 'Reports', 'status' => 'Planned'],
+    ['label' => 'Analytics', 'status' => 'Planned'],
+    ],
+    ],
+    [
+    'label' => 'System Admin',
+    'icon' => 'settings',
+    'patterns' => ['admin.activity-logs.*', 'admin.hero-slides.*'],
+    'items' => [
+    ['label' => 'Activity Logs', 'route' => 'admin.activity-logs.index', 'adminOnly' => true],
+    ['label' => 'Hero Slides', 'route' => 'admin.hero-slides.index'],
+    ['label' => 'Database Management', 'status' => 'Not linked', 'adminOnly' => true],
+    ],
+    ],
+    ];
+    } elseif ($isTechnician) {
+    $sidebarModules = [
+    [
+    'label' => 'Field Technician',
+    'icon' => 'clipboard-list',
+    'patterns' => ['technician.job-orders.*'],
+    'items' => [
+    ['label' => 'My Job Orders', 'route' => 'technician.job-orders.index'],
+    ],
+    ],
+    ];
+    } elseif ($isCustomer) {
+    $sidebarModules = [
+    [
+    'label' => 'Customer Portal',
+    'icon' => 'house',
+    'patterns' => ['customer.application.*', 'customer.tickets.*', 'customer.invoices.*'],
+    'items' => [
+    ['label' => 'Service Application', 'route' => 'customer.application.create'],
+    ['label' => 'My Tickets', 'route' => 'customer.tickets.index', 'status' => 'No separate route'],
+    ['label' => 'My Invoices', 'route' => 'customer.invoices.index', 'status' => 'No separate route'],
+    ],
+    ],
     ];
     }
     @endphp
@@ -503,7 +663,7 @@
                 lg:sticky
                 lg:top-0
                 lg:z-auto
-                lg:w-64
+                lg:w-72
                 lg:max-w-none
                 lg:shrink-0
                 lg:translate-x-0
@@ -521,7 +681,12 @@
                 <div class="min-w-0">
 
                     <h1 class="text-lg font-bold">
-                        Rincomm CMS
+                        <a href="{{ route($dashboardRouteName) }}"
+                            aria-label="Go to Dashboard"
+                            title="Go to Dashboard"
+                            class="inline-block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008080]/40 hover:text-[#008080] dark:hover:text-[#5EEAD4]">
+                            Rincomm CMS
+                        </a>
                     </h1>
 
                     <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
@@ -560,287 +725,68 @@
             </div>
 
 
-            {{-- Main module navigation --}}
-            <nav aria-label="Primary navigation" class="min-h-0 flex-1 space-y-1 overflow-y-auto p-4">
+            {{-- Main module navigation: role-aware primary links and expandable groups. --}}
+            <nav aria-label="Primary navigation" class="min-h-0 flex-1 space-y-1 overflow-y-auto p-3">
 
-                {{-- Dashboard --}}
-                <a
-                    href="{{ route($dashboardRouteName) }}"
-                    @if ($currentModule==='Dashboard' ) aria-current="page" @endif
-                    class="
-                        flex items-center gap-3 border-l-[3px]
-                         px-4 py-2.5
-                        text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
-
-                        {{ $currentModule === 'Dashboard'
-                            ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
-                            : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
-                               dark:text-neutral-300 dark:hover:bg-[#008080]/15
-                               dark:hover:text-[#5EEAD4]'
-                        }}
-                    ">
-
-                    <i
-                        data-lucide="layout-dashboard"
-                        class="h-5 w-5 shrink-0"
-                        aria-hidden="true">
-                    </i>
-
-                    <span>
-                        Dashboard
-                    </span>
-
-                </a>
-
-
-                @if ($isTechnician && Route::has('technician.job-orders.index'))
-
-                {{-- Technician Job Orders --}}
-                <a
-                    href="{{ route('technician.job-orders.index') }}"
-                    @if ($currentModule==='Field Operations' ) aria-current="true" @endif
-                    class="
-                        flex items-center gap-3 border-l-[3px]
-                         px-4 py-2.5
-                        text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
-
-                        {{ $currentModule === 'Field Operations'
-                            ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
-                            : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
-                               dark:text-neutral-300 dark:hover:bg-[#008080]/15
-                               dark:hover:text-[#5EEAD4]'
-                        }}
-                    ">
-
-                    <i
-                        data-lucide="clipboard-list"
-                        class="h-5 w-5 shrink-0"
-                        aria-hidden="true">
-                    </i>
-
-                    <span>
-                        Job Orders
-                    </span>
-
-                </a>
-
-                @endif
-
-
-                @if ($isAdminOrStaff)
-
-                {{-- Subscribers --}}
-                <a
-                    href="{{ route('admin.subscribers.index') }}"
-                    @if ($currentModule==='Customer Management' ) aria-current="true" @endif
-                    class="
-                            flex items-center gap-3 border-l-[3px]
-                             px-4 py-2.5
-                            text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
-
-                            {{ $currentModule === 'Customer Management'
+                {{-- Dashboard remains a direct primary link for every authenticated role. --}}
+                    <a
+                        href="{{ route($dashboardRouteName) }}"
+                        @if ($currentModule === 'Dashboard') aria-current="page" @endif
+                        class="flex min-h-11 items-center gap-3 border-l-[3px] px-3 py-2.5 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
+                            {{ $currentModule === 'Dashboard'
                                 ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
-                                : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
-                                   dark:text-neutral-300 dark:hover:bg-[#008080]/15
-                                   dark:hover:text-[#5EEAD4]'
-                            }}
-                        ">
+                                : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080] dark:text-neutral-300 dark:hover:bg-[#008080]/15 dark:hover:text-[#5EEAD4]' }}">
+                        <i data-lucide="layout-dashboard" class="h-5 w-5 shrink-0" aria-hidden="true"></i>
+                        <span class="whitespace-nowrap">Dashboard</span>
+                    </a>
 
-                    <i
-                        data-lucide="users"
-                        class="h-5 w-5 shrink-0"
-                        aria-hidden="true">
-                    </i>
+                {{-- Every management module owns a primary expandable navigation section. --}}
+                @foreach ($sidebarModules as $sidebarModule)
+                    @php
+                        $moduleActive = !empty($sidebarModule['patterns']) && request()->routeIs(...$sidebarModule['patterns']);
+                    @endphp
+                    <details class="group" @if ($moduleActive) open @endif>
+                        <summary
+                            class="flex min-h-11 cursor-pointer list-none items-center gap-3 border-l-[3px] px-3 py-2.5 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40 [&::-webkit-details-marker]:hidden
+                                {{ $moduleActive
+                                    ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
+                                    : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080] dark:text-neutral-300 dark:hover:bg-[#008080]/15 dark:hover:text-[#5EEAD4]' }}">
+                            <i data-lucide="{{ $sidebarModule['icon'] }}" class="h-5 w-5 shrink-0" aria-hidden="true"></i>
+                            <span class="min-w-0 flex-1 truncate whitespace-nowrap leading-5" title="{{ $sidebarModule['label'] }}">{{ $sidebarModule['label'] }}</span>
+                            <i data-lucide="chevron-down" class="h-4 w-4 shrink-0 transition-transform duration-150 group-open:rotate-180" aria-hidden="true"></i>
+                        </summary>
 
-                    <span>
-                        Customer Management
-                    </span>
-
-                </a>
-
-
-                {{-- Internet Packages --}}
-                @if (Route::has('admin.service-plans.index'))
-
-                <a
-                    href="{{ route('admin.service-plans.index') }}"
-                    @if ($currentModule==='Internet Packages' ) aria-current="true" @endif
-                    class="
-                        flex items-center gap-3 border-l-[3px]
-                         px-4 py-2.5
-                        text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
-
-                        {{ $currentModule === 'Internet Packages'
-                            ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
-                            : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
-                               dark:text-neutral-300 dark:hover:bg-[#008080]/15
-                               dark:hover:text-[#5EEAD4]'
-                        }}
-                    ">
-
-                    <i
-                        data-lucide="router"
-                        class="h-5 w-5 shrink-0"
-                        aria-hidden="true">
-                    </i>
-
-                    <span>
-                        Internet Packages
-                    </span>
-
-                </a>
-
-                @endif
-
-
-                {{-- Billing & Invoicing --}}
-                @if (Route::has('admin.invoices.index'))
-
-                <a
-                    href="{{ route('admin.invoices.index') }}"
-                    @if ($currentModule==='Billing & Invoicing' ) aria-current="true" @endif
-                    class="
-                        flex items-center gap-3 border-l-[3px]
-                         px-4 py-2.5
-                        text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
-
-                        {{ $currentModule === 'Billing & Invoicing'
-                            ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
-                            : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
-                               dark:text-neutral-300 dark:hover:bg-[#008080]/15
-                               dark:hover:text-[#5EEAD4]'
-                        }}
-                    ">
-
-                    <i
-                        data-lucide="receipt-text"
-                        class="h-5 w-5 shrink-0"
-                        aria-hidden="true">
-                    </i>
-
-                    <span>
-                        Billing & Invoicing
-                    </span>
-
-                </a>
-
-                @endif
-
-
-                {{-- Support Tickets --}}
-                @if (Route::has('admin.tickets.index'))
-                <a
-                    href="{{ route('admin.tickets.index') }}"
-                    @if (request()->routeIs('admin.tickets.*')) aria-current="true" @endif
-                    class="
-                    flex items-center gap-3 border-l-[3px]
-                    px-4 py-2.5 text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
-                    {{ request()->routeIs('admin.tickets.*')
-                                ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
-                                : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
-                                   dark:text-neutral-300 dark:hover:bg-[#008080]/15
-                                   dark:hover:text-[#5EEAD4]' }}
-                    ">
-                    <i data-lucide="ticket"
-                        class="h-5 w-5 shrink-0"
-                        aria-hidden="true"></i>
-                    <span>Support Tickets</span>
-                </a>
-                @endif
-                {{-- Admin / Staff Job Orders --}}
-                @if (Route::has('admin.job-orders.index'))
-
-                <a
-                    href="{{ route('admin.job-orders.index') }}"
-                    @if ($currentModule==='Field Operations' ) aria-current="true" @endif
-                    class="
-                        flex items-center gap-3 border-l-[3px]
-                         px-4 py-2.5
-                        text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
-
-                        {{ $currentModule === 'Field Operations'
-                            ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
-                            : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
-                               dark:text-neutral-300 dark:hover:bg-[#008080]/15
-                               dark:hover:text-[#5EEAD4]'
-                        }}
-                    ">
-
-                    <i
-                        data-lucide="clipboard-list"
-                        class="h-5 w-5 shrink-0"
-                        aria-hidden="true">
-                    </i>
-
-                    <span>
-                        Field Operations
-                    </span>
-
-                </a>
-
-                @endif
-
-
-                {{-- System --}}
-                <a
-                    href="{{ route('admin.users.index') }}"
-                    @if ($currentModule==='System Administration' ) aria-current="true" @endif
-                    class="
-                            flex items-center gap-3 border-l-[3px]
-                             px-4 py-2.5
-                            text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
-
-                            {{ $currentModule === 'System Administration'
-                                ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
-                                : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
-                                   dark:text-neutral-300 dark:hover:bg-[#008080]/15
-                                   dark:hover:text-[#5EEAD4]'
-                            }}
-                        ">
-
-                    <i
-                        data-lucide="settings"
-                        class="h-5 w-5 shrink-0"
-                        aria-hidden="true">
-                    </i>
-
-                    <span>
-                        System Administration
-                    </span>
-
-                </a>
-
-                @endif
-
-
-                @if ($isCustomer && Route::has('customer.application.create'))
-
-                <a
-                    href="{{ route('customer.application.create') }}"
-                    @if (request()->routeIs('customer.application.*')) aria-current="true" @endif
-                    class="
-                    flex items-center gap-3 border-l-[3px]
-                    px-4 py-2.5
-                    text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40
-                    {{ request()->routeIs('customer.application.*')
-                                ? 'border-[#008080] bg-[#008080]/10 font-semibold text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
-                                : 'border-transparent text-neutral-700 hover:bg-[#008080]/10 hover:text-[#008080]
-                                   dark:text-neutral-300 dark:hover:bg-[#008080]/15 dark:hover:text-[#5EEAD4]' }}
-                    ">
-
-                    <i
-                        data-lucide="clipboard-list"
-                        class="h-5 w-5 shrink-0"
-                        aria-hidden="true">
-                    </i>
-
-                    <span>
-                        Service Application
-                    </span>
-
-                </a>
-
-                @endif
+                        <div class="mb-1 ml-5 space-y-0.5 border-l border-neutral-200 py-1 pl-3 dark:border-neutral-800">
+                            @foreach ($sidebarModule['items'] as $sidebarItem)
+                                @if (!($sidebarItem['adminOnly'] ?? false) || $authenticatedUser->role === 'admin')
+                                    @if (!empty($sidebarItem['route']) && Route::has($sidebarItem['route']))
+                                        @php
+                                            $childActive = request()->routeIs($sidebarItem['route']) ||
+                                                (!empty($sidebarItem['patterns']) && request()->routeIs(...$sidebarItem['patterns']));
+                                            $childActive = $childActive && $moduleActive;
+                                        @endphp
+                                        <a
+                                            href="{{ route($sidebarItem['route'], $sidebarItem['parameters'] ?? []) }}"
+                                            @if ($childActive) aria-current="page" @endif
+                                            class="flex min-h-9 items-center border-l-2 px-3 py-2 text-xs leading-5 transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#008080]/40 sm:text-sm
+                                                {{ $childActive
+                                                    ? 'border-[#008080] bg-[#008080]/10 font-medium text-[#006666] dark:bg-[#008080]/20 dark:text-[#5EEAD4]'
+                                                    : 'border-transparent text-neutral-600 hover:bg-[#008080]/10 hover:text-[#008080] dark:text-neutral-400 dark:hover:bg-[#008080]/15 dark:hover:text-[#5EEAD4]' }}">
+                                            {{ $sidebarItem['label'] }}
+                                        </a>
+                                    @else
+                                        {{-- Read-only navigation preserves module visibility without inventing routes. --}}
+                                        <div class="flex min-h-9 items-center justify-between gap-2 px-3 py-2 text-xs leading-5 text-neutral-400 dark:text-neutral-500 sm:text-sm"
+                                            aria-disabled="true">
+                                            <span class="min-w-0 truncate" title="{{ $sidebarItem['label'] }}">{{ $sidebarItem['label'] }}</span>
+                                            <span class="max-w-24 shrink-0 truncate text-right text-[10px]" title="{{ $sidebarItem['status'] ?? 'Not linked' }}">{{ $sidebarItem['status'] ?? 'Not linked' }}</span>
+                                        </div>
+                                    @endif
+                                @endif
+                            @endforeach
+                        </div>
+                    </details>
+                @endforeach
 
             </nav>
 
