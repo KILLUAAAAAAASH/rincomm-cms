@@ -3,6 +3,7 @@
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\CashPaymentController;
 use App\Http\Controllers\Admin\EquipmentAssignmentController;
+use App\Http\Controllers\Admin\EquipmentRetrievalController;
 use App\Http\Controllers\Admin\EquipmentAssetController;
 use App\Http\Controllers\Admin\CustomerDocumentController;
 use App\Http\Controllers\Admin\HeroSlideController;
@@ -283,6 +284,23 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     | Module 8, Feature 2: Subscriber equipment binding
     |--------------------------------------------------------------------------
     */
+    /*
+    |--------------------------------------------------------------------------
+    | Module 8, Feature 3: Physical equipment retrieval logging
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/admin/equipment-retrievals', [EquipmentRetrievalController::class, 'index'])
+        ->name('admin.equipment-retrievals.index');
+
+    Route::get('/admin/equipment-retrievals/create', [EquipmentRetrievalController::class, 'create'])
+        ->name('admin.equipment-retrievals.create');
+
+    Route::post('/admin/equipment-retrievals', [EquipmentRetrievalController::class, 'store'])
+        ->name('admin.equipment-retrievals.store');
+
+    Route::get('/admin/equipment-retrievals/{equipmentRetrieval}', [EquipmentRetrievalController::class, 'show'])
+        ->name('admin.equipment-retrievals.show');
+
     Route::get('/admin/equipment-assignments', [EquipmentAssignmentController::class, 'index'])
         ->name('admin.equipment-assignments.index');
 

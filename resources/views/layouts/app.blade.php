@@ -302,6 +302,14 @@
     'visible' => Route::has('admin.equipment-assignments.index'),
     ],
     [
+    'label' => 'Equipment Retrieval',
+    'description' => 'Log a returned device and review equipment retrieval history.',
+    'module' => 'Equipment & Network',
+    'route' => 'admin.equipment-retrievals.index',
+    'keywords' => 'hardware return recovery retrieval physical disconnection maintenance recovered serial',
+    'visible' => Route::has('admin.equipment-retrievals.index'),
+    ],
+    [
     'label' => 'Hero Slides',
     'description' => 'Manage landing-page carousel content.',
     'module' => 'System Administration & Database',
@@ -367,7 +375,7 @@
     ) => 'Field Technician Management',
 
     $isAdminOrStaff &&
-    request()->routeIs('admin.equipment-assets.*', 'admin.equipment-assignments.*') => 'Equipment & Network Inventory',
+    request()->routeIs('admin.equipment-assets.*', 'admin.equipment-assignments.*', 'admin.equipment-retrievals.*') => 'Equipment & Network Inventory',
 
     $isAdminOrStaff &&
     request()->routeIs(
@@ -460,6 +468,11 @@
     'label' => 'Customer Equipment',
     'route' => 'admin.equipment-assignments.index',
     'active' => request()->routeIs('admin.equipment-assignments.*'),
+    ],
+    [
+    'label' => 'Equipment Retrieval',
+    'route' => 'admin.equipment-retrievals.index',
+    'active' => request()->routeIs('admin.equipment-retrievals.*'),
     ],
     ];
     }
@@ -582,11 +595,11 @@
     [
     'label' => 'Equipment & Network',
     'icon' => 'cable',
-    'patterns' => ['admin.equipment.*', 'admin.inventory.*', 'admin.equipment-assets.*', 'admin.equipment-assignments.*'],
+    'patterns' => ['admin.equipment.*', 'admin.inventory.*', 'admin.equipment-assets.*', 'admin.equipment-assignments.*', 'admin.equipment-retrievals.*'],
     'items' => [
     ['label' => 'Hardware Assets', 'route' => 'admin.equipment-assets.index', 'patterns' => ['admin.equipment-assets.*']],
     ['label' => 'Customer Equipment', 'route' => 'admin.equipment-assignments.index', 'patterns' => ['admin.equipment-assignments.*']],
-    ['label' => 'Equipment Retrieval', 'status' => 'Planned'],
+    ['label' => 'Equipment Retrieval', 'route' => 'admin.equipment-retrievals.index', 'patterns' => ['admin.equipment-retrievals.*']],
     ],
     ],
     [

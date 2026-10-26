@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class EquipmentAssignment extends Model
 {
@@ -35,6 +36,11 @@ class EquipmentAssignment extends Model
     public function assignedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'assigned_by');
+    }
+
+    public function retrieval(): HasOne
+    {
+        return $this->hasOne(EquipmentRetrieval::class);
     }
 
     public function releasedBy(): BelongsTo

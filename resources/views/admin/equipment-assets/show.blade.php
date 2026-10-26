@@ -33,7 +33,7 @@
         @else
             <div class="overflow-x-auto">
                 <table class="w-full min-w-[560px] text-left text-sm">
-                    <thead class="text-xs text-neutral-500 dark:text-neutral-400"><tr><th class="py-3">Subscriber</th><th>IP Address</th><th>Assigned</th><th>Status</th></tr></thead>
+                    <thead class="text-xs text-neutral-500 dark:text-neutral-400"><tr><th class="py-3">Subscriber</th><th>IP Address</th><th>Assigned</th><th>Status</th><th>Action</th></tr></thead>
                     <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
                         @foreach ($assignments as $assignment)
                             <tr>
@@ -41,6 +41,13 @@
                                 <td class="pr-3 font-mono text-xs">{{ $assignment->ip_address ?? 'Not recorded' }}</td>
                                 <td class="pr-3 text-xs">{{ $assignment->assigned_at->format('M d, Y') }}</td>
                                 <td><span class="border border-neutral-300 px-2 py-1 text-xs dark:border-neutral-700">{{ $assignment->released_at ? 'Retrieved' : 'Active' }}</span></td>
+                                <td class="py-3 text-xs">
+                                    @if ($assignment->retrieval)
+                                        <a class="font-medium text-[#008080] hover:underline dark:text-teal-300" href="{{ route('admin.equipment-retrievals.show', $assignment->retrieval) }}">View retrieval</a>
+                                    @elseif (! $assignment->released_at)
+                                        <a class="font-medium text-[#008080] hover:underline dark:text-teal-300" href="{{ route('admin.equipment-retrievals.create', ['assignment_id' => $assignment->id]) }}">Record retrieval</a>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

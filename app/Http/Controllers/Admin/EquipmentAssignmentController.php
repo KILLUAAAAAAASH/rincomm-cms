@@ -22,7 +22,7 @@ class EquipmentAssignmentController extends Controller
         ]);
 
         $assignments = EquipmentAssignment::query()
-            ->with(['customer', 'equipmentAsset', 'assignedBy'])
+            ->with(['customer', 'equipmentAsset', 'assignedBy', 'retrieval'])
             ->when(($filters['state'] ?? '') === 'active', fn ($q) => $q->whereNull('released_at'))
             ->when(($filters['state'] ?? '') === 'history', fn ($q) => $q->whereNotNull('released_at'));
 

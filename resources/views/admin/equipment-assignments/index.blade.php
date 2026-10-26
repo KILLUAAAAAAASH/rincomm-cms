@@ -36,9 +36,9 @@
             <p class="px-4 py-10 text-center text-sm text-neutral-500 dark:text-neutral-400">No customer equipment assignments found. Select “Assign Equipment” to bind a device.</p>
         @else
             <div class="overflow-x-auto">
-                <table class="w-full min-w-[850px] text-left text-sm">
+                <table class="w-full min-w-[1020px] text-left text-sm">
                     <thead class="bg-neutral-50 text-xs uppercase tracking-wide text-neutral-500 dark:bg-neutral-950"><tr>
-                        <th scope="col" class="px-4 py-3">Subscriber</th><th scope="col" class="px-4 py-3">Equipment</th><th scope="col" class="px-4 py-3">Serial Number</th><th scope="col" class="px-4 py-3">IP Address</th><th scope="col" class="px-4 py-3">Date</th><th scope="col" class="px-4 py-3">State</th>
+                        <th scope="col" class="px-4 py-3">Subscriber</th><th scope="col" class="px-4 py-3">Equipment</th><th scope="col" class="px-4 py-3">Serial Number</th><th scope="col" class="px-4 py-3">IP Address</th><th scope="col" class="px-4 py-3">Date</th><th scope="col" class="px-4 py-3">State</th><th scope="col" class="px-4 py-3">Action</th>
                     </tr></thead>
                     <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
                         @foreach ($assignments as $assignment)
@@ -49,6 +49,13 @@
                                 <td class="px-4 py-3 font-mono text-xs">{{ $assignment->ip_address ?? 'Not recorded' }}</td>
                                 <td class="px-4 py-3 text-xs">{{ $assignment->assigned_at->format('M d, Y') }}</td>
                                 <td class="px-4 py-3"><span class="border border-neutral-300 px-2 py-1 text-xs dark:border-neutral-700">{{ $assignment->released_at ? 'Retrieved' : 'Assigned' }}</span></td>
+                                <td class="px-4 py-3">
+                                    @if ($assignment->released_at && $assignment->retrieval)
+                                        <a href="{{ route('admin.equipment-retrievals.show', $assignment->retrieval) }}" class="font-semibold text-[#008080] hover:underline dark:text-teal-300">Retrieval record</a>
+                                    @elseif (! $assignment->released_at)
+                                        <a href="{{ route('admin.equipment-retrievals.create', ['assignment_id' => $assignment->id]) }}" class="font-semibold text-[#008080] hover:underline dark:text-teal-300">Retrieve</a>
+                                    @endif
+                                </td>
                             </tr>
                         @endforeach
                     </tbody>

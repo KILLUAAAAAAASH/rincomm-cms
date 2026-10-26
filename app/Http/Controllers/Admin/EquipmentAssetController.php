@@ -78,13 +78,13 @@ class EquipmentAssetController extends Controller
     {
         $activities = DB::table('activity_logs')
             ->leftJoin('users', 'users.id', '=', 'activity_logs.actor_user_id')
-            ->whereIn('activity_logs.action', ['equipment.asset_created', 'equipment.asset_updated', 'equipment.customer_assigned'])
+            ->whereIn('activity_logs.action', ['equipment.asset_created', 'equipment.asset_updated', 'equipment.customer_assigned', 'equipment.retrieved'])
             ->where('activity_logs.metadata->equipment_asset_id', $equipmentAsset->id)
             ->orderByDesc('activity_logs.id')
             ->limit(20)
             ->get(['activity_logs.id', 'activity_logs.action', 'activity_logs.description', 'activity_logs.created_at', 'users.name as actor_name']);
 
-        $assignments = $equipmentAsset->assignments()->with(['customer', 'assignedBy'])->latest('assigned_at')->limit(50)->get();
+        $assignments = $equipmentAsset->assignments()->with(['customer', 'assignedBy', 'retrieval'])->latest('assigned_at')->limit(50)->get();
 
         return view('admin.equipment-assets.show', compact('equipmentAsset', 'activities', 'assignments'));
     }
