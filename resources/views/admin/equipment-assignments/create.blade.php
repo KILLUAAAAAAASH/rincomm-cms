@@ -13,6 +13,7 @@
 
     <form method="GET" action="{{ route('admin.equipment-assignments.create') }}" class="space-y-3 border border-neutral-200 bg-neutral-50 p-4 dark:border-neutral-800 dark:bg-neutral-900" role="search">
         <h2 class="text-sm font-semibold">Find a subscriber or hardware asset</h2>
+        <p class="text-xs text-neutral-600 dark:text-neutral-400">Search for available records, then choose a subscriber and device in the Assignment Details dropdowns below. Searching alone does not create an assignment.</p>
         <div class="grid gap-3 sm:grid-cols-2">
             <div>
                 <label for="customer_search" class="mb-1 block text-xs font-semibold">Subscriber name or code</label>
@@ -26,10 +27,23 @@
         @if (! empty($filters['customer_id'])) <input type="hidden" name="customer_id" value="{{ $filters['customer_id'] }}"> @endif
         @if (! empty($filters['asset_id'])) <input type="hidden" name="asset_id" value="{{ $filters['asset_id'] }}"> @endif
         <button type="submit" class="min-h-10 border border-[#008080] px-4 text-sm font-semibold text-[#008080] hover:bg-[#008080]/10 dark:text-teal-300">Find Matches</button>
-        <p class="text-xs text-neutral-500 dark:text-neutral-400">Showing up to 40 matching subscribers and 40 available devices. Refine your search if the record is missing.</p>
+        @if (request()->hasAny(['customer_search', 'asset_search']))
+            <div class="space-y-2 border-l-2 border-[#008080] bg-[#008080]/10 p-3 text-sm dark:bg-[#008080]/20" role="status">
+                <p class="font-semibold">Search finished — {{ $customers->count() }} active subscriber {{ \Illuminate\Support\Str::plural('match', $customers->count()) }} and {{ $assets->count() }} available equipment {{ \Illuminate\Support\Str::plural('match', $assets->count()) }}.</p>
+                <p>Search results are shown in the Subscriber and Available Serialized Equipment dropdowns under <a href="#assignment-details" class="font-semibold text-[#008080] underline dark:text-teal-300">Assignment Details</a>. Select the records there before saving.</p>
+                @if ($customers->isEmpty())
+                    <p class="text-amber-800 dark:text-amber-200">No active subscriber matches this search. Check the customer code or subscriber account status.</p>
+                @endif
+                @if ($assets->isEmpty())
+                    <p class="text-amber-800 dark:text-amber-200">No available serialized equipment matches this search. The asset may not exist, may be assigned, or may not be In Stock. <a href="{{ route('admin.equipment-assets.index') }}" class="underline">Check Hardware Assets</a>.</p>
+                @endif
+            </div>
+        @else
+            <p class="text-xs text-neutral-500 dark:text-neutral-400">Choose from the active subscribers and available in-stock serialized devices shown below (up to 40 of each). Use search to narrow down the choices.</p>
+        @endif
     </form>
 
-    <section class="border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
+    <section id="assignment-details" class="border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900">
         <h2 class="mb-4 border-b border-neutral-200 pb-3 text-sm font-semibold dark:border-neutral-800">Assignment Details</h2>
         @if ($errors->any())
             <div class="mb-4 border border-red-300 bg-red-50 p-3 text-sm text-red-800 dark:border-red-800 dark:bg-red-950 dark:text-red-200" role="alert">
@@ -46,6 +60,11 @@
                         <option value="{{ $customer->id }}" @selected((string) old('customer_id', $filters['customer_id'] ?? '') === (string) $customer->id)>{{ $customer->customer_code }} — {{ $customer->first_name }} {{ $customer->last_name }}</option>
                     @endforeach
                 </select>
+                @if ($customers->isEmpty())
+                    <p class="mt-1 text-xs text-amber-800 dark:text-amber-200">No active subscribers are available in this search. Try a different name or code, or check the subscriber's status.</p>
+                @else
+                    <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{{ $customers->count() }} matching active subscriber {{ \Illuminate\Support\Str::plural('option', $customers->count()) }} in this dropdown. Open it and select the correct subscriber.</p>
+                @endif
                 @error('customer_id') <p class="mt-1 text-xs text-red-700 dark:text-red-400" role="alert">{{ $message }}</p> @enderror
             </div>
             <div>
@@ -56,6 +75,11 @@
                         <option value="{{ $asset->id }}" @selected((string) old('equipment_asset_id', $filters['asset_id'] ?? '') === (string) $asset->id)>{{ $asset->asset_tag }} — {{ $asset->name }} (SN {{ $asset->serial_number }})</option>
                     @endforeach
                 </select>
+                @if ($assets->isEmpty())
+                    <p class="mt-1 text-xs text-amber-800 dark:text-amber-200">No in-stock unassigned devices with serial numbers match this search. Check Hardware Assets or clear the equipment search.</p>
+                @else
+                    <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">{{ $assets->count() }} matching available device {{ \Illuminate\Support\Str::plural('option', $assets->count()) }} in this dropdown. Open it and select the correct hardware.</p>
+                @endif
                 @error('equipment_asset_id') <p class="mt-1 text-xs text-red-700 dark:text-red-400" role="alert">{{ $message }}</p> @enderror
             </div>
             <div>
