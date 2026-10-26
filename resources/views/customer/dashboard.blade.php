@@ -455,6 +455,8 @@
 
                 </div>
 
+            @include('customer.partials.live-connection')
+
             </section>
 
 

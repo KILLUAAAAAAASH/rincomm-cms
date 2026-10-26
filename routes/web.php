@@ -372,6 +372,19 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     Route::patch('/admin/subscribers/{subscriber}/status', [SubscriberController::class, 'updateStatus'])
         ->name('admin.subscribers.status');
 
+    // MikroTik PPPoE account mapping: administrator only, never alters router state.
+    Route::get('/admin/subscribers/{subscriber}/network-account', [\App\Http\Controllers\Admin\SubscriberNetworkAccountController::class, 'show'])
+        ->middleware('role:admin')
+        ->name('admin.subscribers.network-account.show');
+
+    Route::patch('/admin/subscribers/{subscriber}/network-account', [\App\Http\Controllers\Admin\SubscriberNetworkAccountController::class, 'update'])
+        ->middleware('role:admin')
+        ->name('admin.subscribers.network-account.update');
+
+    Route::delete('/admin/subscribers/{subscriber}/network-account', [\App\Http\Controllers\Admin\SubscriberNetworkAccountController::class, 'destroy'])
+        ->middleware('role:admin')
+        ->name('admin.subscribers.network-account.destroy');
+
     Route::patch(
         '/admin/subscribers/{subscriber}/subscriptions/{subscription}/activate',
         [SubscriptionController::class, 'activate']
@@ -603,6 +616,9 @@ Route::middleware(['auth', 'active', 'role:technician'])->group(function () {
 Route::middleware(['auth', 'active', 'role:customer'])->group(function () {
     Route::get('/customer/dashboard', [CustomerDashboardController::class, 'index'])
         ->name('customer.dashboard');
+    // Customer-only status endpoint. Never accepts a subscriber or router username from the URL.
+    Route::get('/customer/connection-status', [\App\Http\Controllers\Customer\ConnectionStatusController::class, 'show'])
+        ->name('customer.connection-status.show');
 
     // Customer-only plan management and requests. No subscriber ID in the URL.
     /*

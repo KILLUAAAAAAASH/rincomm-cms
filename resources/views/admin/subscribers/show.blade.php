@@ -1470,6 +1470,24 @@ $hasDocumentErrors = $errors->hasAny([
 
         </div>
 
+        {{-- Network account entry point: only administrators can manage PPPoE identities. --}}
+        @if (auth()->user()?->role === 'admin')
+            <section class="rounded-md border border-neutral-200 bg-white px-4 py-4 dark:border-neutral-800 dark:bg-neutral-900">
+                <div class="flex flex-wrap items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="network" class="h-5 w-5 text-[#008080] dark:text-[#5EEAD4]" aria-hidden="true"></i>
+                        <div>
+                            <h2 class="text-sm font-semibold text-neutral-900 dark:text-white">PPPoE Network Account</h2>
+                            <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">Manage the subscriber's MikroTik login mapping without changing their subscription.</p>
+                        </div>
+                    </div>
+                    <a href="{{ route('admin.subscribers.network-account.show', $subscriber) }}"
+                       class="inline-flex min-h-10 items-center justify-center rounded-md border border-[#008080]/30 px-4 py-2 text-sm font-semibold text-[#008080] hover:bg-[#008080]/5 focus:outline-none focus:ring-2 focus:ring-[#008080]/30 dark:text-[#5EEAD4]">
+                        Manage Network Account
+                    </a>
+                </div>
+            </section>
+        @endif
         {{-- Current subscription --}}
         <section
             class="
