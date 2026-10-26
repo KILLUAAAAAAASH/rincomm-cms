@@ -294,6 +294,14 @@
     'visible' => $authenticatedUser->role === 'admin' && Route::has('admin.activity-logs.index'),
     ],
     [
+    'label' => 'Customer Equipment',
+    'description' => 'Assign available serialized hardware and record subscriber IP addresses.',
+    'module' => 'Equipment & Network',
+    'route' => 'admin.equipment-assignments.index',
+    'keywords' => 'customer equipment subscriber binding assign device serial ip address deployed hardware',
+    'visible' => Route::has('admin.equipment-assignments.index'),
+    ],
+    [
     'label' => 'Hero Slides',
     'description' => 'Manage landing-page carousel content.',
     'module' => 'System Administration & Database',
@@ -359,7 +367,7 @@
     ) => 'Field Technician Management',
 
     $isAdminOrStaff &&
-    request()->routeIs('admin.equipment-assets.*') => 'Equipment & Network Inventory',
+    request()->routeIs('admin.equipment-assets.*', 'admin.equipment-assignments.*') => 'Equipment & Network Inventory',
 
     $isAdminOrStaff &&
     request()->routeIs(
@@ -447,6 +455,11 @@
     'label' => 'Hardware Assets',
     'route' => 'admin.equipment-assets.index',
     'active' => request()->routeIs('admin.equipment-assets.*'),
+    ],
+    [
+    'label' => 'Customer Equipment',
+    'route' => 'admin.equipment-assignments.index',
+    'active' => request()->routeIs('admin.equipment-assignments.*'),
     ],
     ];
     }
@@ -569,10 +582,10 @@
     [
     'label' => 'Equipment & Network',
     'icon' => 'cable',
-    'patterns' => ['admin.equipment.*', 'admin.inventory.*', 'admin.equipment-assets.*'],
+    'patterns' => ['admin.equipment.*', 'admin.inventory.*', 'admin.equipment-assets.*', 'admin.equipment-assignments.*'],
     'items' => [
     ['label' => 'Hardware Assets', 'route' => 'admin.equipment-assets.index', 'patterns' => ['admin.equipment-assets.*']],
-    ['label' => 'Customer Equipment', 'status' => 'Planned'],
+    ['label' => 'Customer Equipment', 'route' => 'admin.equipment-assignments.index', 'patterns' => ['admin.equipment-assignments.*']],
     ['label' => 'Equipment Retrieval', 'status' => 'Planned'],
     ],
     ],

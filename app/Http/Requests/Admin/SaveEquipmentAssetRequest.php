@@ -43,6 +43,10 @@ class SaveEquipmentAssetRequest extends FormRequest
     {
         $asset = $this->route('equipmentAsset');
         $id = $asset instanceof EquipmentAsset ? $asset->getKey() : null;
+        $allowedStatuses = array_keys(EquipmentAsset::STATUSES);
+        if (! ($asset instanceof EquipmentAsset && $asset->status === 'deployed')) {
+            $allowedStatuses = array_values(array_diff($allowedStatuses, ['deployed']));
+        }
 
         return [
             'asset_tag' => [
@@ -54,7 +58,7 @@ class SaveEquipmentAssetRequest extends FormRequest
             'brand' => ['nullable', 'string', 'max:80'],
             'model' => ['nullable', 'string', 'max:100'],
             'serial_number' => ['nullable', 'string', 'max:120', Rule::unique('equipment_assets', 'serial_number')->ignore($id)],
-            'status' => ['required', 'string', Rule::in(array_keys(EquipmentAsset::STATUSES))],
+            'status' => ['required', 'string', Rule::in($allowedStatuses)],
             'notes' => ['nullable', 'string', 'max:2000'],
         ];
     }

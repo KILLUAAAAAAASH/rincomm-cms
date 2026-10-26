@@ -58,6 +58,11 @@ class Customer extends Model
         return $this->hasMany(Payment::class);
     }
 
+    public function equipmentAssignments(): HasMany
+    {
+        return $this->hasMany(EquipmentAssignment::class);
+    }
+
     public function statusHistories(): HasMany
     {
         return $this->hasMany(CustomerStatusHistory::class);

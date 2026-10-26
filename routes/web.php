@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\CashPaymentController;
+use App\Http\Controllers\Admin\EquipmentAssignmentController;
 use App\Http\Controllers\Admin\EquipmentAssetController;
 use App\Http\Controllers\Admin\CustomerDocumentController;
 use App\Http\Controllers\Admin\HeroSlideController;
@@ -276,6 +277,20 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     | Equipment & Network Inventory — Module 8 Feature 1
     |--------------------------------------------------------------------------
     */
+
+    /*
+    |--------------------------------------------------------------------------
+    | Module 8, Feature 2: Subscriber equipment binding
+    |--------------------------------------------------------------------------
+    */
+    Route::get('/admin/equipment-assignments', [EquipmentAssignmentController::class, 'index'])
+        ->name('admin.equipment-assignments.index');
+
+    Route::get('/admin/equipment-assignments/create', [EquipmentAssignmentController::class, 'create'])
+        ->name('admin.equipment-assignments.create');
+
+    Route::post('/admin/equipment-assignments', [EquipmentAssignmentController::class, 'store'])
+        ->name('admin.equipment-assignments.store');
 
     Route::get('/admin/equipment-assets', [EquipmentAssetController::class, 'index'])
         ->name('admin.equipment-assets.index');

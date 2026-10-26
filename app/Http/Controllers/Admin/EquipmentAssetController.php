@@ -78,13 +78,15 @@ class EquipmentAssetController extends Controller
     {
         $activities = DB::table('activity_logs')
             ->leftJoin('users', 'users.id', '=', 'activity_logs.actor_user_id')
-            ->whereIn('activity_logs.action', ['equipment.asset_created', 'equipment.asset_updated'])
+            ->whereIn('activity_logs.action', ['equipment.asset_created', 'equipment.asset_updated', 'equipment.customer_assigned'])
             ->where('activity_logs.metadata->equipment_asset_id', $equipmentAsset->id)
             ->orderByDesc('activity_logs.id')
             ->limit(20)
             ->get(['activity_logs.id', 'activity_logs.action', 'activity_logs.description', 'activity_logs.created_at', 'users.name as actor_name']);
 
-        return view('admin.equipment-assets.show', compact('equipmentAsset', 'activities'));
+        $assignments = $equipmentAsset->assignments()->with(['customer', 'assignedBy'])->latest('assigned_at')->limit(50)->get();
+
+        return view('admin.equipment-assets.show', compact('equipmentAsset', 'activities', 'assignments'));
     }
 
     public function edit(EquipmentAsset $equipmentAsset)
@@ -100,6 +102,23 @@ class EquipmentAssetController extends Controller
             DB::transaction(function () use ($request, $equipmentAsset, &$changed): void {
                 $asset = EquipmentAsset::query()->lockForUpdate()->findOrFail($equipmentAsset->id);
                 $asset->fill($request->validated());
+
+                $hasActiveAssignment = $asset->activeAssignment()->exists();
+                if ($hasActiveAssignment && (
+                    $asset->status !== 'deployed' ||
+                    $asset->asset_tag !== $asset->getOriginal('asset_tag') ||
+                    $asset->serial_number !== $asset->getOriginal('serial_number')
+                )) {
+                    throw ValidationException::withMessages([
+                        'status' => 'Assigned equipment cannot change status, asset tag, or serial number until retrieved.',
+                    ]);
+                }
+
+                if (! $hasActiveAssignment && $asset->status === 'deployed') {
+                    throw ValidationException::withMessages([
+                        'status' => 'Only a customer assignment can mark equipment as deployed.',
+                    ]);
+                }
 
                 if (! $asset->isDirty()) {
                     return;

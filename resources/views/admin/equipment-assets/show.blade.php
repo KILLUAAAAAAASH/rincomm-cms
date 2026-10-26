@@ -18,6 +18,40 @@
         <div role="status" class="border border-emerald-300 bg-emerald-50 px-4 py-3 text-sm text-emerald-900 dark:border-emerald-800 dark:bg-emerald-950 dark:text-emerald-200">{{ session('success') }}</div>
     @endif
 
+    <section class="border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900" aria-labelledby="assignment-heading">
+        <div class="flex flex-wrap items-center justify-between gap-3 border-b border-neutral-200 pb-3 dark:border-neutral-800">
+            <div>
+                <h2 id="assignment-heading" class="text-sm font-semibold">Subscriber Equipment Binding</h2>
+                <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">The serial number is sourced from inventory; customer IP addresses are recorded per assignment.</p>
+            </div>
+            @if ($equipmentAsset->status === 'in_stock' && filled($equipmentAsset->serial_number) && $assignments->whereNull('released_at')->isEmpty())
+                <a href="{{ route('admin.equipment-assignments.create', ['asset_id' => $equipmentAsset->id]) }}" class="inline-flex min-h-10 items-center bg-[#008080] px-4 text-sm font-semibold text-white hover:bg-[#006666]">Assign to Subscriber</a>
+            @endif
+        </div>
+        @if ($assignments->isEmpty())
+            <p class="py-4 text-sm text-neutral-500 dark:text-neutral-400">No subscriber assignments recorded for this device.</p>
+        @else
+            <div class="overflow-x-auto">
+                <table class="w-full min-w-[560px] text-left text-sm">
+                    <thead class="text-xs text-neutral-500 dark:text-neutral-400"><tr><th class="py-3">Subscriber</th><th>IP Address</th><th>Assigned</th><th>Status</th></tr></thead>
+                    <tbody class="divide-y divide-neutral-200 dark:divide-neutral-800">
+                        @foreach ($assignments as $assignment)
+                            <tr>
+                                <td class="py-3 pr-3 font-medium">{{ $assignment->customer->customer_code }} — {{ $assignment->customer->first_name }} {{ $assignment->customer->last_name }}</td>
+                                <td class="pr-3 font-mono text-xs">{{ $assignment->ip_address ?? 'Not recorded' }}</td>
+                                <td class="pr-3 text-xs">{{ $assignment->assigned_at->format('M d, Y') }}</td>
+                                <td><span class="border border-neutral-300 px-2 py-1 text-xs dark:border-neutral-700">{{ $assignment->released_at ? 'Retrieved' : 'Active' }}</span></td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
+            </div>
+            @if ($assignments->count() >= 50)
+                <p class="text-xs text-neutral-500">Showing 50 most recent assignments.</p>
+            @endif
+        @endif
+    </section>
+
     <div class="grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(16rem,1fr)]">
         <section class="border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900" aria-labelledby="details-heading">
             <h2 id="details-heading" class="mb-4 border-b border-neutral-200 pb-3 text-sm font-semibold dark:border-neutral-800">Equipment Details</h2>

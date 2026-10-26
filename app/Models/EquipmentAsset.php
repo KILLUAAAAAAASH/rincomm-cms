@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class EquipmentAsset extends Model
 {
@@ -19,13 +21,12 @@ class EquipmentAsset extends Model
         'other' => 'Other',
     ];
 
-    // Customer assignments and retrieval states are deliberately deferred to
-    // the next FRS features, to avoid falsely claiming a device is deployed.
     public const STATUSES = [
         'in_stock' => 'In Stock',
         'maintenance' => 'Under Maintenance',
         'faulty' => 'Faulty',
         'retired' => 'Retired',
+        'deployed' => 'Deployed',
     ];
 
     protected $fillable = [
@@ -38,4 +39,14 @@ class EquipmentAsset extends Model
         'status',
         'notes',
     ];
+
+    public function assignments(): HasMany
+    {
+        return $this->hasMany(EquipmentAssignment::class);
+    }
+
+    public function activeAssignment(): HasOne
+    {
+        return $this->hasOne(EquipmentAssignment::class)->whereNull('released_at');
+    }
 }
