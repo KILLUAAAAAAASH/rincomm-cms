@@ -188,6 +188,14 @@
     'visible' => Route::has('admin.applications.index'),
     ],
     [
+    'label' => 'Hardware Assets',
+    'description' => 'Register, find, and maintain network equipment.',
+    'module' => 'Equipment & Network Inventory',
+    'route' => 'admin.equipment-assets.index',
+    'keywords' => 'equipment hardware asset assets inventory serial number router ont switch modem',
+    'visible' => Route::has('admin.equipment-assets.index'),
+    ],
+    [
     'label' => 'Job Orders',
     'description' => 'Create and monitor field Job Orders.',
     'module' => 'Field Technician Management',
@@ -351,6 +359,9 @@
     ) => 'Field Technician Management',
 
     $isAdminOrStaff &&
+    request()->routeIs('admin.equipment-assets.*') => 'Equipment & Network Inventory',
+
+    $isAdminOrStaff &&
     request()->routeIs(
     'admin.service-plans.*'
     ) => 'Subscription & Plan Management',
@@ -426,6 +437,16 @@
     'label' => 'Job Orders',
     'route' => 'technician.job-orders.index',
     'active' => request()->routeIs('technician.job-orders.*'),
+    ],
+    ];
+    }
+
+    if ($currentModule === 'Equipment & Network Inventory') {
+    $contextualNavigation = [
+    [
+    'label' => 'Hardware Assets',
+    'route' => 'admin.equipment-assets.index',
+    'active' => request()->routeIs('admin.equipment-assets.*'),
     ],
     ];
     }
@@ -548,9 +569,9 @@
     [
     'label' => 'Equipment & Network',
     'icon' => 'cable',
-    'patterns' => ['admin.equipment.*', 'admin.inventory.*'],
+    'patterns' => ['admin.equipment.*', 'admin.inventory.*', 'admin.equipment-assets.*'],
     'items' => [
-    ['label' => 'Hardware Assets', 'status' => 'Planned'],
+    ['label' => 'Hardware Assets', 'route' => 'admin.equipment-assets.index', 'patterns' => ['admin.equipment-assets.*']],
     ['label' => 'Customer Equipment', 'status' => 'Planned'],
     ['label' => 'Equipment Retrieval', 'status' => 'Planned'],
     ],

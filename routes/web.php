@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ActivityLogController;
 use App\Http\Controllers\Admin\CashPaymentController;
+use App\Http\Controllers\Admin\EquipmentAssetController;
 use App\Http\Controllers\Admin\CustomerDocumentController;
 use App\Http\Controllers\Admin\HeroSlideController;
 use App\Http\Controllers\Admin\InvoiceController;
@@ -269,6 +270,30 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
 
     Route::get('/admin/job-orders/{jobOrder}', [AdminJobOrderController::class, 'show'])
         ->name('admin.job-orders.show');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Equipment & Network Inventory — Module 8 Feature 1
+    |--------------------------------------------------------------------------
+    */
+
+    Route::get('/admin/equipment-assets', [EquipmentAssetController::class, 'index'])
+        ->name('admin.equipment-assets.index');
+
+    Route::get('/admin/equipment-assets/create', [EquipmentAssetController::class, 'create'])
+        ->name('admin.equipment-assets.create');
+
+    Route::post('/admin/equipment-assets', [EquipmentAssetController::class, 'store'])
+        ->name('admin.equipment-assets.store');
+
+    Route::get('/admin/equipment-assets/{equipmentAsset}/edit', [EquipmentAssetController::class, 'edit'])
+        ->name('admin.equipment-assets.edit');
+
+    Route::patch('/admin/equipment-assets/{equipmentAsset}', [EquipmentAssetController::class, 'update'])
+        ->name('admin.equipment-assets.update');
+
+    Route::get('/admin/equipment-assets/{equipmentAsset}', [EquipmentAssetController::class, 'show'])
+        ->name('admin.equipment-assets.show');
 
     /*
     |--------------------------------------------------------------------------
