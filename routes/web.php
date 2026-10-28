@@ -196,6 +196,15 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->name('profile.update');
 });
 
+// Module 9 Feature 5: customer-owned profile update requests; no direct profile mutation.
+Route::middleware(['auth', 'active', 'role:customer'])->group(function () {
+    Route::get('/customer/profile-update-requests', [\App\Http\Controllers\Customer\ProfileUpdateRequestController::class, 'index'])
+        ->name('customer.profile-update-requests.index');
+    Route::post('/customer/profile-update-requests', [\App\Http\Controllers\Customer\ProfileUpdateRequestController::class, 'store'])
+        ->middleware('throttle:10,1')
+        ->name('customer.profile-update-requests.store');
+});
+
 /*
 |--------------------------------------------------------------------------
 | Administrator / Staff Routes
@@ -357,6 +366,16 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
     |--------------------------------------------------------------------------
     */
 
+        // Module 9 Feature 5 - staff review of subscriber profile update requests.
+    // Place BEFORE /admin/subscribers/{subscriber} route to avoid binding collisions.
+    Route::get('/admin/subscribers/profile-update-requests', [\App\Http\Controllers\Admin\ProfileUpdateReviewController::class, 'index'])
+        ->name('admin.profile-update-requests.index');
+    Route::post('/admin/subscribers/profile-update-requests/{profileUpdateRequest}/approve', [\App\Http\Controllers\Admin\ProfileUpdateReviewController::class, 'approve'])
+        ->middleware('throttle:20,1')
+        ->name('admin.profile-update-requests.approve');
+    Route::post('/admin/subscribers/profile-update-requests/{profileUpdateRequest}/reject', [\App\Http\Controllers\Admin\ProfileUpdateReviewController::class, 'reject'])
+        ->middleware('throttle:20,1')
+        ->name('admin.profile-update-requests.reject');
     Route::get('/admin/subscribers', [SubscriberController::class, 'index'])
         ->name('admin.subscribers.index');
 

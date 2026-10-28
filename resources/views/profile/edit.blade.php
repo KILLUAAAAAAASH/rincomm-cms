@@ -179,6 +179,14 @@
 
     {{-- Main content --}}
     <main class="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        {{-- Feature 5 profile update requests: separate from the existing name editor. --}}
+        @if ($hasSubscriberProfile)
+            <div class="mb-6 border border-teal-200 bg-teal-50 p-4 dark:border-teal-900 dark:bg-teal-950/30">
+                <p class="font-semibold">Need to change subscriber contact or billing details?</p>
+                <p class="mt-1 text-sm text-neutral-600 dark:text-neutral-300">Submit a profile update request for staff review. Your current details stay unchanged until approved.</p>
+                <a href="{{ route('customer.profile-update-requests.index') }}" class="mt-3 inline-block rounded bg-teal-700 px-4 py-2 text-sm font-semibold text-white hover:bg-teal-800">Request profile changes</a>
+            </div>
+        @endif
 
         {{-- Success message --}}
         @if (session('success'))

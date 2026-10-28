@@ -536,11 +536,11 @@
     [
     'label' => 'Customers',
     'icon' => 'users',
-    'patterns' => ['admin.subscribers.*', 'admin.applications.*'],
+    'patterns' => ['admin.subscribers.*', 'admin.applications.*', 'admin.profile-update-requests.*'],
     'items' => [
     ['label' => 'All Subscribers', 'route' => 'admin.subscribers.index', 'patterns' => ['admin.subscribers.*']],
     ['label' => 'Applications', 'route' => 'admin.applications.index'],
-    ['label' => 'Requests', 'status' => 'In subscriber records'],
+    ['label' => 'Requests', 'route' => 'admin.profile-update-requests.index', 'patterns' => ['admin.profile-update-requests.*']],
     ['label' => 'Relocation & Transfer', 'route' => 'admin.subscribers.index', 'parameters' => ['feature' => 'relocation-transfer']],
     ['label' => 'Customer Documents', 'route' => 'admin.subscribers.index', 'parameters' => ['feature' => 'customer-documents']],
     ],
