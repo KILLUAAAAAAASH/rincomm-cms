@@ -791,6 +791,62 @@
                         dark:border-neutral-800
                     ">
 
+                    {{-- Feature 4: payment proof is independent of verified gateway payments. --}}
+                    <section class="mb-6 rounded-lg border border-neutral-200 p-4 dark:border-neutral-800" aria-labelledby="proof-heading">
+                        <h3 id="proof-heading" class="text-sm font-semibold">Submit proof of payment</h3>
+                        <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                            Only upload a receipt for a transfer you have already made. Uploading does not pay this invoice or confirm receipt of funds.
+                        </p>
+
+                        @if ($paymentProofs->isNotEmpty())
+                            <ul class="mt-3 space-y-2 text-xs" aria-label="Submitted payment proofs">
+                                @foreach ($paymentProofs as $submittedProof)
+                                    <li class="rounded-md border border-neutral-200 p-2 dark:border-neutral-700">
+                                        {{ $submittedProof->transaction_reference }}
+                                        &middot; &#8369;{{ number_format((float) $submittedProof->amount, 2) }}
+                                        &middot; {{ $submittedProof->status === 'pending' ? 'Pending staff review' : ucfirst($submittedProof->status) }}
+                                    </li>
+                                @endforeach
+                            </ul>
+                        @endif
+
+                        @if ($hasPendingPaymentProof)
+                            <p class="mt-3 text-sm text-amber-700 dark:text-amber-300" role="status">A proof is awaiting staff review. Do not submit it again.</p>
+                        @elseif ($hasPendingGatewayPayment)
+                            <p class="mt-3 text-sm text-amber-700 dark:text-amber-300">Resolve your pending GCash gateway payment before submitting other proof.</p>
+                        @elseif ($balance['balance_cents'] > 0 && in_array($invoice->status, ['issued', 'partially_paid', 'overdue'], true))
+                            <form method="POST" action="{{ route('customer.billing.payment-proofs.store', $invoice) }}" enctype="multipart/form-data" class="mt-4 space-y-3">
+                                @csrf
+                                <div>
+                                    <label for="proof-method" class="block text-xs font-medium">Payment method</label>
+                                    <select id="proof-method" name="payment_method" required class="mt-1 w-full rounded-md border border-neutral-300 bg-white p-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white">
+                                        <option value="bank_transfer" @selected(old('payment_method') === 'bank_transfer')>Bank transfer</option>
+                                        <option value="gcash" @selected(old('payment_method') === 'gcash')>Manual GCash transfer (not online checkout)</option>
+                                        <option value="other" @selected(old('payment_method') === 'other')>Other transfer</option>
+                                    </select>
+                                    @error('payment_method') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label for="proof-reference" class="block text-xs font-medium">Transaction reference</label>
+                                    <input id="proof-reference" name="transaction_reference" required minlength="5" maxlength="100" value="{{ old('transaction_reference') }}" class="mt-1 w-full rounded-md border border-neutral-300 bg-white p-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white">
+                                    @error('transaction_reference') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label for="proof-amount" class="block text-xs font-medium">Amount already paid (PHP)</label>
+                                    <input id="proof-amount" name="amount" type="number" min="0.01" step="0.01" required value="{{ old('amount') }}" class="mt-1 w-full rounded-md border border-neutral-300 bg-white p-2 text-sm text-neutral-900 dark:border-neutral-700 dark:bg-neutral-900 dark:text-white">
+                                    @error('amount') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <div>
+                                    <label for="proof-file" class="block text-xs font-medium">Proof image or PDF (max 5 MB)</label>
+                                    <input id="proof-file" name="proof" type="file" accept="image/jpeg,image/png,application/pdf" required class="mt-1 block w-full text-xs">
+                                    @error('proof') <p class="mt-1 text-xs text-red-600">{{ $message }}</p> @enderror
+                                </div>
+                                <button type="submit" class="rounded-md bg-[#008080] px-4 py-2 text-sm font-semibold text-white hover:bg-[#006666]">Submit for staff review</button>
+                            </form>
+                        @else
+                            <p class="mt-3 text-xs text-neutral-500">No outstanding balance is available for proof submission.</p>
+                        @endif
+                    </section>
                     @if ($hasPendingGatewayPayment)
 
                         <div

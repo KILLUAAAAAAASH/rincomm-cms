@@ -524,6 +524,11 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
         [CashPaymentController::class, 'store']
     )->name('admin.invoices.cash-payments.store');
 
+    // Feature 4: staff-only private evidence retrieval and manual payment verification.
+    Route::get('/admin/invoices/{invoice}/payment-proofs/{submission}/download', [\App\Http\Controllers\Admin\PaymentProofReviewController::class, 'download'])
+        ->name('admin.invoices.payment-proofs.download');
+    Route::post('/admin/invoices/{invoice}/payment-proofs/{submission}/review', [\App\Http\Controllers\Admin\PaymentProofReviewController::class, 'review'])
+        ->name('admin.invoices.payment-proofs.review');
     Route::get('/admin/invoices/{invoice}', [InvoiceController::class, 'show'])
         ->name('admin.invoices.show');
 
@@ -663,6 +668,10 @@ Route::middleware(['auth', 'active', 'role:customer'])->group(function () {
         [PaymentReceiptController::class, 'show']
     )->name('customer.billing.payments.receipt.show');
 
+    Route::post(
+        '/customer/billing/invoices/{invoice}/payment-proofs',
+        [\App\Http\Controllers\Customer\PaymentProofSubmissionController::class, 'store']
+    )->name('customer.billing.payment-proofs.store');
     Route::post(
         '/customer/billing/invoices/{invoice}/gateway-payments',
         [GatewayPaymentController::class, 'store']

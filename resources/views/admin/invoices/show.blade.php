@@ -136,6 +136,53 @@ $paymentToken
 @endphp
 
 <div class="space-y-1.5">
+    {{-- Feature 4: staff payment proof review. Never approve solely from a screenshot. --}}
+    <section class="mb-4 rounded-lg border border-neutral-200 bg-white p-4 dark:border-neutral-800 dark:bg-neutral-900 print:hidden" aria-label="Payment proof review">
+        <h2 class="text-sm font-semibold text-neutral-900 dark:text-white">Payment proof review</h2>
+        <p class="mt-1 text-xs text-neutral-600 dark:text-neutral-400">Approve only after independently confirming the transfer in Rincomm's actual receiving account. Approval records a completed payment, updates the invoice, and issues a receipt. Do not approve a screenshot alone.</p>
+        @if ($errors->has('review'))
+            <p role="alert" class="mt-2 text-sm text-red-700 dark:text-red-300">{{ $errors->first('review') }}</p>
+        @endif
+        @if ($paymentProofSubmissions->isEmpty())
+            <p class="mt-3 text-xs text-neutral-500">No payment proofs submitted for this invoice.</p>
+        @else
+            <div class="mt-3 space-y-3">
+                @foreach ($paymentProofSubmissions as $proofSubmission)
+                    <div class="rounded-md border border-neutral-200 p-3 dark:border-neutral-700">
+                        <div class="flex flex-wrap items-center gap-3 text-xs">
+                            <strong>{{ strtoupper(str_replace('_', ' ', $proofSubmission->payment_method)) }}</strong>
+                            <span>PHP {{ number_format((float) $proofSubmission->amount, 2) }}</span>
+                            <span>Reference: {{ $proofSubmission->transaction_reference }}</span>
+                            <span>Status: {{ ucfirst($proofSubmission->status) }}</span>
+                            <a class="font-semibold text-teal-700 underline dark:text-teal-300" href="{{ route('admin.invoices.payment-proofs.download', [$invoice, $proofSubmission]) }}">Download private proof</a>
+                        </div>
+                        @if ($proofSubmission->status === 'pending')
+                            <div class="mt-3 grid gap-3 md:grid-cols-2">
+                                <form method="POST" action="{{ route('admin.invoices.payment-proofs.review', [$invoice, $proofSubmission]) }}" class="space-y-2 rounded-md border border-teal-200 p-3 dark:border-teal-900">
+                                    @csrf
+                                    <input type="hidden" name="decision" value="approve">
+                                    <label class="block text-xs font-medium" for="proof-approve-note-{{ $proofSubmission->id }}">Independent verification details (minimum 10 characters)</label>
+                                    <textarea id="proof-approve-note-{{ $proofSubmission->id }}" name="review_notes" required minlength="10" maxlength="1000" rows="2" class="w-full rounded-md border border-neutral-300 bg-white p-2 text-sm dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" placeholder="e.g. Confirmed in bank transaction ledger"></textarea>
+                                    <label class="flex items-start gap-2 text-xs"><input type="checkbox" name="confirmed_received" value="1" required><span>I independently verified that Rincomm received these funds.</span></label>
+                                    <button type="submit" class="rounded-md bg-teal-700 px-3 py-2 text-xs font-semibold text-white hover:bg-teal-800">Approve verified payment</button>
+                                </form>
+                                <form method="POST" action="{{ route('admin.invoices.payment-proofs.review', [$invoice, $proofSubmission]) }}" class="space-y-2 rounded-md border border-red-200 p-3 dark:border-red-900">
+                                    @csrf
+                                    <input type="hidden" name="decision" value="reject">
+                                    <label class="block text-xs font-medium" for="proof-reject-note-{{ $proofSubmission->id }}">Reason for rejection (minimum 10 characters)</label>
+                                    <textarea id="proof-reject-note-{{ $proofSubmission->id }}" name="review_notes" required minlength="10" maxlength="1000" rows="2" class="w-full rounded-md border border-neutral-300 bg-white p-2 text-sm dark:border-neutral-700 dark:bg-neutral-950 dark:text-white" placeholder="e.g. No matching transfer was received"></textarea>
+                                    <button type="submit" class="rounded-md border border-red-500 px-3 py-2 text-xs font-semibold text-red-700 dark:text-red-300">Reject proof</button>
+                                </form>
+                            </div>
+                        @else
+                            <p class="mt-2 text-xs text-neutral-500">Reviewed {{ $proofSubmission->reviewed_at?->format('Y-m-d H:i') ?? '' }}. Notes: {{ $proofSubmission->review_notes ?? 'N/A' }}</p>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        @endif
+    </section>
+
 
     {{-- Compact page controls --}}
     <div

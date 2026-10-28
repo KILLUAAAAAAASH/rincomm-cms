@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Models\PaymentProofSubmission;
 use App\Services\InvoiceBalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -222,6 +223,11 @@ class InvoiceController extends Controller
                 true
             );
 
+        $paymentProofSubmissions = PaymentProofSubmission::query()
+            ->where('invoice_id', $invoice->id)
+            ->orderByDesc('created_at')
+            ->orderByDesc('id')
+            ->get();
         $paymentToken = (string) Str::uuid();
 
         return view(
@@ -231,6 +237,7 @@ class InvoiceController extends Controller
                 'amountPaid',
                 'outstandingBalance',
                 'gatewayPayments',
+                'paymentProofSubmissions',
                 'canRecordCashPayment',
                 'paymentToken'
             )

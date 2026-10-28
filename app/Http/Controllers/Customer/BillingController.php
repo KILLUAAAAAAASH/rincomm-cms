@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Customer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Invoice;
+use App\Models\PaymentProofSubmission;
 use App\Services\InvoiceBalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -142,6 +143,12 @@ class BillingController extends Controller
                 'pending'
             );
 
+        $paymentProofs = PaymentProofSubmission::query()
+            ->where('invoice_id', $ownedInvoice->id)
+            ->where('customer_id', $customer->id)
+            ->orderByDesc('id')
+            ->get();
+        $hasPendingPaymentProof = $paymentProofs->contains('status', 'pending');
         $paymentToken = (string) Str::uuid();
 
         return view(
@@ -159,6 +166,10 @@ class BillingController extends Controller
                     $hasPendingGatewayPayment,
                 'paymentToken' =>
                     $paymentToken,
+                'paymentProofs' =>
+                    $paymentProofs,
+                'hasPendingPaymentProof' =>
+                    $hasPendingPaymentProof,
             ]
         );
     }
