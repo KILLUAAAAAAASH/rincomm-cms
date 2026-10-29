@@ -100,6 +100,13 @@ $customerName = trim(implode(' ', array_filter([
     </section>
 
 
+    @if ($jobOrder->status === 'cancelled')
+    <section class="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">
+        <p class="font-semibold">This Job Order was cancelled. Fieldwork must not be started.</p>
+        <p class="mt-1 whitespace-pre-wrap break-words">Reason: {{ $jobOrder->cancellation_reason ?: 'Not recorded' }}</p>
+    </section>
+    @endif
+
     @if (session('success'))
 
     <div

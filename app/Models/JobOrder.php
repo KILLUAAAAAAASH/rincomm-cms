@@ -28,12 +28,16 @@ class JobOrder extends Model
         'materials_cost',
         'total_cost',
         'remarks',
+        'cancellation_reason',
+        'cancelled_at',
+        'cancelled_by_user_id',
     ];
 
     protected $casts = [
         'scheduled_date' => 'date',
         'started_at' => 'datetime',
         'completed_at' => 'datetime',
+        'cancelled_at' => 'datetime',
         'labor_cost' => 'decimal:2',
         'materials_cost' => 'decimal:2',
         'total_cost' => 'decimal:2',

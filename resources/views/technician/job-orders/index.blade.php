@@ -628,6 +628,10 @@ $reopenCompletionJobOrderId ===
             @endif
 
 
+            @if ($jobOrder->status === 'assigned' && $jobOrder->serviceRequest?->status === 'closed')
+            <div class="px-4 pt-3"><p class="border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">The linked support ticket is Closed. Contact an administrator before starting work.</p></div>
+            @endif
+
             @if ($jobOrder->job_type === null)
 
             <div class="px-4 pt-3">
@@ -648,7 +652,7 @@ $reopenCompletionJobOrderId ===
             @endif
 
 
-            <dl class="grid grid-cols-2 gap-x-4 gap-y-3 px-4 py-3">
+            <dl class="grid grid-cols-1 gap-y-3 px-4 py-3">
 
                 <div class="min-w-0">
                     <dt class="text-[9px] font-semibold uppercase tracking-wide text-neutral-400">
@@ -959,7 +963,17 @@ $reopenCompletionJobOrderId ===
             </button>
 
 
-            @if ($jobOrder->status === 'assigned')
+            <a
+                href="{{ route('technician.job-orders.show', $jobOrder) }}"
+                class="inline-flex min-h-9 items-center justify-center gap-1.5 rounded-md border border-neutral-300 bg-white px-3 py-2 text-xs font-semibold text-neutral-700 transition hover:border-[#008080] hover:text-[#008080] focus:outline-none focus:ring-2 focus:ring-[#008080]/30 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-300 dark:hover:border-[#008080] dark:hover:text-[#5EEAD4]">
+                <i
+                    data-lucide="external-link"
+                    class="h-3.5 w-3.5"
+                    aria-hidden="true"></i>
+                View Full Details
+            </a>
+
+            @if ($jobOrder->status === 'assigned' && $jobOrder->serviceRequest?->status !== 'closed')
 
             <form
                 method="POST"

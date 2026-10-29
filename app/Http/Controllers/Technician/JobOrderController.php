@@ -86,6 +86,13 @@ class JobOrderController extends Controller
             'proofs.uploader',
         ]);
 
+        if (
+            $jobOrder->service_request_id !== null
+            && in_array($jobOrder->status, ['assigned', 'in_progress'], true)
+        ) {
+            $jobOrder->load('serviceRequest.ticketNotes.user');
+        }
+
         return view('technician.job-orders.show', [
             'jobOrder' => $jobOrder,
         ]);
@@ -123,6 +130,19 @@ class JobOrderController extends Controller
                 throw ValidationException::withMessages([
                     'job_order' => 'Only assigned Job Orders can be started.',
                 ]);
+            }
+
+            if ($lockedJobOrder->service_request_id !== null) {
+                $ticketStatus = \App\Models\ServiceRequest::query()
+                    ->whereKey($lockedJobOrder->service_request_id)
+                    ->lockForUpdate()
+                    ->value('status');
+
+                if ($ticketStatus === 'closed') {
+                    throw ValidationException::withMessages([
+                        'job_order' => 'The linked support ticket is Closed. Ask an administrator to review this Job Order before starting work.',
+                    ]);
+                }
             }
 
             if ($lockedJobOrder->job_type === null) {

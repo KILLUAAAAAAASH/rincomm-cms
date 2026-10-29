@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\ActivityLog;
 use App\Models\Customer;
 use App\Models\JobOrder;
 use App\Models\ServiceRequest;
@@ -432,6 +433,68 @@ class JobOrderController extends Controller
             $wasInitialAssignment
                 ? 'Job Order assigned and scheduled successfully.'
                 : 'Job Order assignment and schedule updated successfully.'
+        );
+    }
+
+    /**
+     * Cancel an unstarted Job Order with an auditable reason.
+     * Completed or in-progress fieldwork must not be cancelled here.
+     */
+    public function cancel(Request $request, JobOrder $jobOrder): RedirectResponse
+    {
+        $validated = $request->validate([
+            'cancellation_reason' => ['required', 'string', 'min:10', 'max:1000'],
+        ], [
+            'cancellation_reason.required' => 'Please explain why this Job Order is being cancelled.',
+            'cancellation_reason.min' => 'Please provide at least 10 characters for the cancellation reason.',
+        ]);
+
+        DB::transaction(function () use ($jobOrder, $request, $validated): void {
+            $locked = JobOrder::query()
+                ->whereKey($jobOrder->id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            if (! in_array($locked->status, ['pending', 'assigned'], true)
+                || $locked->started_at !== null
+                || $locked->completed_at !== null
+            ) {
+                throw ValidationException::withMessages([
+                    'cancellation_reason' => 'Only pending or assigned Job Orders that have not started may be cancelled.',
+                ]);
+            }
+
+            $oldStatus = $locked->status;
+            $reason = trim($validated['cancellation_reason']);
+
+            $locked->update([
+                'status' => 'cancelled',
+                'cancellation_reason' => $reason,
+                'cancelled_at' => now(),
+                'cancelled_by_user_id' => $request->user()->id,
+            ]);
+
+            // Fail the transaction if the audit write fails.
+            ActivityLog::query()->create([
+                'actor_user_id' => $request->user()->id,
+                'action' => 'job_order.cancelled',
+                'description' => "Cancelled Job Order {$locked->job_order_number}: {$reason}",
+                'metadata' => [
+                    'job_order_id' => $locked->id,
+                    'job_order_number' => $locked->job_order_number,
+                    'service_request_id' => $locked->service_request_id,
+                    'technician_id' => $locked->technician_id,
+                    'previous_status' => $oldStatus,
+                    'new_status' => 'cancelled',
+                    'reason' => $reason,
+                ],
+                'ip_address' => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ]);
+        });
+
+        return redirect()->route('admin.job-orders.index')->with(
+            'success', 'Job Order cancelled successfully. The technician can no longer start it.'
         );
     }
 

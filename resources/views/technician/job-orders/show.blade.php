@@ -153,7 +153,7 @@ default =>
             </div>
 
 
-            @if ($jobOrder->status === 'assigned')
+            @if ($jobOrder->status === 'assigned' && $jobOrder->serviceRequest?->status !== 'closed')
 
             <form
                 method="POST"
@@ -207,6 +207,17 @@ default =>
         </div>
     </div>
 
+
+    @if ($jobOrder->status === 'cancelled')
+    <section class="border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900 dark:border-red-900 dark:bg-red-950/30 dark:text-red-200">
+        <p class="font-semibold">This Job Order was cancelled. Fieldwork must not be started.</p>
+        <p class="mt-1 whitespace-pre-wrap break-words">Reason: {{ $jobOrder->cancellation_reason ?: 'Not recorded' }}</p>
+    </section>
+    @endif
+
+    @if ($jobOrder->status === 'assigned' && $jobOrder->serviceRequest?->status === 'closed')
+    <div class="border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900 dark:border-amber-900 dark:bg-amber-950/30 dark:text-amber-200">The linked support ticket is Closed. Ask an administrator to review this Job Order before starting work.</div>
+    @endif
 
     {{-- Success --}}
     @if (session('success'))
@@ -784,6 +795,82 @@ default =>
 
             </section>
 
+
+            {{-- Shared internal support ticket notes --}}
+            @if (
+                $jobOrder->service_request_id !== null
+                && in_array($jobOrder->status, ['assigned', 'in_progress'], true)
+                && $jobOrder->serviceRequest !== null
+            )
+                <section class="border border-neutral-200 bg-white dark:border-neutral-800 dark:bg-neutral-900">
+                    <div class="border-b border-neutral-200 px-4 py-3 dark:border-neutral-800">
+                        <h2 class="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-white">
+                            <i data-lucide="messages-square" class="h-4 w-4 text-[#008080] dark:text-[#5EEAD4]" aria-hidden="true"></i>
+                            Internal Staff Notes
+                        </h2>
+                        <p class="mt-1 text-xs text-neutral-500 dark:text-neutral-400">
+                            Shared with authorized Rincomm administrators, support staff and assigned technicians.
+                            Not visible to customers.
+                        </p>
+                    </div>
+
+                    <div class="space-y-4 p-4">
+                        @forelse ($jobOrder->serviceRequest->ticketNotes as $ticketNote)
+                            <article class="border border-neutral-200 p-3 dark:border-neutral-700">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <p class="text-sm font-semibold text-neutral-900 dark:text-white">
+                                        {{ $ticketNote->user?->name ?? 'Rincomm team member' }}
+                                    </p>
+                                    <time class="text-xs text-neutral-500 dark:text-neutral-400">
+                                        {{ $ticketNote->created_at?->format('M j, Y g:i A') }}
+                                    </time>
+                                </div>
+                                <p class="mt-2 whitespace-pre-wrap break-words text-sm text-neutral-700 dark:text-neutral-200">{{ $ticketNote->note }}</p>
+                            </article>
+                        @empty
+                            <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                                No internal ticket notes yet.
+                            </p>
+                        @endforelse
+
+                        @if ($jobOrder->serviceRequest->status !== 'closed')
+                            <form method="POST"
+                                action="{{ route('technician.job-orders.ticket-notes.store', $jobOrder) }}"
+                                class="space-y-3"
+                                data-lock-submit>
+                                @csrf
+
+                                <div>
+                                    <label for="shared-ticket-note" class="mb-2 block text-sm font-medium">
+                                        Add an internal note
+                                    </label>
+                                    <textarea
+                                        id="shared-ticket-note"
+                                        name="note"
+                                        rows="4"
+                                        maxlength="5000"
+                                        required
+                                        class="min-h-28 w-full border border-neutral-300 bg-white px-3 py-2 text-sm text-neutral-900 focus:border-[#008080] focus:outline-none focus:ring-2 focus:ring-[#008080]/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-white"
+                                    >{{ old('note') }}</textarea>
+                                    @error('note')
+                                        <p class="mt-1 text-xs text-red-600 dark:text-red-400">{{ $message }}</p>
+                                    @enderror
+                                </div>
+
+                                <button type="submit"
+                                    class="inline-flex min-h-11 items-center justify-center gap-2 bg-[#008080] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#006666] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#008080]/40">
+                                    <i data-lucide="send" class="h-4 w-4" aria-hidden="true"></i>
+                                    Post Internal Note
+                                </button>
+                            </form>
+                        @else
+                            <p class="text-sm text-neutral-500 dark:text-neutral-400">
+                                This support ticket is closed. Notes are read-only.
+                            </p>
+                        @endif
+                    </div>
+                </section>
+            @endif
 
             {{-- Proof of work --}}
             <section
@@ -1409,6 +1496,21 @@ default =>
                 </h2>
 
 
+                @if ($jobOrder->status === 'cancelled')
+                <div class="mt-4 flex items-start gap-3" role="status">
+                    <div class="flex h-7 w-7 shrink-0 items-center justify-center bg-red-100 text-red-700 dark:bg-red-950/50 dark:text-red-300">
+                        <i data-lucide="x" class="h-4 w-4" aria-hidden="true"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-red-700 dark:text-red-300">
+                            Cancelled
+                        </p>
+                        <p class="mt-0.5 text-xs text-neutral-500 dark:text-neutral-400">
+                            This Job Order was cancelled. No fieldwork should be performed.
+                        </p>
+                    </div>
+                </div>
+                @else
                 <ol class="mt-4 space-y-4">
 
                     <li class="flex gap-3">
@@ -1571,6 +1673,7 @@ default =>
                     </li>
 
                 </ol>
+                @endif
 
             </section>
 

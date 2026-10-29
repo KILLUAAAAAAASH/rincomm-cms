@@ -297,6 +297,11 @@ Route::middleware(['auth', 'active', 'role:admin,staff'])->group(function () {
         [AdminJobOrderController::class, 'updateAssignment']
     )->name('admin.job-orders.assignment.update');
 
+    Route::patch(
+        '/admin/job-orders/{jobOrder}/cancel',
+        [AdminJobOrderController::class, 'cancel']
+    )->middleware('throttle:10,1')->name('admin.job-orders.cancel');
+
     Route::get('/admin/job-orders/{jobOrder}', [AdminJobOrderController::class, 'show'])
         ->name('admin.job-orders.show');
 
@@ -611,6 +616,12 @@ Route::middleware(['auth', 'active', 'role:technician'])->group(function () {
         '/technician/job-orders/{jobOrder}',
         [JobOrderController::class, 'show']
     )->name('technician.job-orders.show');
+
+    Route::post(
+        '/technician/job-orders/{jobOrder}/ticket-notes',
+        [\App\Http\Controllers\Technician\TechnicianTicketNoteController::class, 'store']
+    )->middleware('throttle:10,1')
+     ->name('technician.job-orders.ticket-notes.store');
 
     Route::patch(
         '/technician/job-orders/{jobOrder}/start',

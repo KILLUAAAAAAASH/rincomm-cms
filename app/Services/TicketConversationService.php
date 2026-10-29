@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\Customer;
+use App\Models\JobOrder;
 use App\Models\ServiceRequest;
 use App\Models\TicketMessage;
 use App\Models\TicketNote;
@@ -61,6 +62,50 @@ class TicketConversationService
             $this->ensureTicketIsOpenForCommunication($lockedTicket);
 
             return $lockedTicket->ticketNotes()->create([
+                'user_id' => $actor->getKey(),
+                'note' => $note,
+            ]);
+        });
+    }
+
+    /**
+     * Add a shared internal note from an actively assigned technician.
+     * Revalidate assignment inside the transaction before writing.
+     */
+    public function addTechnicianInternalNote(
+        JobOrder $jobOrder,
+        User $actor,
+        string $note
+    ): TicketNote {
+        $note = $this->validateContent($note, 'note');
+
+        return DB::transaction(function () use ($jobOrder, $actor, $note): TicketNote {
+            $lockedJobOrder = JobOrder::query()
+                ->whereKey($jobOrder->getKey())
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $technician = $actor->role === 'technician'
+                && $actor->account_status === 'active'
+                ? $actor->technician
+                : null;
+
+            abort_unless(
+                $technician !== null
+                    && $lockedJobOrder->technician_id === $technician->getKey()
+                    && $lockedJobOrder->service_request_id !== null
+                    && in_array($lockedJobOrder->status, ['assigned', 'in_progress'], true),
+                404
+            );
+
+            $ticket = ServiceRequest::query()
+                ->whereKey($lockedJobOrder->service_request_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $this->ensureTicketIsOpenForCommunication($ticket);
+
+            return $ticket->ticketNotes()->create([
                 'user_id' => $actor->getKey(),
                 'note' => $note,
             ]);

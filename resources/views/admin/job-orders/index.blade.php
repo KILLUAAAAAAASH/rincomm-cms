@@ -39,6 +39,8 @@ $reopenAssignmentModal =
 $errors->any()
 && $modalContext === 'assignment';
 
+$reopenCancelModal = $errors->any() && $modalContext === 'cancellation';
+
 $oldAssignmentJobOrderId =
 (string) old('assignment_job_order_id', '');
 
@@ -51,6 +53,8 @@ $createdJobOrderId =
     id="job-order-modal-state"
     class="hidden"
     data-reopen-create="{{ $reopenCreateModal ? '1' : '0' }}"
+    data-reopen-cancellation="{{ $reopenCancelModal ? '1' : '0' }}"
+    data-cancellation-job-order-id="{{ old('cancellation_job_order_id', '') }}"
     data-reopen-assignment="{{ $reopenAssignmentModal ? '1' : '0' }}"
     data-assignment-job-order-id="{{ $oldAssignmentJobOrderId }}"
     data-created-job-order-id="{{ $createdJobOrderId }}">
@@ -638,6 +642,7 @@ $createdJobOrderId =
                                 data-job-type="{{ $jobTypeLabel }}"
                                 data-status="{{ $jobOrder->status }}"
                                 data-status-label="{{ $display['label'] }}"
+                                data-cancellation-reason="{{ $jobOrder->cancellation_reason }}"
                                 data-description="{{ $jobOrder->description }}"
                                 data-customer-name="{{ $customerName ?: 'Unknown subscriber' }}"
                                 data-customer-code="{{ $jobOrder->customer?->customer_code ?? '' }}"
@@ -658,6 +663,8 @@ $createdJobOrderId =
                                 data-scheduled-date="{{ $scheduledDateInput }}"
                                 data-scheduled-time="{{ $scheduledTimeInput }}"
                                 data-schedule-display="{{ $scheduleDisplay }}"
+                                data-can-cancel="{{ in_array($jobOrder->status, ['pending', 'assigned'], true) && !$jobOrder->started_at && !$jobOrder->completed_at ? '1' : '0' }}"
+                                data-cancel-url="{{ route('admin.job-orders.cancel', $jobOrder) }}"
                                 data-can-assign="{{ $canEditAssignment ? '1' : '0' }}"
                                 data-assignment-mode="{{ $jobOrder->status === 'assigned' ? 'edit' : 'assign' }}"
                                 data-assignment-url="{{
@@ -901,6 +908,7 @@ $createdJobOrderId =
                 data-job-type="{{ $jobTypeLabel }}"
                 data-status="{{ $jobOrder->status }}"
                 data-status-label="{{ $display['label'] }}"
+                data-cancellation-reason="{{ $jobOrder->cancellation_reason }}"
                 data-description="{{ $jobOrder->description }}"
                 data-customer-name="{{ $customerName ?: 'Unknown subscriber' }}"
                 data-customer-code="{{ $jobOrder->customer?->customer_code ?? '' }}"
@@ -921,6 +929,8 @@ $createdJobOrderId =
                 data-scheduled-date="{{ $scheduledDateInput }}"
                 data-scheduled-time="{{ $scheduledTimeInput }}"
                 data-schedule-display="{{ $scheduleDisplay }}"
+                data-can-cancel="{{ in_array($jobOrder->status, ['pending', 'assigned'], true) && !$jobOrder->started_at && !$jobOrder->completed_at ? '1' : '0' }}"
+                data-cancel-url="{{ route('admin.job-orders.cancel', $jobOrder) }}"
                 data-can-assign="{{ $canEditAssignment ? '1' : '0' }}"
                 data-assignment-mode="{{ $jobOrder->status === 'assigned' ? 'edit' : 'assign' }}"
                 data-assignment-url="{{
@@ -1638,6 +1648,11 @@ $createdJobOrderId =
                 </div>
 
 
+                <div id="details-cancellation-row" class="hidden grid-cols-[125px_minmax(0,1fr)] items-start gap-4 py-3">
+                    <span class="text-sm text-gray-500 dark:text-gray-400">Cancellation reason</span>
+                    <p id="details-cancellation-reason" class="break-words whitespace-pre-wrap text-right text-sm font-medium text-gray-800 dark:text-gray-100"></p>
+                </div>
+
                 <div
                     class="
                         grid grid-cols-[125px_minmax(0,1fr)]
@@ -1752,6 +1767,13 @@ $createdJobOrderId =
 
 
             <button
+                id="details-cancel-button"
+                type="button"
+                class="hidden min-h-10 items-center justify-center rounded-md border border-red-300 px-4 text-sm font-semibold text-red-700 transition hover:bg-red-50 dark:border-red-800 dark:text-red-300 dark:hover:bg-red-950/30">
+                Cancel Job Order
+            </button>
+
+            <button
                 id="details-assignment-button"
                 type="button"
                 class="
@@ -1779,6 +1801,43 @@ $createdJobOrderId =
 
 
 {{-- ========================================================= --}}
+{{-- ========================================================= --}}
+{{-- JOB ORDER CANCELLATION CONFIRMATION                       --}}
+{{-- ========================================================= --}}
+<div id="cancel-job-order-modal"
+     class="fixed inset-0 z-[10010] hidden items-center justify-center overflow-y-auto bg-slate-950/60 px-4 py-6 backdrop-blur-[1px]"
+     role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="cancel-job-title">
+    <div data-job-order-cancel-overlay class="absolute inset-0"></div>
+    <section class="relative z-10 w-full max-w-[500px] border border-gray-200 bg-white p-6 shadow-2xl dark:border-neutral-700 dark:bg-neutral-900">
+        <h2 id="cancel-job-title" class="text-lg font-semibold text-gray-900 dark:text-white">Cancel Job Order?</h2>
+        <p id="cancel-job-number" class="mt-1 text-sm font-semibold text-[#008080] dark:text-[#5EEAD4]"></p>
+        <p class="mt-3 text-sm leading-6 text-gray-600 dark:text-gray-300">
+            This will stop the technician from starting this Job Order. Existing records and the linked support ticket will be preserved. This action cannot be undone here.
+        </p>
+        <form id="cancel-job-form" method="POST" action="" class="mt-5 space-y-3">
+            @csrf
+            @method('PATCH')
+            <input type="hidden" name="modal_context" value="cancellation">
+            <input type="hidden" id="cancel-job-order-id" name="cancellation_job_order_id" value="{{ old('cancellation_job_order_id') }}">
+            <label for="cancel-job-reason" class="block text-sm font-semibold text-gray-800 dark:text-gray-100">Cancellation reason <span class="text-red-600">*</span></label>
+            <textarea id="cancel-job-reason" name="cancellation_reason" rows="3" required minlength="10" maxlength="1000"
+                      placeholder="Explain why fieldwork is no longer needed"
+                      class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 focus:border-[#008080] focus:outline-none focus:ring-2 focus:ring-[#008080]/20 dark:border-neutral-600 dark:bg-neutral-800 dark:text-white">{{ old('cancellation_reason') }}</textarea>
+            @if ($reopenCancelModal)
+                @error('cancellation_reason')
+                    <p class="text-sm text-red-600 dark:text-red-400">{{ $message }}</p>
+                @enderror
+            @endif
+            <footer class="flex flex-wrap justify-end gap-2 pt-3">
+                <button type="button" data-job-order-cancel-close
+                        class="min-h-10 rounded-md border border-gray-300 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50 dark:border-neutral-700 dark:text-gray-200 dark:hover:bg-neutral-800">Keep Job Order</button>
+                <button type="submit"
+                        class="min-h-10 rounded-md bg-red-700 px-4 text-sm font-semibold text-white transition hover:bg-red-800">Confirm cancellation</button>
+            </footer>
+        </form>
+    </section>
+</div>
+
 {{-- TECHNICIAN ASSIGNMENT MODAL                               --}}
 {{-- ========================================================= --}}
 
@@ -2182,6 +2241,8 @@ $createdJobOrderId =
                 'assignment-modal'
             );
 
+        let cancelModal = document.getElementById('cancel-job-order-modal');
+
 
         /*
         |--------------------------------------------------------------------------
@@ -2197,6 +2258,7 @@ $createdJobOrderId =
             createModal,
             detailsModal,
             assignmentModal,
+            cancelModal,
         ].forEach((modal) => {
             if (
                 modal &&
@@ -2257,6 +2319,7 @@ $createdJobOrderId =
                 createModal,
                 detailsModal,
                 assignmentModal,
+                cancelModal,
             ].some(
                 (candidate) =>
                 modalIsOpen(candidate)
@@ -2457,6 +2520,9 @@ $createdJobOrderId =
                 '#details-status'
             );
 
+        const detailsCancellationRow = detailsModal?.querySelector('#details-cancellation-row');
+        const detailsCancellationReason = detailsModal?.querySelector('#details-cancellation-reason');
+
         const detailsTechnicianName =
             detailsModal?.querySelector(
                 '#details-technician-name'
@@ -2491,6 +2557,8 @@ $createdJobOrderId =
             detailsModal?.querySelector(
                 '#details-customer-link'
             );
+
+        const detailsCancelButton = detailsModal?.querySelector('#details-cancel-button');
 
         const detailsAssignmentButton =
             detailsModal?.querySelector(
@@ -2555,6 +2623,12 @@ $createdJobOrderId =
                 detailsStatus.textContent =
                     source.dataset.statusLabel ??
                     '';
+            }
+            if (detailsCancellationRow && detailsCancellationReason) {
+                const cancelled = source.dataset.status === 'cancelled';
+                detailsCancellationReason.textContent = source.dataset.cancellationReason || 'Not recorded';
+                detailsCancellationRow.classList.toggle('hidden', !cancelled);
+                detailsCancellationRow.classList.toggle('grid', cancelled);
             }
 
 
@@ -2665,6 +2739,12 @@ $createdJobOrderId =
             }
 
 
+            if (detailsCancelButton) {
+                const canCancel = source.dataset.canCancel === '1';
+                detailsCancelButton.classList.toggle('hidden', !canCancel);
+                detailsCancelButton.classList.toggle('inline-flex', canCancel);
+            }
+
             if (
                 detailsAssignmentButton &&
                 detailsAssignmentButtonLabel
@@ -2762,6 +2842,31 @@ $createdJobOrderId =
             closeDetailsModal
         );
 
+
+        /* Cancel Job Order: reason and server confirmation required. */
+        const cancelForm = cancelModal?.querySelector('#cancel-job-form');
+        const cancelJobOrderId = cancelModal?.querySelector('#cancel-job-order-id');
+        const cancelJobNumber = cancelModal?.querySelector('#cancel-job-number');
+        const cancelReason = cancelModal?.querySelector('#cancel-job-reason');
+        const closeCancelModal = () => hideModal(cancelModal);
+
+        const openCancelModal = (source, preserveReason = false) => {
+            if (!source || source.dataset.canCancel !== '1' || !cancelForm || !cancelJobOrderId) return;
+            cancelForm.action = source.dataset.cancelUrl ?? '';
+            if (!cancelForm.action || !source.dataset.cancelUrl) return;
+            cancelJobOrderId.value = source.dataset.jobOrderId ?? '';
+            if (cancelJobNumber) cancelJobNumber.textContent = source.dataset.jobOrderNumber ?? '';
+            if (cancelReason && !preserveReason) cancelReason.value = '';
+            hideModal(detailsModal);
+            showModal(cancelModal);
+            cancelReason?.focus();
+        };
+
+        detailsCancelButton?.addEventListener('click', () => openCancelModal(currentDetailsSource));
+        cancelModal?.querySelectorAll('[data-job-order-cancel-close]').forEach(
+            (button) => button.addEventListener('click', closeCancelModal)
+        );
+        cancelModal?.querySelector('[data-job-order-cancel-overlay]')?.addEventListener('click', closeCancelModal);
 
         /*
         |--------------------------------------------------------------------------
@@ -2952,6 +3057,12 @@ $createdJobOrderId =
                 }
 
 
+                if (modalIsOpen(cancelModal)) {
+                    event.preventDefault();
+                    closeCancelModal();
+                    return;
+                }
+
                 if (modalIsOpen(assignmentModal)) {
                     event.preventDefault();
 
@@ -2994,6 +3105,14 @@ $createdJobOrderId =
             return;
         }
 
+
+        if (state?.dataset.reopenCancellation === '1') {
+            const source = viewButtons.find((button) =>
+                button.dataset.jobOrderId === state.dataset.cancellationJobOrderId
+            );
+            if (source) openCancelModal(source, true);
+            return;
+        }
 
         if (
             state?.dataset.reopenAssignment ===
