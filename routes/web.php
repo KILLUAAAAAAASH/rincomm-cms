@@ -196,6 +196,24 @@ Route::middleware(['auth', 'active'])->group(function () {
         ->name('profile.update');
 });
 
+// Administrator's own login email change: requires verification of the NEW mailbox.
+Route::middleware(['auth', 'active', 'role:admin'])->group(function () {
+    Route::get('/admin/account/email', [\App\Http\Controllers\Admin\AdminEmailChangeController::class, 'edit'])
+        ->name('admin.email-change.edit');
+    Route::post('/admin/account/email', [\App\Http\Controllers\Admin\AdminEmailChangeController::class, 'requestChange'])
+        ->middleware('throttle:3,60')
+        ->name('admin.email-change.request');
+    Route::get('/admin/account/email/verify/{change}/{token}', [\App\Http\Controllers\Admin\AdminEmailChangeController::class, 'confirm'])
+        ->whereNumber('change')
+        ->where('token', '[a-f0-9]{64}')
+        ->name('admin.email-change.confirm');
+    Route::post('/admin/account/email/verify/{change}/{token}', [\App\Http\Controllers\Admin\AdminEmailChangeController::class, 'apply'])
+        ->middleware('throttle:5,1')
+        ->whereNumber('change')
+        ->where('token', '[a-f0-9]{64}')
+        ->name('admin.email-change.apply');
+});
+
 // Module 9 Feature 5: customer-owned profile update requests; no direct profile mutation.
 Route::middleware(['auth', 'active', 'role:customer'])->group(function () {
     Route::get('/customer/profile-update-requests', [\App\Http\Controllers\Customer\ProfileUpdateRequestController::class, 'index'])

@@ -28,6 +28,9 @@ class ProfileController extends Controller
         return view('profile.edit', [
             'user' => $user,
             'customer' => $customer,
+            'adminEmailChangePending' => $user->isAdmin()
+                ? DB::table('admin_email_change_requests')->where('user_id', $user->id)->first()
+                : null,
         ]);
     }
 

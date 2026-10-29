@@ -527,7 +527,7 @@
     [
     'label' => 'Users',
     'icon' => 'user-cog',
-    'patterns' => ['admin.users.*'],
+    'patterns' => ['admin.users.*', 'admin.email-change.*'],
     'items' => [
     ['label' => 'User Accounts', 'route' => 'admin.users.index'],
     ['label' => 'Roles & Permissions', 'status' => 'In users'],
@@ -838,7 +838,16 @@
             </nav>
 
 
-            {{-- Logout --}}
+                            @php
+                    $accountMenuInitials = collect(
+                        preg_split('/\s+/', trim((string) $authenticatedUser->name))
+                    )
+                        ->filter()
+                        ->take(2)
+                        ->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))
+                        ->implode('');
+                @endphp
+{{-- Account profile --}}
             <div
                 class="
                     shrink-0
@@ -848,52 +857,187 @@
                     dark:bg-neutral-950
                 ">
 
-                <form
-                    method="POST"
-                    action="{{ route('logout') }}"
-                    data-lock-submit>
+                <details class="group relative">
 
-                    @csrf
-
-                    <button
-                        type="submit"
+                    <summary
                         class="
-                            inline-flex min-h-10 w-full
-                            items-center justify-start gap-3
-
-                            border border-transparent
-                            px-4 py-2.5
-                            text-sm font-semibold
-                            text-neutral-600
+                            flex cursor-pointer
+                            list-none items-center gap-3
+                            px-2 py-2
                             transition
-                            hover:border-neutral-200
-                            hover:bg-neutral-100
-                            focus:outline-none
-                            focus:ring-2
-                            focus:ring-[#008080]/30
-                            dark:border-transparent
-                            dark:text-neutral-300
-                            dark:hover:border-neutral-700
-                            dark:hover:bg-neutral-800
+                            hover:bg-[#008080]/10
+                            dark:hover:bg-[#008080]/15
                         ">
 
+                        <div
+                            class="
+                                flex h-9 w-9 shrink-0
+                                items-center justify-center
+                                rounded-full
+                                bg-[#008080]
+                                text-xs font-bold
+                                text-white
+                            "
+                            aria-hidden="true">
+
+                            {{ $accountMenuInitials }}
+
+                        </div>
+
+
+                        <div class="min-w-0 flex-1">
+
+                            <p
+                                class="
+                                    truncate
+                                    text-sm font-semibold
+                                    text-neutral-800
+                                    dark:text-neutral-100
+                                ">
+                                {{ $authenticatedUser->name }}
+                            </p>
+
+                            <p
+                                class="
+                                    mt-0.5 truncate
+                                    text-[11px]
+                                    text-neutral-500
+                                    dark:text-neutral-400
+                                ">
+
+                                {{ ucfirst($authenticatedUser->role) }} Account
+
+                            </p>
+
+                        </div>
+
+
                         <i
-                            data-lucide="log-out"
-                            class="h-5 w-5 shrink-0"
+                            data-lucide="chevron-down"
+                            class="
+                                h-4 w-4 shrink-0
+                                text-neutral-400
+                                transition-transform
+                                group-open:rotate-180
+                            "
                             aria-hidden="true">
                         </i>
 
-                        <span>
-                            Logout
-                        </span>
+                    </summary>
 
-                    </button>
 
-                </form>
+                    <div
+                        class="
+                            absolute bottom-full left-0 right-0 z-30
+                            mb-2
+                            overflow-hidden
+                            rounded-md
+                            border border-neutral-200
+                            bg-white
+                            py-1
+                            shadow-lg
+                            dark:border-neutral-700
+                            dark:bg-neutral-900
+                        ">
+
+                        <div
+                            class="
+                                border-b border-neutral-200
+                                px-3 py-2.5
+                                dark:border-neutral-800
+                            ">
+
+                            <p
+                                class="
+                                    truncate text-xs font-semibold
+                                    text-neutral-900
+                                    dark:text-white
+                                ">
+                                Account Profile
+                            </p>
+
+                            <p
+                                class="
+                                    mt-0.5 truncate text-[11px]
+                                    text-neutral-500
+                                    dark:text-neutral-400
+                                ">
+                                {{ $authenticatedUser->email }}
+                            </p>
+
+                        </div>
+
+
+                        <a
+                            href="{{ route('profile.edit') }}"
+                            class="
+                                flex items-center gap-2.5
+                                px-3 py-2.5
+                                text-sm
+                                text-neutral-700
+                                transition
+                                hover:bg-[#008080]/10
+                                hover:text-[#008080]
+                                dark:text-neutral-300
+                                dark:hover:bg-[#008080]/15
+                                dark:hover:text-[#5EEAD4]
+                            ">
+
+                            <i
+                                data-lucide="user"
+                                class="h-4 w-4"
+                                aria-hidden="true">
+                            </i>
+
+                            <span>
+                                My Profile
+                            </span>
+
+                        </a>
+
+
+                        <form
+                            method="POST"
+                            action="{{ route('logout') }}"
+                            data-lock-submit>
+
+                            @csrf
+
+                            <button
+                                type="submit"
+                                class="
+                                    flex w-full
+                                    items-center gap-2.5
+                                    px-3 py-2.5
+                                    text-left text-sm
+                                    text-red-600
+                                    transition
+                                    hover:bg-red-50
+                                    dark:text-red-400
+                                    dark:hover:bg-red-950/30
+                                ">
+
+                                <i
+                                    data-lucide="log-out"
+                                    class="h-4 w-4"
+                                    aria-hidden="true">
+                                </i>
+
+                                <span>
+                                    Logout
+                                </span>
+
+                            </button>
+
+                        </form>
+
+                    </div>
+
+                </details>
 
             </div>
 
-        </aside>
+</aside>
 
 
         {{-- Workspace --}}

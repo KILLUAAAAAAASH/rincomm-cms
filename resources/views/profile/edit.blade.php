@@ -259,7 +259,12 @@
                 </div>
 
 
-                <form
+                @if ($user->isAdmin())
+<form id="admin-email-change-form" method="POST" action="{{ route('admin.email-change.request') }}" data-lock-submit>
+    @csrf
+</form>
+@endif
+<form
                     method="POST"
                     action="{{ route('profile.update') }}"
                     data-lock-submit
@@ -486,7 +491,48 @@
                     @endif
 
 
-                    {{-- Email --}}
+                    {{-- Email address: same My Profile page; separate verification action for admin login security. --}}
+@if ($user->isAdmin())
+<div class="space-y-4" aria-label="Administrator email address">
+    <div>
+        <label for="admin_profile_email" class="mb-2 block text-sm font-medium">Email Address</label>
+        <input
+            id="admin_profile_email"
+            type="email"
+            form="admin-email-change-form"
+            name="new_email"
+            value="{{ old('new_email', $user->email) }}"
+            autocomplete="email"
+            inputmode="email"
+            required maxlength="255"
+            aria-describedby="admin-email-help admin-email-error"
+            @error('new_email') aria-invalid="true" @enderror
+            class="min-h-11 w-full border bg-white px-3 py-2.5 text-base text-neutral-900 outline-none transition focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/20 dark:bg-neutral-950 dark:text-neutral-100 @error('new_email') border-red-500 @else border-neutral-300 dark:border-neutral-700 @enderror">
+        <p id="admin-email-help" class="mt-2 text-sm text-neutral-600 dark:text-neutral-400">
+            To change your login email, edit this field, enter your current password below, then send a verification link. Your existing email remains active until you confirm the new inbox.
+        </p>
+        @error('new_email')<p id="admin-email-error" role="alert" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+    </div>
+    @if($adminEmailChangePending)
+        <div role="status" class="border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950 dark:border-amber-800 dark:bg-amber-950/30 dark:text-amber-100">
+            <strong>Pending email verification:</strong> {{ $adminEmailChangePending->requested_email }}.
+            This request expires {{ \Illuminate\Support\Carbon::parse($adminEmailChangePending->expires_at)->format('M j, Y g:i A') }}. You may request a replacement link below.
+        </div>
+    @endif
+    <div>
+        <label for="admin_email_current_password" class="mb-2 block text-sm font-medium">Current Password</label>
+        <input id="admin_email_current_password" type="password" name="current_password" form="admin-email-change-form" autocomplete="current-password" required
+               aria-describedby="admin-email-password-error" @error('current_password') aria-invalid="true" @enderror
+               class="min-h-11 w-full border border-neutral-300 bg-white px-3 py-2.5 text-base text-neutral-900 outline-none transition focus:border-[#008080] focus:ring-2 focus:ring-[#008080]/20 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100 @error('current_password') border-red-500 @enderror">
+        @error('current_password')<p id="admin-email-password-error" role="alert" class="mt-2 text-sm text-red-600 dark:text-red-400">{{ $message }}</p>@enderror
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+        <button type="submit" form="admin-email-change-form" class="min-h-11 bg-[#008080] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#006666] focus:outline-none focus:ring-2 focus:ring-[#008080]">Send Email Verification</button>
+        <p class="text-xs text-neutral-600 dark:text-neutral-400">Name changes use Save Changes below; email changes require verification first.</p>
+    </div>
+</div>
+@else
+{{-- Email --}}
                     <div>
 
                         <label
@@ -537,6 +583,7 @@
                         </p>
 
                     </div>
+@endif
 
 
                     {{-- Form actions --}}
